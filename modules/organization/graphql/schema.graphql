@@ -1,0 +1,14 @@
+type GraphQLItem {
+  id: ID!
+  name: String!
+}
+
+type Mutation {
+  """Creates a new Item"""
+  addItem(name: String!): GraphQLItem!
+}
+
+type Query {
+  """Returns all Items"""
+  items: [GraphQLItem!]!
+}

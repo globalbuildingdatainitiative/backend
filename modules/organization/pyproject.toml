@@ -1,0 +1,25 @@
+[tool.pytest.ini_options]
+pythonpath = "src"
+testpaths = ["tests/"]
+asyncio_mode = "auto"
+
+env = [
+    "SERVER_NAME=ASYNC_STRAWBERRY Test",
+    "SERVER_HOST=http://test.com",
+    "POSTGRES_HOST=localhost",
+    "POSTGRES_USER=postgresuser",
+    "POSTGRES_PASSWORD=mypassword",
+    "POSTGRES_DB=ASYNC_STRAWBERRY",
+    "POSTGRES_PORT=5632"
+]
+
+[tool.black]
+line-length = 120
+target-version = ['py311']
+extend-include = """
+^/alembic
+"""
+
+[tool.isort]
+profile = "black"
+src_paths = ["src", "tests"]

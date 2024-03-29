@@ -1,0 +1,46 @@
+# Default values for backend.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+namespace: ASYNC_STRAWBERRY
+
+appDomain: example.com
+tlsSecret: 'example-com'
+appProtocol: https
+deployType: "PROD"
+
+imageKey:
+  registry: registry.example.com
+  repository: ASYNC_STRAWBERRY
+  tag: 1
+
+secretStore:
+  name: ASYNC_STRAWBERRY
+  tenantId: ""
+  userAssignedIdentityID: ""
+
+db:
+  appName: database
+  serviceName: database-service
+  databaseName: ASYNC_STRAWBERRY
+  configmap: db-config
+  replicas: 1
+  dockerImageTag: 13.1-alpine
+  port: 5432
+  passwordSecret:
+    name: postgres-password
+    value: 'YWRnYWtqMjM1NGpoc2tsaDc4MzU0'
+  usernameSecret:
+    name: postgres-username
+    value: 'cG9zdGdyZXN1c2Vy'
+  ssl: false
+
+backend:
+  appName: backend
+  serviceName: backend-service
+  configmap: backend-config
+  replicas: 1
+  servicePort: 8000
+  secretName: backend-secret
+
+

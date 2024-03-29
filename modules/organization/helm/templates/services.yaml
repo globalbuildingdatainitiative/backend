@@ -1,0 +1,32 @@
+{{- if eq .Values.deployType "DEV" }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.db.serviceName }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.db.appName }}
+spec:
+  selector:
+    app: {{ .Values.db.appName }}
+  ports:
+    - name: postgres
+      port: {{ .Values.db.port}}
+      targetPort: 5432
+---
+{{- end}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.backend.serviceName }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.backend.appName }}
+spec:
+  selector:
+    app: {{ .Values.backend.appName }}
+  ports:
+    - name: fastapi
+      port: {{ .Values.backend.servicePort }}
+      targetPort: 8000
+

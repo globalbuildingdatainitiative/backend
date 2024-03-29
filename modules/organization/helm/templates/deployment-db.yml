@@ -1,0 +1,46 @@
+{{- if eq .Values.deployType "DEV" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.db.appName }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.db.appName }}
+spec:
+  replicas: {{ .Values.db.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.db.appName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.db.appName }}
+
+    spec:
+      containers:
+        - name: postgres
+          image: "postgres:{{ .Values.db.dockerImageTag }}"
+          ports:
+            - containerPort: {{ .Values.db.port }}
+          env:
+            - name: PGDATA
+              value: "/var/lib/postgresql/data/pgdata"
+
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.usernameSecret.name }}
+                  key: username
+
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.passwordSecret.name }}
+                  key: password
+
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.db.configmap }}
+                  key: POSTGRES_DB
+{{- end}}

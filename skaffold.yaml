@@ -1,0 +1,96 @@
+apiVersion: skaffold/v4beta5
+kind: Config
+metadata:
+  name: gbdi
+build:
+  artifacts:
+    - image: gbdi/auth
+      context: ./modules/auth/
+      docker:
+        dockerfile: Dockerfile
+
+#    - image: gbdi/organization
+#      context: ./modules/organization/
+#      sync:
+#        infer:
+#          - 'src/**/*'
+#      docker:
+#        dockerfile: ./modules/organization/Dockerfile
+#        buildArgs:
+#          BUILD_STAGE: DEV
+#          BUILD_VERSION: DEV
+#
+#    - image: gbdi/router
+#      context: ./modules/router
+#      hooks:
+#        before:
+#          - command: [ 'cp', 'modules/auth/graphql/schema.graphql', './modules/router/schemas/auth/' ]
+#            os: [ darwin, linux ]
+#          - command: [ 'cp', 'modules/organization/graphql/schema.graphql', './modules/router/schemas/organization/' ]
+#            os: [ darwin, linux ]
+#      docker:
+#        dockerfile: ./modules/router/Dockerfile
+
+manifests:
+  helm:
+    flags:
+      upgrade:
+        - --install
+    releases:
+      - name: auth
+        chartPath: ./modules/auth/helm
+        namespace: auth
+        setValues:
+          backend.servicePort: "7001"
+          deployType: DEV
+          imageKey.registry: gbdi
+          imageKey.repository: auth
+          imageKey.tag: latest
+          backend.apiKey: fakeKey
+          backend.connectionUri: http://supertokens-service.auth:3567
+        setValueTemplates:
+          backend.serverName: "{{.SERVER_NAME}}"
+          backend.serverHost: "{{.SERVER_HOST}}"
+        createNamespace: true
+
+#      - name: organization
+#        chartPath: ./modules/organization/helm
+#        namespace: organization
+#        setValues:
+#          backend.servicePort: "7002"
+#          deployType: DEV
+#          imageKey.registry: gbdi
+#          imageKey.repository: organization
+#          imageKey.tag: latest
+#        createNamespace: true
+
+#      - name: router
+#        chartPath: ./modules/router/helm
+#        namespace: router
+#        setValues:
+#          organizationUrl: http://backend-service.organization:7002/api/graphql
+#          clientOrigin: http://localhost:8000
+#          deployType: DEV
+#          imageKey.registry: gbdi
+#          imageKey.repository: router
+#          imageKey.tag: latest
+#        createNamespace: true
+deploy:
+  helm: { }
+  kubeContext: minikube
+
+portForward:
+#  - resourceType: service
+#    resourceName: router-service
+#    namespace: router
+#    port: 7000
+
+  - resourceType: service
+    resourceName: backend-service
+    namespace: auth
+    port: 7001
+
+#  - resourceType: service
+#    resourceName: backend-service
+#    namespace: organization
+#    port: 7002

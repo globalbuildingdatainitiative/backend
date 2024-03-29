@@ -1,0 +1,19 @@
+==============================================================================
+
+              _   _
+             | | | |
+   __ _ _   _| |_| |__
+  / _` | | | | __| '_ \
+ | (_| | |_| | |_| | | |
+  \__,_|\__,_|\__|_| |_|
+
+
+==============================================================================
+
+Deploy Type: {{.Values.deployType }}
+------------------------------------
+App Domain: {{ .Values.appDomain }}
+Image Registry: {{ .Values.imageKey.registry }}
+Image Repository: {{ .Values.imageKey.repository }}
+Image Tag: {{ .Values.imageKey.tag }}
+

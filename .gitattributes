@@ -1,0 +1,4 @@
+* text=auto
+# Shell scripts should have LF line endings
+*.sh text eol=lf
+*.bin filter=lfs diff=lfs merge=lfs -text

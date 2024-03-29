@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.backend.appName }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.backend.appName }}
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.backend.appName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.backend.appName }}
+    spec:
+      containers:
+        - name: {{ .Values.backend.appName }}
+          image: "{{.Values.imageKey.registry }}/{{ .Values.imageKey.repository }}:{{ .Values.imageKey.tag }}"
+          ports:
+            - containerPort: 8000
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.usernameSecret.name }}
+                  key: username
+
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.passwordSecret.name }}
+                  key: password
+
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.db.configmap }}
+                  key: POSTGRES_DB
+
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.db.configmap }}
+                  key: POSTGRES_HOST
+
+            - name: POSTGRES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.db.configmap }}
+                  key: POSTGRES_PORT
+
+            - name: POSTGRES_SSL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.db.configmap }}
+                  key: POSTGRES_SSL
+
+            - name: BACKEND_CORS_ORIGINS
+              valueFrom:
+                configMapKeyRef:
+                  key: BACKEND_CORS_ORIGINS
+                  name: {{ .Values.backend.configmap }}
+
+            - name: SERVER_NAME
+              value: {{ .Values.backend.serverName }}
+
+            - name: SERVER_HOST
+              value: {{ .Values.backend.serverHost }}
+
+            - name: RUN_STAGE
+              value: {{ .Values.deployType }}
+
+            - name: API_KEY
+              value: {{ .Values.backend.apiKey }}
+
+            - name: CONNECTION_URI
+              value: {{ .Values.backend.connectionUri }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supertokens
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: supertokens
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  selector:
+    matchLabels:
+      app: supertokens
+  template:
+    metadata:
+      labels:
+        app: supertokens
+    spec:
+      containers:
+        - name: supertokens
+          image: registry.supertokens.io/supertokens/supertokens-postgresql:9.0
+          ports:
+            - containerPort: 3567
+          env: {{ include "supertokens.env" . | indent 18 }}
+          startupProbe:
+            httpGet:
+              port: 3567
+              path: '/hello'
+            failureThreshold: 30
+            periodSeconds: 10
