@@ -1,8 +1,5 @@
 # GBDI Backend
 
-Our vision is to create a range of digital services to support the project-lifecycle LCA needs,
-that can work as one shared data platform for multiple stakeholders.
-
 # Getting Started
 
 To get started please make sure that the following pieces of software are installed on your machine.
