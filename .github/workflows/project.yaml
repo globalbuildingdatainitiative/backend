@@ -34,7 +34,7 @@ jobs:
 
       - name: Install Dependencies
         working-directory: modules/projects
-        run: pipenv sync
+        run: pipenv sync --dev
 
       - name: Run Formatting
         working-directory: modules/projects
