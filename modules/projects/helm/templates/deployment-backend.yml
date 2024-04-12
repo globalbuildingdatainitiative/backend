@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.backend.appName }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.backend.appName }}
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.backend.appName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.backend.appName }}
+    spec:
+      {{- if eq .Values.deployType "PROD" }}
+      volumes:
+        - name: secrets-store01-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ .Values.backend.secretName }}
+      {{- end }}
+      containers:
+        - name: {{ .Values.backend.appName }}
+          image: "{{.Values.imageKey.registry }}/{{ .Values.imageKey.repository }}:{{ .Values.imageKey.tag }}"
+          {{- if eq .Values.deployType "PROD" }}
+          volumeMounts:
+            - name: secrets-store01-inline
+              mountPath: "/mnt/secrets"
+              readOnly: true
+          {{- end}}
+          ports:
+            - containerPort: 8000
+          env:
+            - name: MONGO_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.usernameSecret.name }}
+                  key: username
+
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.passwordSecret.name }}
+                  key: password
+
+            - name: MONGO_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.db.configmap }}
+                  key: DATABASE_NAME
+
+            - name: MONGO_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.db.configmap }}
+                  key: DATABASE_HOST
+
+            - name: MONGO_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.db.configmap }}
+                  key: DATABASE_PORT
+
+            - name: BACKEND_CORS_ORIGINS
+              valueFrom:
+                configMapKeyRef:
+                  key: BACKEND_CORS_ORIGINS
+                  name: {{ .Values.backend.configmap }}
+
+            - name: SERVER_NAME
+              valueFrom:
+                configMapKeyRef:
+                  key: SERVER_NAME
+                  name: {{ .Values.backend.configmap }}
+
+            - name: SERVER_HOST
+              valueFrom:
+                configMapKeyRef:
+                  key: SERVER_HOST
+                  name: {{ .Values.backend.configmap }}
+
+            - name: RUN_STAGE
+              value: {{ .Values.deployType }}
