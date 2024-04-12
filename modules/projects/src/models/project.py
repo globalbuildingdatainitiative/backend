@@ -8,7 +8,6 @@ from pydantic import BaseModel, Field
 class ProjectBase(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     name: str
-    description: str
 
 
 class DBProject(ProjectBase, Document):
