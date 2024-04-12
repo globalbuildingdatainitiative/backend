@@ -1,0 +1,28 @@
+supergraph:
+  path: /graphql
+  listen: 0.0.0.0:4000
+  introspection: ${env.ENABLE_INTROSPECTION:-true}
+sandbox:
+  enabled: true # sandbox environment for the gateway
+homepage:
+  enabled: false # playground for the gateway
+health_check:
+  listen: 0.0.0.0:8088
+cors:
+  origins: # Specific Origin required with allow credentials set to true.
+    - ${env.CLIENT_ORIGIN:-http://localhost:8000}
+  allow_credentials: true
+headers:
+  all: # Header rules for all subgraphs
+    request:
+    - propagate: # send the following matching headers onwards from the client to all subgraphs
+        matching: authorization
+    - propagate:
+        matching: origin # required for member invitation to indicate platform where invite originates
+include_subgraph_errors:
+  all: true
+override_subgraph_url:
+  organization: ${env.ORGANIZATION_URL:-http://localhost:7002}
+  projects: ${env.PROJECTS_URL:-http://localhost:7003}
+
+

@@ -1,0 +1,22 @@
+namespace: router
+appName: router
+appDomain: 'api.gbdi.io'
+tlsSecret: 'api-gbdi-io'
+serviceName: router-service
+servicePort: 7000
+replicas: 1
+secretName: router-secrets
+deployType: 'PROD'
+
+imageKey:
+  registry: ghcr.io/gbdi
+  repository: rover
+  tag: 1
+
+router:
+  imageTag: v1.43.2
+  logLevel: info
+
+clientOrigin: 'http://localhost:8000'
+organizationUrl: 'http://localhost:7001'
+projectsUrl: 'http://localhost:7002'

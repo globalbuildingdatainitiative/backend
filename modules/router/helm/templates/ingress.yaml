@@ -1,0 +1,28 @@
+{{- if eq .Values.deployType "PROD" }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: router-ingress
+  namespace: {{ .Values.namespace }}
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.org/client-max-body-size: "100m"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - {{ .Values.appDomain }}
+      secretName: {{ .Values.tlsSecret }}
+  rules:
+    - host: {{ .Values.appDomain }}
+      http:
+        paths:
+          - pathType: Exact
+            path: "/graphql"
+            backend:
+              service:
+                name: {{ .Values.serviceName }}
+                port:
+                  number: {{ .Values.servicePort }}
+{{- end }}

@@ -4,32 +4,58 @@ metadata:
   name: gbdi
 build:
   artifacts:
+    - image: gbdi/router
+      context: ./modules/router
+      hooks:
+        before:
+          #          - command: [ 'cp', 'modules/organization/graphql/schema.graphql', './modules/router/schemas/organization/' ]
+          #            os: [ darwin, linux ]
+          - command: [ 'cp', 'modules/projects/graphql/schema.graphql', './modules/router/schemas/projects/' ]
+            os: [ darwin, linux ]
+      docker:
+        dockerfile: Dockerfile
+
     - image: gbdi/auth
       context: ./modules/auth/
       docker:
         dockerfile: Dockerfile
 
-#    - image: gbdi/organization
-#      context: ./modules/organization/
-#      sync:
-#        infer:
-#          - 'src/**/*'
-#      docker:
-#        dockerfile: ./modules/organization/Dockerfile
-#        buildArgs:
-#          BUILD_STAGE: DEV
-#          BUILD_VERSION: DEV
-#
-#    - image: gbdi/router
-#      context: ./modules/router
-#      hooks:
-#        before:
-#          - command: [ 'cp', 'modules/auth/graphql/schema.graphql', './modules/router/schemas/auth/' ]
-#            os: [ darwin, linux ]
-#          - command: [ 'cp', 'modules/organization/graphql/schema.graphql', './modules/router/schemas/organization/' ]
-#            os: [ darwin, linux ]
-#      docker:
-#        dockerfile: ./modules/router/Dockerfile
+    #    - image: gbdi/organization
+    #      context: ./modules/organization/
+    #      sync:
+    #        infer:
+    #          - 'src/**/*'
+    #      docker:
+    #        dockerfile: ./modules/organization/Dockerfile
+    #        buildArgs:
+    #          BUILD_STAGE: DEV
+    #          BUILD_VERSION: DEV
+    #
+
+    - image: gbdi/projects
+      context: ./modules/projects/
+      sync:
+        infer:
+          - 'src/**/*'
+        hooks:
+          after:
+            - container:
+                command:
+                  - bash
+                  - /app/export_schema.sh
+            - host:
+                command:
+                  - bash
+                  - modules/projects/extract_schema.sh
+                os:
+                  - darwin
+                  - linux
+      docker:
+        dockerfile: Dockerfile
+        buildArgs:
+          BUILD_STAGE: DEV
+          BUILD_VERSION: DEV
+
 
 manifests:
   helm:
@@ -37,6 +63,19 @@ manifests:
       upgrade:
         - --install
     releases:
+      - name: router
+        chartPath: ./modules/router/helm
+        namespace: router
+        setValues:
+          organizationUrl: http://backend-service.organization:7002/api/graphql
+          projectsUrl: http://backend-service.projects:7003/api/graphql
+          clientOrigin: http://localhost:8000
+          deployType: DEV
+          imageKey.registry: gbdi
+          imageKey.repository: router
+          imageKey.tag: latest
+        createNamespace: true
+
       - name: auth
         chartPath: ./modules/auth/helm
         namespace: auth
@@ -48,49 +87,54 @@ manifests:
           imageKey.tag: latest
           backend.apiKey: fakeKey
           backend.connectionUri: http://supertokens-service.auth:3567
-        setValueTemplates:
-          backend.serverName: "{{.SERVER_NAME}}"
-          backend.serverHost: "{{.SERVER_HOST}}"
+          backend.serverName: "Auth"
+          backend.serverHost: "http://localhost:8000"
         createNamespace: true
 
-#      - name: organization
-#        chartPath: ./modules/organization/helm
-#        namespace: organization
-#        setValues:
-#          backend.servicePort: "7002"
-#          deployType: DEV
-#          imageKey.registry: gbdi
-#          imageKey.repository: organization
-#          imageKey.tag: latest
-#        createNamespace: true
+      #      - name: organization
+      #        chartPath: ./modules/organization/helm
+      #        namespace: organization
+      #        setValues:
+      #          backend.servicePort: "7002"
+      #          deployType: DEV
+      #          imageKey.registry: gbdi
+      #          imageKey.repository: organization
+      #          imageKey.tag: latest
+      #        createNamespace: true
 
-#      - name: router
-#        chartPath: ./modules/router/helm
-#        namespace: router
-#        setValues:
-#          organizationUrl: http://backend-service.organization:7002/api/graphql
-#          clientOrigin: http://localhost:8000
-#          deployType: DEV
-#          imageKey.registry: gbdi
-#          imageKey.repository: router
-#          imageKey.tag: latest
-#        createNamespace: true
+      - name: projects
+        chartPath: ./modules/projects/helm
+        namespace: projects
+        setValues:
+          backend.servicePort: "7003"
+          deployType: DEV
+          imageKey.registry: gbdi
+          imageKey.repository: projects
+          imageKey.tag: latest
+          backend.serverName: "Projects"
+        createNamespace: true
+
 deploy:
   helm: { }
   kubeContext: minikube
 
 portForward:
-#  - resourceType: service
-#    resourceName: router-service
-#    namespace: router
-#    port: 7000
+  - resourceType: service
+    resourceName: router-service
+    namespace: router
+    port: 7000
 
   - resourceType: service
     resourceName: backend-service
     namespace: auth
     port: 7001
 
-#  - resourceType: service
-#    resourceName: backend-service
-#    namespace: organization
-#    port: 7002
+  #  - resourceType: service
+  #    resourceName: backend-service
+  #    namespace: organization
+  #    port: 7002
+
+  - resourceType: service
+    resourceName: backend-service
+    namespace: projects
+    port: 7003

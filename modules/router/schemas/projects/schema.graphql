@@ -1,0 +1,16 @@
+type Mutation {
+  """Creates new Projects"""
+  addProjects(names: [String!]!): [Project!]!
+}
+
+type Project {
+  id: UUID!
+  name: String!
+}
+
+type Query {
+  """Returns all Projects"""
+  projects: [Project!]!
+}
+
+scalar UUID
