@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.appName }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.appName }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.appName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.appName }}
+    spec:
+      volumes:
+        - name: router-config
+          emptyDir:
+            sizeLimit: "64k"
+      {{- if eq .Values.deployType "PROD" }}
+        - name: secrets-store01-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ .Values.secretName }}
+      {{- end }}
+      initContainers:
+        - name: rover
+          image: "{{.Values.imageKey.registry }}/{{ .Values.imageKey.repository }}:{{ .Values.imageKey.tag }}"
+          volumeMounts:
+            - mountPath: /config
+              name: router-config
+          {{- if eq .Values.deployType "PROD" }}
+            - name: secrets-store01-inline
+              mountPath: "/mnt/secrets"
+              readOnly: true
+          imagePullPolicy: "Always"
+          {{- end}}
+      containers:
+        - name: {{ .Values.appName }}
+          image: "ghcr.io/apollographql/router:{{ .Values.router.imageTag }}"
+          imagePullPolicy: IfNotPresent
+          args:
+            - --hot-reload
+            - --config
+            - /app/router.yaml
+            - --supergraph
+            - /app/supergraph.graphql
+
+          env:
+            - name: PROJECTS_URL
+              value: "{{ .Values.projectsUrl }}"
+            - name: CLIENT_ORIGIN
+              value: "{{ .Values.clientOrigin }}"
+            - name: ORGANIZATION_URL
+              value: "{{ .Values.organizationUrl }}"
+            - name: ENABLE_INTROSPECTION
+              value: "true"
+
+            - name: APOLLO_ROUTER_LOG
+              value: {{ .Values.router.logLevel }}
+
+          ports:
+            - name: http
+              containerPort: 4000
+              protocol: TCP
+            - name: health
+              containerPort: 8088
+              protocol: TCP
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: health
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: health
+
+          volumeMounts:
+            - name: router-config
+              mountPath: /app
