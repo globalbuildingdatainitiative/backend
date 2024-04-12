@@ -38,8 +38,8 @@ jobs:
 
       - name: Run Formatting
         working-directory: modules/projects
-        run: ruff check src/ tests/
+        run: pipenv run ruff check src/ tests/
 
       - name: Run Tests
         working-directory: modules/projects
-        run: pytest tests/
+        run: pipenv run pytest tests/
