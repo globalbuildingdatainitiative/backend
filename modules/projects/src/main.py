@@ -1,11 +1,10 @@
 import logging.config
 
 from beanie import init_beanie
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
 from core.config import settings
 from core.connection import get_database
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from models import DBProject
 from routes import graphql_app
 
@@ -35,6 +34,5 @@ app.include_router(graphql_app, prefix=settings.API_STR)
 
 @app.on_event("startup")
 async def app_init():
-
     db = get_database()
     await init_beanie(database=db, document_models=[DBProject])

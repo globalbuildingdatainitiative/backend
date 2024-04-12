@@ -1,6 +1,5 @@
-from strawberry.types import Info
-
 from models import DBProject, GraphQLProject
+from strawberry.types import Info
 
 
 async def projects_query(info: Info) -> list[GraphQLProject]:

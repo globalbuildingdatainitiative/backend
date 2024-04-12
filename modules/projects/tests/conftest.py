@@ -3,11 +3,10 @@ from typing import Iterator
 import docker
 import pytest
 from asgi_lifespan import LifespanManager
-from fastapi import FastAPI
-from httpx import AsyncClient
-
 from core.config import settings
 from core.connection import health_check_mongo
+from fastapi import FastAPI
+from httpx import AsyncClient
 
 
 @pytest.fixture(scope="session")
