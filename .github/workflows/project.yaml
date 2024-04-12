@@ -30,7 +30,7 @@ jobs:
       - name: Run image
         uses: tiagovrtr/actions-pipenv@v1
         with:
-          pipenv-version: v23.9.1
+          pipenv-version: 2023.12.1
 
       - name: Install Dependencies
         working-directory: modules/projects
