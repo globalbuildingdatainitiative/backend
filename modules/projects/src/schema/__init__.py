@@ -1,7 +1,6 @@
 from inspect import getdoc
 
 import strawberry
-
 from models import GraphQLProject
 from schema.project import add_projects_mutation, projects_query
 

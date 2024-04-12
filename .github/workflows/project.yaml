@@ -1,0 +1,45 @@
+name: Project Module Workflow
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - modules/projects/**
+  pull_request:
+    branches:
+      - main
+    paths:
+      - modules/projects/**
+
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pipenv"
+
+      - name: Run image
+        uses: tiagovrtr/actions-pipenv@v1
+        with:
+          pipenv-version: 23.9.1
+
+      - name: Install Dependencies
+        working-directory: modules/projects
+        run: pipenv sync
+
+      - name: Run Formatting
+        working-directory: modules/projects
+        run: ruff check src/ tests/
+
+      - name: Run Tests
+        working-directory: modules/projects
+        run: pytest tests/

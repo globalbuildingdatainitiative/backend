@@ -1,7 +1,5 @@
-from fastapi import Depends
-from strawberry.fastapi import GraphQLRouter
-
 from schema import schema
+from strawberry.fastapi import GraphQLRouter
 
 
 def get_context():

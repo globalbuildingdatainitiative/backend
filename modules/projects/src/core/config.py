@@ -1,6 +1,6 @@
+from pydantic import AnyHttpUrl, MongoDsn, field_validator
 from pydantic_core.core_schema import ValidationInfo
 from pydantic_settings import BaseSettings
-from pydantic import AnyHttpUrl, field_validator, MongoDsn
 
 
 class Settings(BaseSettings):

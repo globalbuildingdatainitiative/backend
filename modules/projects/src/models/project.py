@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 
 import strawberry
 from beanie import Document
-from pydantic import Field, BaseModel
+from pydantic import BaseModel, Field
 
 
 class ProjectBase(BaseModel):
