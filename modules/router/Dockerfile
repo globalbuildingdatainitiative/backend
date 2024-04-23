@@ -1,4 +1,4 @@
-FROM debian:buster-slim
+FROM debian:bookworm-slim
 
 # Download curl
 RUN apt-get update && apt-get install curl -y && rm -rf /var/lib/apt/lists/*

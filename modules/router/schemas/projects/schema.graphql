@@ -9,8 +9,16 @@ type Project {
 }
 
 type Query {
+  _service: _Service!
+
   """Returns all Projects"""
   projects: [Project!]!
 }
 
 scalar UUID
+
+scalar _Any
+
+type _Service {
+  sdl: String!
+}
