@@ -45,7 +45,7 @@ async def test_add_contributions_mutation(client: AsyncClient):
         f"{settings.API_STR}/graphql",
         json={
             "query": query,
-            "variables": {"contributions": [{"project": {"name": "Project 0"}}, {"project": {"name": "Project 1"}}]}
+            "variables": {"contributions": [{"project": {"name": "Project 0"}}, {"project": {"name": "Project 1"}}]},
         },
     )
 

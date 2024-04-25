@@ -91,8 +91,8 @@ async def client(app: FastAPI) -> Iterator[AsyncClient]:
     """Async server client that handles lifespan and teardown"""
 
     async with AsyncClient(
-            app=app,
-            base_url=settings.SERVER_HOST.__str__(),
+        app=app,
+        base_url=settings.SERVER_HOST.__str__(),
     ) as _client:
         try:
             yield _client

@@ -31,17 +31,12 @@ def supertokens_init():
             api_domain=str(settings.SERVER_HOST),
             api_base_path=f"{settings.API_STR}/auth",
             website_base_path="/auth",
-            origin=get_origin
+            origin=get_origin,
         ),
         supertokens_config=SupertokensConfig(
-            connection_uri=str(settings.SUPERTOKENS_CONNECTION_URI),
-            api_key=settings.SUPERTOKENS_API_KEY
+            connection_uri=str(settings.SUPERTOKENS_CONNECTION_URI), api_key=settings.SUPERTOKENS_API_KEY
         ),
-        framework='fastapi',
-        recipe_list=[
-            session.init(),
-            userroles.init(),
-            usermetadata.init()
-        ],
-        mode='asgi'
+        framework="fastapi",
+        recipe_list=[session.init(), userroles.init(), usermetadata.init()],
+        mode="asgi",
     )

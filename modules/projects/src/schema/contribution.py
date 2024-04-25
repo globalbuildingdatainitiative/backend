@@ -5,8 +5,9 @@ from logic import get_contributions, create_contributions
 from models import GraphQLContribution, InputContribution, ContributionFilters, ContributionSort
 
 
-async def contributions_query(info: Info, filters: ContributionFilters | None = None,
-                              sort_by: ContributionSort | None = None) -> list[GraphQLContribution]:
+async def contributions_query(
+    info: Info, filters: ContributionFilters | None = None, sort_by: ContributionSort | None = None
+) -> list[GraphQLContribution]:
     """Returns all contributions assigned to user"""
 
     user = get_user(info)

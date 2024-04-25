@@ -21,8 +21,12 @@ async def contributions(projects, user) -> list[DBContribution]:
     _contributions = []
 
     for i in range(3):
-        contribution = DBContribution(user_id=user.id, organization_id=user.organization_id,
-                                      uploaded_at=datetime.datetime.now(), project=projects[i])
+        contribution = DBContribution(
+            user_id=user.id,
+            organization_id=user.organization_id,
+            uploaded_at=datetime.datetime.now(),
+            project=projects[i],
+        )
         await contribution.insert()
         _contributions.append(contribution)
 
