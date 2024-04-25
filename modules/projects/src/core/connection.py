@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 def create_mongo_client() -> AsyncIOMotorClient:
     """Create a new client to the Mongo database"""
 
-    client = AsyncIOMotorClient(settings.MONGO_URI.__str__())
+    client = AsyncIOMotorClient(settings.MONGO_URI.__str__(), uuidRepresentation="standard")
     return client
 
 

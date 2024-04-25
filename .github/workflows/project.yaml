@@ -36,9 +36,13 @@ jobs:
         working-directory: modules/projects
         run: pipenv sync --dev
 
-      - name: Run Formatting
+      - name: Run Linting
         working-directory: modules/projects
         run: pipenv run ruff check src/ tests/
+
+      - name: Check Formatting
+        working-directory: modules/projects
+        run: pipenv run ruff format --check
 
       - name: Run Tests
         working-directory: modules/projects

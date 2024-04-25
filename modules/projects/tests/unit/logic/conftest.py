@@ -1,9 +1,11 @@
+import datetime
+
 import pytest
 from models import DBProject, DBContribution
 
 
 @pytest.fixture()
-async def projects(mongo) -> list[DBProject]:
+async def projects(app) -> list[DBProject]:
     projects = []
 
     for i in range(3):
@@ -19,7 +21,12 @@ async def contributions(projects, user) -> list[DBContribution]:
     _contributions = []
 
     for i in range(3):
-        contribution = DBContribution(user_id=user.id, organization_id=user.organization_id, project=projects[i])
+        contribution = DBContribution(
+            user_id=user.id,
+            organization_id=user.organization_id,
+            uploaded_at=datetime.datetime.now(),
+            project=projects[i],
+        )
         await contribution.insert()
         _contributions.append(contribution)
 

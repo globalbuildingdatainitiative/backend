@@ -17,3 +17,8 @@ class DBProject(ProjectBase, Document):
 @strawberry.experimental.pydantic.type(model=ProjectBase, all_fields=True, name="Project")
 class GraphQLProject:
     pass
+
+
+@strawberry.input
+class InputProject:
+    name: str
