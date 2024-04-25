@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: list[str] = [
         "http://localhost:8000",
     ]
+    SUPERTOKENS_CONNECTION_URI: AnyHttpUrl
+    SUPERTOKENS_API_KEY: str
 
     MONGO_USER: str
     MONGO_PASSWORD: str

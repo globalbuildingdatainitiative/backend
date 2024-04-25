@@ -2,7 +2,7 @@ from inspect import getdoc
 
 import strawberry
 from models import GraphQLProject
-from schema.project import add_projects_mutation, projects_query
+from schema.project import projects_query
 
 
 @strawberry.type
@@ -15,10 +15,7 @@ class Query:
 
 @strawberry.type
 class Mutation:
-    add_projects: list[GraphQLProject] = strawberry.field(
-        resolver=add_projects_mutation,
-        description=getdoc(add_projects_mutation),
-    )
+    ...
 
 
-schema = strawberry.federation.Schema(query=Query, mutation=Mutation)
+schema = strawberry.federation.Schema(query=Query)#, mutation=Mutation)
