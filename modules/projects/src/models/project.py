@@ -19,6 +19,6 @@ class GraphQLProject:
     pass
 
 
-class InputProject(ProjectBase):
-    id: UUID | None
+@strawberry.input
+class InputProject:
     name: str

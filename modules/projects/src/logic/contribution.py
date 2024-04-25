@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from models import DBContribution, InputContribution, User, ContributionFilters, ContributionSort
+from models import DBContribution, InputContribution, User, ContributionFilters, ContributionSort, DBProject
 from models.sort_filter import sort_model_query
 
 
@@ -16,7 +16,7 @@ async def create_contributions(contributions: list[InputContribution], user: Use
     _contributions = []
     for _contribution in contributions:
         contribution = DBContribution(
-            **_contribution.dict(),
+            project=DBProject(**_contribution.project.__dict__),
             user_id=user.id,
             organization_id=user.organization_id)
         await contribution.insert()

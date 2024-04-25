@@ -10,7 +10,7 @@ from .project import DBProject, GraphQLProject, InputProject
 
 class ContributionBase(BaseModel):
     id: UUID = Field(default_factory=uuid4)
-    uploaded_at: datetime.datetime
+    uploaded_at: datetime.datetime = Field(default_factory=datetime.datetime.now)
     user_id: UUID
     organization_id: UUID
 
@@ -24,12 +24,12 @@ class GraphQLContribution:
     project: GraphQLProject
 
 
-class InputContribution(BaseModel):
-    id: UUID = Field(default_factory=uuid4)
-    uploaded_at: datetime.datetime = datetime.datetime.now()
+@strawberry.input
+class InputContribution:
     project: InputProject
 
 
+@strawberry.input
 class ContributionFilters(BaseFilter):
     id: FilterOptions | None = None
     upload_at: FilterOptions | None = None
@@ -37,6 +37,7 @@ class ContributionFilters(BaseFilter):
     organization_id: FilterOptions | None = None
 
 
+@strawberry.input
 class ContributionSort(BaseFilter):
     id: SortOptions | None = None
     upload_at: SortOptions | None = None
