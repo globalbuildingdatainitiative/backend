@@ -24,8 +24,10 @@ app.add_middleware(get_middleware())
 
 
 def get_origin(request: BaseRequest | None, user_context) -> str:
+    logger.info(f"Request: {request}")
     if request is not None:
         origin = request.get_header("origin")
+        logger.info(f"Origin: {origin}")
         if origin is None:
             # this means the client is in an iframe, it's a mobile app, or
             # there is a privacy setting on the frontend which doesn't send
@@ -48,6 +50,7 @@ init(
         api_base_path=f"{settings.API_STR}/auth",
         website_base_path="/auth",
         origin=get_origin
+        #website_domain="http://localhost:8000"
     ),
     supertokens_config=SupertokensConfig(
         connection_uri=str(settings.CONNECTION_URI),

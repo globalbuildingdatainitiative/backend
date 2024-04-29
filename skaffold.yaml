@@ -19,6 +19,9 @@ build:
       context: ./modules/auth/
       docker:
         dockerfile: Dockerfile
+      sync:
+        infer:
+          - 'src/**/*'
 
     #    - image: gbdi/organization
     #      context: ./modules/organization/
@@ -88,7 +91,9 @@ manifests:
           backend.apiKey: fakeKey
           backend.connectionUri: http://supertokens-service.auth:3567
           backend.serverName: "Auth"
-          backend.serverHost: "http://localhost:8000"
+          backend.serverHost: "http://localhost:7001"
+          appDomain: "localhost:8000"
+          appProtocol: "http"
         createNamespace: true
 
       #      - name: organization
@@ -112,6 +117,8 @@ manifests:
           imageKey.repository: projects
           imageKey.tag: latest
           backend.serverName: "Projects"
+          backend.authApiKey: fakeKey
+          backend.authConnectionUri: http://supertokens-service.auth:3567
         createNamespace: true
 
 deploy:
