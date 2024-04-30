@@ -1,7 +1,7 @@
 from strawberry.types import Info
 
 from core.context import get_user
-from logic import get_contributions, create_contributions
+from logic import get_contributions, create_contributions, check_fetch_projects
 from models import GraphQLContribution, InputContribution, ContributionFilters, ContributionSort
 
 
@@ -12,7 +12,7 @@ async def contributions_query(
 
     user = get_user(info)
 
-    contributions = await get_contributions(user.organization_id, filters, sort_by)
+    contributions = await get_contributions(user.organization_id, filters, sort_by, check_fetch_projects(info))
 
     return contributions
 
