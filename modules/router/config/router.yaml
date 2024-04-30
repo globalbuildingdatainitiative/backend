@@ -13,12 +13,12 @@ cors:
     - ${env.CLIENT_ORIGIN:-http://localhost:8000}
   allow_credentials: true
 headers:
-  all: # Header rules for all subgraphs
+  all:
     request:
-    - propagate: # send the following matching headers onwards from the client to all subgraphs
-        matching: authorization
     - propagate:
-        matching: origin # required for member invitation to indicate platform where invite originates
+        matching: origin
+    - propagate:
+        named: cookie
 include_subgraph_errors:
   all: true
 override_subgraph_url:

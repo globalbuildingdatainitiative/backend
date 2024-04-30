@@ -86,3 +86,9 @@ spec:
 
             - name: RUN_STAGE
               value: {{ .Values.deployType }}
+
+            - name: SUPERTOKENS_API_KEY
+              value: {{ .Values.backend.authApiKey }}
+
+            - name: SUPERTOKENS_CONNECTION_URI
+              value: {{ .Values.backend.authConnectionUri }}

@@ -35,5 +35,8 @@ backend:
   replicas: 1
   servicePort: 8000
   secretName: backend-secret
+  authApiKey: ""
+  authConnectionUri: ""
+
 
 

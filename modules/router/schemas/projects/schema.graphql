@@ -1,6 +1,44 @@
+type Contribution {
+  project: Project!
+  id: UUID!
+  uploadedAt: DateTime!
+  userId: UUID!
+  organizationId: UUID!
+}
+
+input ContributionFilters {
+  id: FilterOptions = null
+  uploadAt: FilterOptions = null
+  userId: FilterOptions = null
+  organizationId: FilterOptions = null
+}
+
+input ContributionSort {
+  id: SortOptions = null
+  uploadAt: SortOptions = null
+  userId: SortOptions = null
+  organizationId: SortOptions = null
+}
+
+"""Date with time (isoformat)"""
+scalar DateTime
+
+input FilterOptions {
+  equal: String = null
+  isTrue: Boolean = null
+}
+
+input InputContribution {
+  project: InputProject!
+}
+
+input InputProject {
+  name: String!
+}
+
 type Mutation {
-  """Creates new Projects"""
-  addProjects(names: [String!]!): [Project!]!
+  """Creates new Contributions"""
+  addContributions(contributions: [InputContribution!]!): [Contribution!]!
 }
 
 type Project {
@@ -13,6 +51,14 @@ type Query {
 
   """Returns all Projects"""
   projects: [Project!]!
+
+  """Returns all contributions assigned to user"""
+  contributions(filters: ContributionFilters = null, sortBy: ContributionSort = null): [Contribution!]!
+}
+
+enum SortOptions {
+  ASC
+  DSC
 }
 
 scalar UUID

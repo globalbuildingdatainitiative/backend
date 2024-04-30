@@ -9,9 +9,6 @@ class Settings(BaseSettings):
     API_KEY: str
     BACKEND_CORS_ORIGINS: list[str] = [
         "http://localhost:8000",
-        "https://auth.kongsgaard.eu",
-        "https://okobau.kongsgaard.eu",
-        "https://stage.okobau.kongsgaard.eu",
     ]
 
     @validator("BACKEND_CORS_ORIGINS", pre=True)

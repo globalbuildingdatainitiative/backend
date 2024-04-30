@@ -10,7 +10,9 @@ from models import User
 async def get_context(session: SessionContainer = Depends(verify_session())):
     user_id = session.get_user_id()
     metadata = await get_user_metadata(user_id)
-    organization_id = metadata.metadata.get("organization_id", None)
+    organization_id = metadata.metadata.get(
+        "organization_id", "869f6060-f8dd-465b-9b5f-13f115416184"
+    )  # TODO - Needs to be changed!!
 
     return {"user": User(id=user_id, organization_id=organization_id)}
 
