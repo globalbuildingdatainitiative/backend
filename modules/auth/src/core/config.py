@@ -1,5 +1,6 @@
+from pydantic import AnyHttpUrl, field_validator
 from pydantic_settings import BaseSettings
-from pydantic import AnyHttpUrl, validator
+
 
 class Settings(BaseSettings):
     API_STR: str = "/api"
@@ -11,7 +12,8 @@ class Settings(BaseSettings):
         "http://localhost:8000",
     ]
 
-    @validator("BACKEND_CORS_ORIGINS", pre=True)
+    @field_validator("BACKEND_CORS_ORIGINS")
+    @classmethod
     def assemble_cors_origins(cls, v: str | list[str]) -> list[str] | str:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
