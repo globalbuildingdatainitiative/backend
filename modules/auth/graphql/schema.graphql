@@ -1,0 +1,18 @@
+type Query {
+  _service: _Service!
+
+  """Returns all Users"""
+  users: [User!]!
+}
+
+scalar UUID
+
+type User {
+  id: UUID!
+}
+
+scalar _Any
+
+type _Service {
+  sdl: String!
+}

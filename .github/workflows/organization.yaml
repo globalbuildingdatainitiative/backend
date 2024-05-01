@@ -1,0 +1,49 @@
+name: Organization Module Workflow
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - modules/organization/**
+  pull_request:
+    branches:
+      - main
+    paths:
+      - modules/organization/**
+
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pipenv"
+
+      - name: Run image
+        uses: tiagovrtr/actions-pipenv@v1
+        with:
+          pipenv-version: 2023.12.1
+
+      - name: Install Dependencies
+        working-directory: modules/organization
+        run: pipenv sync --dev
+
+      - name: Run Linting
+        working-directory: modules/organization
+        run: pipenv run ruff check src/ tests/
+
+      - name: Check Formatting
+        working-directory: modules/organization
+        run: pipenv run ruff format --check
+
+      - name: Run Tests
+        working-directory: modules/organization
+        run: pipenv run pytest tests/
