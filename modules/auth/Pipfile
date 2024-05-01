@@ -4,11 +4,21 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-supertokens-python = "*"
 fastapi = { extras = ["all"], version = "*" }
 uvicorn = {extras = ["standard"], version = "*"}
+strawberry-graphql = {extras = ["fastapi", "cli"], version = ">=0.134.0"}
+supertokens-python = "*"
 
 [dev-packages]
+asgi-lifespan="*"
+pydevd-pycharm = ">=222.4459.20"
+docker = "*"
+pytest = "*"
+pytest-asyncio = "*"
+pytest-env = "*"
+pytest-datafixtures = "*"
+pytest-mock = "*"
+ruff = "*"
 
 [requires]
-python_version = "3.11"
+python_version = "3.12"

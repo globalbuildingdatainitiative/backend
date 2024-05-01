@@ -1,0 +1,15 @@
+[tool.pytest.ini_options]
+pythonpath = "src"
+testpaths = ["tests/"]
+asyncio_mode = "auto"
+
+env = [
+    "SERVER_NAME=Projects Test",
+    "SERVER_HOST=http://test.gbdi.io",
+    "CONNECTION_URI=http://test.gbdi.io",
+    "API_KEY=DHALFKJDHALFJHDAJF"
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
