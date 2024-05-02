@@ -6,7 +6,6 @@ from .organization import (
 )
 
 
-
 __all__ = [
     get_organizations,
     create_organizations_mutation,
