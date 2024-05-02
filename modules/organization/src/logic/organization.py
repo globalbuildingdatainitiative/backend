@@ -6,9 +6,7 @@ from strawberry import Info
 from models import DBOrganization, GraphQLOrganization, OrganizationFilter, InputOrganization
 
 
-async def get_organizations(
-        filters: OrganizationFilter | None = None
-) -> list[DBOrganization]:
+async def get_organizations(filters: OrganizationFilter | None = None) -> list[DBOrganization]:
     query = DBOrganization.find()
     if filters:
         if filters.id:

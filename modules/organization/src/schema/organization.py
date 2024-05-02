@@ -1,8 +1,10 @@
 from uuid import UUID
-from models import GraphQLOrganization, OrganizationFilter, DBOrganization
+
 from strawberry.types import Info, ID
+
 from logic import get_organizations, create_organizations_mutation, update_organizations_mutation, \
     delete_organizations_mutation
+from models import GraphQLOrganization, OrganizationFilter, DBOrganization
 
 
 async def organizations_query(info: Info, filters: OrganizationFilter | None = None) -> list[GraphQLOrganization]:

@@ -1,7 +1,7 @@
 import pytest
 
-from logic import get_organizations, create_organizations_mutation, \
-    update_organizations_mutation, delete_organizations_mutation
+from logic import get_organizations, create_organizations_mutation, update_organizations_mutation, \
+    delete_organizations_mutation
 
 
 async def test_get_organizations(organizations):

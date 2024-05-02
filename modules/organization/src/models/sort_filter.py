@@ -25,9 +25,8 @@ class BaseFilter:  # pragma: no cover
         return [key for key, value in self.dict().items() if value]
 
 
-def filter_model_query(
-        model: Document, filters: BaseFilter, query: FindMany[FindQueryResultType] | None = None
-) -> FindMany[FindQueryResultType]:
+def filter_model_query(model: Document, filters: BaseFilter, query: FindMany[FindQueryResultType] | None = None) -> \
+FindMany[FindQueryResultType]:
     if query is None:
         query = model.find_all()
 
@@ -49,9 +48,8 @@ class SortOptions(Enum):
     DSC = "dsc"
 
 
-def sort_model_query(
-        model: Document, sorters: BaseFilter, query: FindMany[FindQueryResultType] | None = None
-) -> FindMany[FindQueryResultType]:
+def sort_model_query(model: Document, sorters: BaseFilter, query: FindMany[FindQueryResultType] | None = None) -> \
+FindMany[FindQueryResultType]:
     if query is None:
         query = model.find_all()
 

@@ -1,7 +1,8 @@
 import pytest
+from httpx import AsyncClient
+
 from core.config import settings
 from models import DBOrganization
-from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
@@ -15,12 +16,7 @@ async def test_organizations_query(client: AsyncClient, organizations):
         }
     """
 
-    response = await client.post(
-        f"{settings.API_STR}/graphql",
-        json={
-            "query": query,
-        },
-    )
+    response = await client.post(f"{settings.API_STR}/graphql", json={"query": query, }, )
 
     assert response.status_code == 200
     data = response.json()
@@ -44,9 +40,7 @@ async def test_create_organizations_mutation(mongo, client):
     """
 
     variables = {"name": name}
-    response = await client.post(
-        f"{settings.API_STR}/graphql", json={"query": query, "variables": variables}
-    )
+    response = await client.post(f"{settings.API_STR}/graphql", json={"query": query, "variables": variables})
 
     assert response.status_code == 200
     data = response.json()
@@ -79,9 +73,7 @@ async def test_update_organizations_mutation(mongo, organizations, client):
     """
 
     variables = {"id": str(organization.id), "name": new_name}
-    response = await client.post(
-        f"{settings.API_STR}/graphql", json={"query": query, "variables": variables}
-    )
+    response = await client.post(f"{settings.API_STR}/graphql", json={"query": query, "variables": variables})
 
     assert response.status_code == 200
     data = response.json()
@@ -110,9 +102,7 @@ async def test_delete_organizations_mutation(mongo, organizations, client):
     """
 
     variables = {"id": str(organization.id)}
-    response = await client.post(
-        f"{settings.API_STR}/graphql", json={"query": query, "variables": variables}
-    )
+    response = await client.post(f"{settings.API_STR}/graphql", json={"query": query, "variables": variables})
 
     assert response.status_code == 200
     data = response.json()
