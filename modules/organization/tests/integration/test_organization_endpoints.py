@@ -2,9 +2,6 @@ import pytest
 from backend.modules.organization.src.core.config import settings
 from backend.modules.organization.src.models import DBOrganization
 from httpx import AsyncClient
-from backend.modules.organization.src.schema.organization import (create_organization_mutation,
-                                                                  update_organization_mutation,
-                                                                  delete_organization_mutation)
 
 
 @pytest.mark.asyncio

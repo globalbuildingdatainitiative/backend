@@ -26,7 +26,7 @@ class BaseFilter:  # pragma: no cover
 
 
 def filter_model_query(
-    model: Document, filters: BaseFilter, query: FindMany[FindQueryResultType] | None = None
+        model: Document, filters: BaseFilter, query: FindMany[FindQueryResultType] | None = None
 ) -> FindMany[FindQueryResultType]:
     if query is None:
         query = model.find_all()
@@ -50,7 +50,7 @@ class SortOptions(Enum):
 
 
 def sort_model_query(
-    model: Document, sorters: BaseFilter, query: FindMany[FindQueryResultType] | None = None
+        model: Document, sorters: BaseFilter, query: FindMany[FindQueryResultType] | None = None
 ) -> FindMany[FindQueryResultType]:
     if query is None:
         query = model.find_all()

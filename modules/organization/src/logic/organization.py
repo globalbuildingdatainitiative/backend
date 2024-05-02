@@ -3,13 +3,12 @@ from uuid import UUID
 from beanie import WriteRules
 from strawberry import Info
 
-from ..models import DBOrganization, GraphQLOrganization,  OrganizationFilter
+from ..models import DBOrganization, GraphQLOrganization, OrganizationFilter
 
 
 async def get_organization(
         filters: OrganizationFilter | None = None
-        ) -> list[DBOrganization]:
-
+) -> list[DBOrganization]:
     query = DBOrganization.find()
     if filters:
         if filters.id:

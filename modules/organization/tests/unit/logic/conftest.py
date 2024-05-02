@@ -12,4 +12,3 @@ async def organizations() -> list[DBOrganization]:
         organizations.append(organization)
 
     yield organizations
-

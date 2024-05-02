@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from .sort_filter import BaseFilter, FilterOptions
 
 
-class OrganizationBase (BaseModel):
+class OrganizationBase(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     name: str
 
