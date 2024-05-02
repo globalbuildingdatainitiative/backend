@@ -1,40 +1,48 @@
-from ..models import DBOrganization, GraphQLOrganization, OrganizationFilter
+from uuid import UUID
+from models import GraphQLOrganization, OrganizationFilter, DBOrganization
 from strawberry.types import Info, ID
-from ..logic import get_organization, create_organization_mutation, update_organization_mutation, \
-    delete_organization_mutation
+from logic import get_organizations, create_organizations_mutation, update_organizations_mutation, \
+    delete_organizations_mutation
 
 
-async def organization_query(info: Info, filters: OrganizationFilter | None = None) -> list[GraphQLOrganization]:
+async def organizations_query(info: Info, filters: OrganizationFilter | None = None) -> list[GraphQLOrganization]:
     """Returns all Organizations"""
 
-    organizations = await get_organization(filters)
+    organizations = await get_organizations(filters)
     return organizations
 
 
-async def create_organization_mutation(info: Info, name: str) -> list[GraphQLOrganization]:
-    """Creates a new Organization"""
+async def add_organizations_mutation(info: Info, names: list[str]) -> list[GraphQLOrganization]:
+    """Creates a new Organization for each name in the provided list and returns them"""
 
-    organization = DBOrganization(name=name)
-    await organization.insert()
-    return organization
+    organizations = []
+    for name in names:
+        organization = DBOrganization(name=name)
+        await create_organizations_mutation(organization)
+        organizations.append(organization)
+
+    return organizations
 
 
-async def update_organization_mutation(info: Info, id: ID, name: str) -> list[GraphQLOrganization]:
+async def edit_organizations_mutation(info: Info, id: ID, name: str) -> list[GraphQLOrganization]:
     """Updates an existing Organization"""
 
-    organization = await DBOrganization.get(id=id)
+    organization = await get_organizations(id=id)
     if organization:  # If organization exists, it will update else return None
-        organization.name = name
-        await organization.update()
+        await update_organizations_mutation(id=id, name=name)
         return organization
     return None
 
 
-async def delete_organization_mutation(info: Info, id: ID) -> list[GraphQLOrganization]:
-    """Deletes an existing Organization"""
+async def remove_organizations_mutation(info: Info, ids: list[UUID]) -> list[UUID]:
+    """Deletes a list of Organizations by their IDs and returns a list of deleted IDs"""
 
-    organization = await DBOrganization.get(id=id)
-    if organization:
-        await organization.delete()
-        return True
-    return False
+    deleted_ids = []
+    for organization_id in ids:
+        organization = await get_organizations(
+            id=organization_id)  # Assuming get_organization fetches a single organization
+        if organization:
+            await delete_organizations_mutation(id=organization_id)
+            deleted_ids.append(organization_id)
+
+    return deleted_ids

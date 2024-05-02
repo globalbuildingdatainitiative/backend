@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 import strawberry
 from beanie import Document
 from pydantic import BaseModel, Field
-from .sort_filter import BaseFilter, FilterOptions
+from sort_filter import BaseFilter, FilterOptions
 
 
 class OrganizationBase(BaseModel):

@@ -1,11 +1,11 @@
 import pytest
-from backend.modules.organization.src.core.config import settings
-from backend.modules.organization.src.models import DBOrganization
+from core.config import settings
+from models import DBOrganization
 from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_organization_query(client: AsyncClient, organizations):
+async def test_organizations_query(client: AsyncClient, organizations):
     query = """
         query {
             organizations {
@@ -30,7 +30,7 @@ async def test_organization_query(client: AsyncClient, organizations):
 
 
 @pytest.mark.asyncio
-async def test_create_organization_mutation(mongo, client):
+async def test_create_organizations_mutation(mongo, client):
     """Tests creating a new organization"""
 
     name = "New Organization"
@@ -63,7 +63,7 @@ async def test_create_organization_mutation(mongo, client):
 
 
 @pytest.mark.asyncio
-async def test_update_organization_mutation(mongo, organizations, client):
+async def test_update_organizations_mutation(mongo, organizations, client):
     """Tests updating an existing organization"""
 
     organization = organizations[0]
@@ -98,7 +98,7 @@ async def test_update_organization_mutation(mongo, organizations, client):
 
 
 @pytest.mark.asyncio
-async def test_delete_organization_mutation(mongo, organizations, client):
+async def test_delete_organizations_mutation(mongo, organizations, client):
     """Tests deleting an existing organization"""
 
     organization = organizations[0]

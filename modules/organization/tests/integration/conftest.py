@@ -1,5 +1,5 @@
 import pytest
-from backend.modules.organization.src.models import DBOrganization
+from models import DBOrganization
 
 
 @pytest.fixture()

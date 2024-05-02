@@ -1,31 +1,31 @@
 type Organization {
-  # Define Organization Type
-  id: UUID!
-  name: String!
+    # Define Organization Type
+    id: UUID!
+    name: String!
 }
 
 input OrganizationFilters {
-  id: FilterOptions = null
-  name: FilterOptions = null
+    id: FilterOptions = null
+    name: FilterOptions = null
 }
 
 # Define a Query
 type Query {
-  # Get organization
-  organization(filters: OrganizationFilters = null): [Organization!]!
+    # Get organization
+    organization(filters: OrganizationFilters = null): [Organization!]!
 }
 
 
 # Define a Mutation
 type Mutation {
-  # Create a new Organization
-  createOrganization(name: String!): Organization!
+    # Create a new Organization
+    createOrganization(name: String!): Organization!
 
-  # Update an existing Organization
-  updateOrganization(id: UUID!, name: String!): Organization
+    # Update an existing Organization
+    updateOrganization(id: UUID!, name: String!): Organization
 
-  # Delete an Organization
-  deleteOrganization(id: UUID!): Boolean!
+    # Delete an Organization
+    deleteOrganization(id: UUID!): Boolean!
 }
 
 

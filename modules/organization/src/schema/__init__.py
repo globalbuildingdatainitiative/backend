@@ -1,36 +1,36 @@
 from inspect import getdoc
-
+from uuid import UUID
 import strawberry
 
-from ..models import GraphQLOrganization
-from ..schema.organization import organization_query, create_organization_mutation, update_organization_mutation, \
-    delete_organization_mutation
+from models import GraphQLOrganization
+from .organization import organizations_query, add_organizations_mutation, edit_organizations_mutation, \
+    remove_organizations_mutation
 
 
 @strawberry.type
 class Query:
     organizations: list[GraphQLOrganization] = strawberry.field(
-        resolver=organization_query,
-        description=getdoc(organization_query),
+        resolver=organizations_query,
+        description=getdoc(organizations_query),
     )
 
 
 @strawberry.type
 class Mutation:
-    create_organization: list[GraphQLOrganization] = strawberry.field(
-        resolver=create_organization_mutation,
-        description=getdoc(create_organization_mutation),
+    add_organizations: list[GraphQLOrganization] = strawberry.field(
+        resolver=add_organizations_mutation,
+        description=getdoc(add_organizations_mutation),
     )
 
-    update_organization: list[GraphQLOrganization] = strawberry.field(
-        resolver=update_organization_mutation,
-        description=getdoc(update_organization_mutation),
-    )
 
-    delete_organization: list[GraphQLOrganization] = strawberry.field(
-        resolver=delete_organization_mutation,
-        description=getdoc(delete_organization_mutation),
-    )
+update_organizations: list[GraphQLOrganization] = strawberry.field(
+    resolver=edit_organizations_mutation,
+    description=getdoc(edit_organizations_mutation),
+)
 
+delete_organizations: list[UUID] = strawberry.field(
+    resolver=remove_organizations_mutation,
+    description=getdoc(remove_organizations_mutation),
+)
 
 schema = strawberry.federation.Schema(query=Query, mutation=Mutation, enable_federation_2=True)

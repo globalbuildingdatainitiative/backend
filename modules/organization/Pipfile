@@ -9,9 +9,6 @@ uvicorn = {extras = ["standard"], version = "*"}
 strawberry-graphql = {extras = ["fastapi"], version = ">=0.134.0"}
 asyncpg = "*"
 tenacity = "*"
-sqlalchemy = {extras = ["asyncio"], version = "*"}
-sqlmodel = "*"
-alembic = "*"
 beanie = "*"
 supertokens-python = "*"
 
@@ -26,8 +23,6 @@ mixer = "*"
 pytest = "*"
 pytest-asyncio = "*"
 pytest-env = "*"
-pytest-datafixtures = "*"
-pytest-alembic = "*"
 pytest-mock = "*"
 ruff = "*"
 
