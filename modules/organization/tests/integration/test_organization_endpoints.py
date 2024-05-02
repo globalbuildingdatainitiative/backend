@@ -33,7 +33,7 @@ async def test_organization_query(client: AsyncClient, organizations):
 
 
 @pytest.mark.asyncio
-async def test_create_organization_mutation(mongo):
+async def test_create_organization_mutation(mongo, client):
     """Tests creating a new organization"""
 
     name = "New Organization"
@@ -66,7 +66,7 @@ async def test_create_organization_mutation(mongo):
 
 
 @pytest.mark.asyncio
-async def test_update_organization_mutation(mongo, organizations):
+async def test_update_organization_mutation(mongo, organizations, client):
     """Tests updating an existing organization"""
 
     organization = organizations[0]
@@ -101,7 +101,7 @@ async def test_update_organization_mutation(mongo, organizations):
 
 
 @pytest.mark.asyncio
-async def test_delete_organization_mutation(mongo, organizations):
+async def test_delete_organization_mutation(mongo, organizations, client):
     """Tests deleting an existing organization"""
 
     organization = organizations[0]

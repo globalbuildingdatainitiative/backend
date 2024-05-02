@@ -1,6 +1,6 @@
 from uuid import UUID
 from ..models import DBOrganization, GraphQLOrganization, OrganizationFilter
-from strawberry.types import Info, Type, ID, mutation, query
+from strawberry.types import Info, ID
 from ..logic import get_organization, create_organization_mutation, update_organization_mutation, delete_organization_mutation
 
 

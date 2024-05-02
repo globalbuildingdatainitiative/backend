@@ -1,6 +1,5 @@
 import pytest
 
-from backend.modules.organization.src.models import DBOrganization
 from backend.modules.organization.src.logic import get_organization, create_organization_mutation, update_organization_mutation, delete_organization_mutation
 
 

@@ -3,7 +3,7 @@ from uuid import UUID
 from beanie import WriteRules
 from strawberry import Info
 
-from ..models import DBOrganization, GraphQLOrganization, InputOrganization, OrganizationFilter
+from ..models import DBOrganization, GraphQLOrganization,  OrganizationFilter
 
 
 async def get_organization(
@@ -29,7 +29,7 @@ async def create_organization_mutation(info: Info, name: str) -> GraphQLOrganiza
     return organization
 
 
-async def update_organization_mutation(info: Info, id: ID, name: str) -> GraphQLOrganization | None:
+async def update_organization_mutation(info: Info, id: UUID, name: str) -> GraphQLOrganization | None:
     """Updates an existing Organization"""
 
     organization = await DBOrganization.get(id=id)
@@ -40,7 +40,7 @@ async def update_organization_mutation(info: Info, id: ID, name: str) -> GraphQL
     return None
 
 
-async def delete_organization_mutation(info: Info, id: ID) -> bool:
+async def delete_organization_mutation(info: Info, id: UUID) -> bool:
     """Deletes an existing Organization"""
 
     organization = await DBOrganization.get(id=id)
