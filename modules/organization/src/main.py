@@ -36,7 +36,7 @@ app.include_router(graphql_app, prefix=settings.API_STR)
 
 @app.on_event("startup")
 async def app_init():
-    from models import DBProject, DBOrganization
+    from models import DBOrganization
 
     db = get_database()
-    await init_beanie(database=db, document_models=[DBProject, DBContribution])
+    await init_beanie(database=db, document_models=[DBOrganization])
