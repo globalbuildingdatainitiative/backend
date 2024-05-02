@@ -12,6 +12,8 @@ tenacity = "*"
 sqlalchemy = {extras = ["asyncio"], version = "*"}
 sqlmodel = "*"
 alembic = "*"
+beanie = "*"
+supertokens-python = "*"
 
 [dev-packages]
 asgi-lifespan="*"
@@ -27,6 +29,7 @@ pytest-env = "*"
 pytest-datafixtures = "*"
 pytest-alembic = "*"
 pytest-mock = "*"
+ruff = "*"
 
 [requires]
-python_version = "3.11"
+python_version = "3.12"

@@ -4,22 +4,17 @@ testpaths = ["tests/"]
 asyncio_mode = "auto"
 
 env = [
-    "SERVER_NAME=ASYNC_STRAWBERRY Test",
-    "SERVER_HOST=http://test.com",
-    "POSTGRES_HOST=localhost",
-    "POSTGRES_USER=postgresuser",
-    "POSTGRES_PASSWORD=mypassword",
-    "POSTGRES_DB=ASYNC_STRAWBERRY",
-    "POSTGRES_PORT=5632"
+    "SERVER_NAME=Projects Test",
+    "SERVER_HOST=http://test.gbdi.io",
+    "MONGO_HOST=localhost",
+    "MONGO_USER=testuser",
+    "MONGO_PASSWORD=mypassword",
+    "MONGO_DB=projects",
+    "MONGO_PORT=27017",
+    "SUPERTOKENS_CONNECTION_URI=http://test.gbdi.io",
+    "SUPERTOKENS_API_KEY=DHALFKJDHALFJHDAJF"
 ]
 
-[tool.black]
+[tool.ruff]
 line-length = 120
-target-version = ['py311']
-extend-include = """
-^/alembic
-"""
-
-[tool.isort]
-profile = "black"
-src_paths = ["src", "tests"]
+target-version = "py312"

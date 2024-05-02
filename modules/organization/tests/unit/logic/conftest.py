@@ -1,10 +1,9 @@
 import pytest
-from backend.modules.organization.src.models import DBOrganization
+from backend.modules.organization.src.models.organization import DBOrganization
 
 
 @pytest.fixture()
-async def organizations(mongo):
-    """Creates sample organizations before each test"""
+async def organizations() -> list[DBOrganization]:
     organizations = []
 
     for i in range(3):
@@ -13,3 +12,4 @@ async def organizations(mongo):
         organizations.append(organization)
 
     yield organizations
+

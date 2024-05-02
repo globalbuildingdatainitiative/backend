@@ -1,13 +1,6 @@
-from fastapi import Depends
-from strawberry.fastapi import GraphQLRouter
-
-from core.connection import get_db
+from core.context import get_context
 from schema import schema
-
-
-def get_context(session=Depends(get_db)):
-    return {"session": session}
-
+from strawberry.fastapi import GraphQLRouter
 
 graphql_app = GraphQLRouter(
     schema,

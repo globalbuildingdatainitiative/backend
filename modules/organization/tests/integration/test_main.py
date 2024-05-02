@@ -1,7 +1,6 @@
 import pytest
+from backend.modules.organization.src.core.config import settings
 from httpx import AsyncClient
-
-from core.config import settings
 
 
 @pytest.mark.asyncio

@@ -2,24 +2,33 @@ from inspect import getdoc
 
 import strawberry
 
-from graphql_types.item import GraphQLItem
-from schema.item import add_item_mutation, items_query
+from ..models import GraphQLOrganization
+from ..schema.organization import organization_query, create_organization_mutation, update_organization_mutation, delete_organization_mutation
 
 
 @strawberry.type
 class Query:
-    items: list[GraphQLItem] = strawberry.field(
-        resolver=items_query,
-        description=getdoc(items_query),
+    organizations: list[GraphQLOrganization] = strawberry.field(
+        resolver=organization_query,
+        description=getdoc(organization_query),
     )
-
 
 @strawberry.type
 class Mutation:
-    add_item: GraphQLItem = strawberry.field(
-        resolver=add_item_mutation,
-        description=getdoc(add_item_mutation),
+    
+    create_organization: list[GraphQLOrganization] = strawberry.field(
+        resolver=create_organization_mutation,
+        description=getdoc(create_organization_mutation),
+    )
+    
+    update_organization: list[GraphQLOrganization] = strawberry.field(
+        resolver=update_organization_mutation,
+        description=getdoc(update_organization_mutation),
+    )
+    
+    delete_organization: list[GraphQLOrganization] = strawberry.field(
+        resolver=delete_organization_mutation,
+        description=getdoc(delete_organization_mutation),
     )
 
-
-schema = strawberry.Schema(query=Query, mutation=Mutation)
+schema = strawberry.federation.Schema(query=Query, mutation=Mutation, enable_federation_2=True)
