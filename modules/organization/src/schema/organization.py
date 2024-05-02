@@ -2,8 +2,12 @@ from uuid import UUID
 
 from strawberry.types import Info, ID
 
-from logic import get_organizations, create_organizations_mutation, update_organizations_mutation, \
-    delete_organizations_mutation
+from logic import (
+    get_organizations,
+    create_organizations_mutation,
+    update_organizations_mutation,
+    delete_organizations_mutation,
+)
 from models import GraphQLOrganization, OrganizationFilter, DBOrganization
 
 
@@ -42,7 +46,8 @@ async def remove_organizations_mutation(info: Info, ids: list[UUID]) -> list[UUI
     deleted_ids = []
     for organization_id in ids:
         organization = await get_organizations(
-            id=organization_id)  # Assuming get_organization fetches a single organization
+            id=organization_id
+        )  # Assuming get_organization fetches a single organization
         if organization:
             await delete_organizations_mutation(id=organization_id)
             deleted_ids.append(organization_id)

@@ -1,7 +1,11 @@
 import pytest
 
-from logic import get_organizations, create_organizations_mutation, update_organizations_mutation, \
-    delete_organizations_mutation
+from logic import (
+    get_organizations,
+    create_organizations_mutation,
+    update_organizations_mutation,
+    delete_organizations_mutation,
+)
 
 
 async def test_get_organizations(organizations):
@@ -21,7 +25,8 @@ async def test_create_organizations(app):
 
     name = "New Organization"
     created_organization = await create_organizations_mutation(
-        name=name)  # Assuming create_organization_mutation exists
+        name=name
+    )  # Assuming create_organization_mutation exists
 
     assert created_organization.name == name
 
@@ -33,8 +38,9 @@ async def test_update_organizations(organizations):
     organization = organizations[0]
     new_name = "Updated Organization"
 
-    updated_organization = await update_organizations_mutation(id=organization.id,
-                                                               name=new_name)  # Assuming update_organization_mutation exists
+    updated_organization = await update_organizations_mutation(
+        id=organization.id, name=new_name
+    )  # Assuming update_organization_mutation exists
 
     assert updated_organization.id == organization.id
     assert updated_organization.name == new_name

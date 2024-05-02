@@ -16,7 +16,12 @@ async def test_organizations_query(client: AsyncClient, organizations):
         }
     """
 
-    response = await client.post(f"{settings.API_STR}/graphql", json={"query": query, }, )
+    response = await client.post(
+        f"{settings.API_STR}/graphql",
+        json={
+            "query": query,
+        },
+    )
 
     assert response.status_code == 200
     data = response.json()

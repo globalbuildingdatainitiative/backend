@@ -28,8 +28,9 @@ async def create_organizations_mutation(info: Info, organizations: list[InputOrg
     return _organizations
 
 
-async def update_organizations_mutation(info: Info, organizations: list[InputOrganization]) -> list[
-    GraphQLOrganization | None]:
+async def update_organizations_mutation(
+    info: Info, organizations: list[InputOrganization]
+) -> list[GraphQLOrganization | None]:
     """Updates a list of existing Organizations"""
 
     updated_organizations = []

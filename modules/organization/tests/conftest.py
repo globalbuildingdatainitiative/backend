@@ -21,10 +21,18 @@ def docker_client():
 
 @pytest.fixture(scope="session")
 async def mongo(docker_client):
-    container = docker_client.containers.run("mongo:7", ports={"27017": settings.MONGO_PORT},
-        environment={"MONGO_INITDB_DATABASE": settings.MONGO_DB, "MONGO_INITDB_ROOT_USERNAME": settings.MONGO_USER,
-            "MONGO_INITDB_ROOT_PASSWORD": settings.MONGO_PASSWORD, }, name="mongo_database", detach=True,
-        auto_remove=True, )
+    container = docker_client.containers.run(
+        "mongo:7",
+        ports={"27017": settings.MONGO_PORT},
+        environment={
+            "MONGO_INITDB_DATABASE": settings.MONGO_DB,
+            "MONGO_INITDB_ROOT_USERNAME": settings.MONGO_USER,
+            "MONGO_INITDB_ROOT_PASSWORD": settings.MONGO_PASSWORD,
+        },
+        name="mongo_database",
+        detach=True,
+        auto_remove=True,
+    )
 
     await health_check_mongo()
     try:
@@ -44,7 +52,11 @@ def mock_supertokens(session_mocker):
     def fake_supertokens():
         pass
 
-    session_mocker.patch.object(core.auth, "supertokens_init", fake_supertokens, )
+    session_mocker.patch.object(
+        core.auth,
+        "supertokens_init",
+        fake_supertokens,
+    )
 
 
 @pytest.fixture(scope="session")
@@ -52,7 +64,11 @@ def mock_get_context(user, session_mocker):
     async def fake_get_context():
         return {"user": user}
 
-    session_mocker.patch.object(core.context, "get_context", fake_get_context, )
+    session_mocker.patch.object(
+        core.context,
+        "get_context",
+        fake_get_context,
+    )
 
 
 @pytest.fixture
@@ -74,7 +90,10 @@ async def app(database, mock_supertokens, mock_get_context) -> FastAPI:
 async def client(app: FastAPI) -> Iterator[AsyncClient]:
     """Async server client that handles lifespan and teardown"""
 
-    async with AsyncClient(app=app, base_url=settings.SERVER_HOST.__str__(), ) as _client:
+    async with AsyncClient(
+        app=app,
+        base_url=settings.SERVER_HOST.__str__(),
+    ) as _client:
         try:
             yield _client
         except Exception as exc:
