@@ -92,7 +92,7 @@ async def client(app: FastAPI) -> Iterator[AsyncClient]:
 
     async with AsyncClient(
         app=app,
-        base_url=settings.SERVER_HOST.__str__(),
+        base_url=str(settings.SERVER_HOST),
     ) as _client:
         try:
             yield _client

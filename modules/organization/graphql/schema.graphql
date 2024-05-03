@@ -10,7 +10,7 @@ type Mutation {
   addOrganizations(names: [String!]!): [Organization!]!
 
   """Updates an existing Organization"""
-  updateOrganizations(id: UUID!, name: String!): [Organization!]!
+  updateOrganizations(Id: UUID!, name: String!): [Organization!]!
 
   """
   Deletes a list of Organizations by their IDs and returns a list of deleted IDs
