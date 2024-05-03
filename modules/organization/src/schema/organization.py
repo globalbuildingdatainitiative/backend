@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from strawberry.types import Info, ID
+from strawberry.types import Info
 
 from logic import (
     get_organizations,
@@ -30,7 +30,7 @@ async def add_organizations_mutation(info: Info, names: list[str]) -> list[Graph
     return organizations
 
 
-async def edit_organizations_mutation(info: Info, id: ID, name: str) -> list[GraphQLOrganization]:
+async def edit_organizations_mutation(info: Info, id: UUID, name: str) -> list[GraphQLOrganization]:
     """Updates an existing Organization"""
 
     organization = await get_organizations(id=id)

@@ -4,25 +4,23 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-fastapi = {extras = ["all"], version = "==0.94.1"}
+fastapi = {extras = ["all"], version = ">=0.94.1"}
 uvicorn = {extras = ["standard"], version = "*"}
-strawberry-graphql = {extras = ["fastapi"], version = ">=0.134.0"}
-asyncpg = "*"
+strawberry-graphql = {extras = ["fastapi", "cli"], version = ">=0.134.0"}
 tenacity = "*"
 beanie = "*"
 supertokens-python = "*"
+bson = "*"
 
 [dev-packages]
 asgi-lifespan="*"
-pydevd-pycharm = "==222.4459.20"
-black = ">=23.1.0"
-isort = ">=5.12.0"
+pydevd-pycharm = ">=222.4459.20"
 pre-commit = "*"
 docker = "*"
-mixer = "*"
 pytest = "*"
 pytest-asyncio = "*"
 pytest-env = "*"
+pytest-datafixtures = "*"
 pytest-mock = "*"
 ruff = "*"
 

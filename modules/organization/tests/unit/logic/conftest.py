@@ -3,7 +3,7 @@ from models import DBOrganization
 
 
 @pytest.fixture()
-async def organizations() -> list[DBOrganization]:
+async def organizations(app) -> list[DBOrganization]:
     organizations = []
 
     for i in range(3):

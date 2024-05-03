@@ -1,34 +1,44 @@
-type Organization {
-    # Define Organization Type
-    id: UUID!
-    name: String!
+input FilterOptions {
+  equal: String = null
+  isTrue: Boolean = null
 }
 
-input OrganizationFilters {
-    id: FilterOptions = null
-    name: FilterOptions = null
-}
-
-# Define a Query
-type Query {
-    # Get organization
-    organization(filters: OrganizationFilters = null): [Organization!]!
-}
-
-
-# Define a Mutation
 type Mutation {
-    # Create a new Organization
-    createOrganization(name: String!): Organization!
+  """
+  Creates a new Organization for each name in the provided list and returns them
+  """
+  addOrganizations(names: [String!]!): [Organization!]!
 
-    # Update an existing Organization
-    updateOrganization(id: UUID!, name: String!): Organization
+  """Updates an existing Organization"""
+  updateOrganizations(id: UUID!, name: String!): [Organization!]!
 
-    # Delete an Organization
-    deleteOrganization(id: UUID!): Boolean!
+  """
+  Deletes a list of Organizations by their IDs and returns a list of deleted IDs
+  """
+  deleteOrganizations(ids: [UUID!]!): [UUID!]!
 }
 
+type Organization {
+  id: UUID!
+  name: String!
+}
+
+input OrganizationFilter {
+  id: FilterOptions = null
+  name: FilterOptions = null
+}
+
+type Query {
+  _service: _Service!
+
+  """Returns all Organizations"""
+  organizations(filters: OrganizationFilter = null): [Organization!]!
+}
 
 scalar UUID
 
 scalar _Any
+
+type _Service {
+  sdl: String!
+}

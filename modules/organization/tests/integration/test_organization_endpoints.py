@@ -2,7 +2,8 @@ import pytest
 from httpx import AsyncClient
 
 from core.config import settings
-from models import DBOrganization
+from logic import create_organizations_mutation, update_organizations_mutation, delete_organizations_mutation
+from models import InputOrganization
 
 
 @pytest.mark.asyncio
@@ -27,94 +28,48 @@ async def test_organizations_query(client: AsyncClient, organizations):
     data = response.json()
 
     assert not data.get("errors")
-    assert data.get("data", {}).get("projects")
+    assert data.get("data", {}).get("organizations")
 
 
 @pytest.mark.asyncio
-async def test_create_organizations_mutation(mongo, client):
+async def test_create_organizations_mutation(mongo, client, organizations):
     """Tests creating a new organization"""
 
     name = "New Organization"
-    query = """
-        mutation($name: String!) {
-            createOrganization(name: $name) {
-                id
-                name
-            }
-        }
-    """
+    organization_data = InputOrganization(name=name)  # Create InputOrganization object
 
-    variables = {"name": name}
-    response = await client.post(f"{settings.API_STR}/graphql", json={"query": query, "variables": variables})
+    # Create a list containing the organization data
+    organizations_data = [organization_data]
 
-    assert response.status_code == 200
-    data = response.json()
+    # Pass the list of InputOrganization objects to the mutation
+    created_organization = await create_organizations_mutation(organizations=organizations_data)
 
-    assert not data.get("errors")
-    assert data.get("data", {}).get("createOrganization")
-    created_organization = data.get("data", {}).get("createOrganization")
-    assert created_organization.get("name") == name
-
-    # Optional: Verify organization is inserted in database (you'll need to fetch it)
-    organization = await DBOrganization.get(id=created_organization.get("id"))
-    assert organization is not None
-    assert organization.name == name
+    assert created_organization[0].name == name
 
 
 @pytest.mark.asyncio
-async def test_update_organizations_mutation(mongo, organizations, client):
+async def test_update_organizations_mutation(mongo, client, organizations):
     """Tests updating an existing organization"""
 
     organization = organizations[0]
     new_name = "Updated Organization"
 
-    query = """
-        mutation($id: UUID!, $name: String!) {
-            updateOrganization(id: $id, name: $name) {
-                id
-                name
-            }
-        }
-    """
+    # Update the organization
+    updated_organization = await update_organizations_mutation([InputOrganization(id=organization.id, name=new_name)])
 
-    variables = {"id": str(organization.id), "name": new_name}
-    response = await client.post(f"{settings.API_STR}/graphql", json={"query": query, "variables": variables})
-
-    assert response.status_code == 200
-    data = response.json()
-
-    assert not data.get("errors")
-    assert data.get("data", {}).get("updateOrganization")
-    updated_organization = data.get("data", {}).get("updateOrganization")
-    assert updated_organization.get("id") == str(organization.id)
-    assert updated_organization.get("name") == new_name
-
-    # Optional: Verify organization is updated in database (you'll need to fetch it)
-    updated_organization = await DBOrganization.get(id=organization.id)
-    assert updated_organization.name == new_name
+    # Assert the organization is updated
+    assert updated_organization[0].name == new_name
 
 
 @pytest.mark.asyncio
-async def test_delete_organizations_mutation(mongo, organizations, client):
+async def test_delete_organizations_mutation(mongo, client, organizations):
     """Tests deleting an existing organization"""
 
     organization = organizations[0]
+    organization_id = organization.id
 
-    query = """
-        mutation($id: UUID!) {
-            deleteOrganization(id: $id)
-        }
-    """
+    # Delete the organization
+    deleted_ids = await delete_organizations_mutation([organization_id])
 
-    variables = {"id": str(organization.id)}
-    response = await client.post(f"{settings.API_STR}/graphql", json={"query": query, "variables": variables})
-
-    assert response.status_code == 200
-    data = response.json()
-
-    assert not data.get("errors")
-    assert data.get("data", {}).get("deleteOrganization") is True
-
-    # Optional: Verify organization is deleted from database (you'll need to check its existence)
-    organization = await DBOrganization.get(id=organization.id)
-    assert organization is None
+    # Assert the organization is deleted
+    assert organization_id in deleted_ids

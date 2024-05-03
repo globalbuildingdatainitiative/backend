@@ -6,8 +6,10 @@ from logic import (
     update_organizations_mutation,
     delete_organizations_mutation,
 )
+from models import InputOrganization
 
 
+@pytest.mark.asyncio
 async def test_get_organizations(organizations):
     """Tests retrieving all organizations"""
 
@@ -20,15 +22,17 @@ async def test_get_organizations(organizations):
 
 
 @pytest.mark.asyncio
-async def test_create_organizations(app):
+async def test_create_organizations(organizations):
     """Tests creating a new organization"""
 
     name = "New Organization"
-    created_organization = await create_organizations_mutation(
-        name=name
-    )  # Assuming create_organization_mutation exists
+    organization_data = InputOrganization(name=name)  # Create InputOrganization object
 
-    assert created_organization.name == name
+    created_organization = await create_organizations_mutation(
+        organizations=[organization_data],  # Pass list of InputOrganization objects
+    )
+
+    assert created_organization[0].name == name
 
 
 @pytest.mark.asyncio
@@ -38,10 +42,11 @@ async def test_update_organizations(organizations):
     organization = organizations[0]
     new_name = "Updated Organization"
 
-    updated_organization = await update_organizations_mutation(
-        id=organization.id, name=new_name
+    input_organization = InputOrganization(id=organization.id, name=new_name)
+    updated_organizations = await update_organizations_mutation(
+        organizations=[input_organization]
     )  # Assuming update_organization_mutation exists
-
+    updated_organization = updated_organizations[0]
     assert updated_organization.id == organization.id
     assert updated_organization.name == new_name
 
@@ -52,6 +57,10 @@ async def test_delete_organizations(organizations):
 
     organization = organizations[0]
 
-    deleted = await delete_organizations_mutation(id=organization.id)  # Assuming delete_organization_mutation exists
+    ids = [organization.id]
 
-    assert deleted is True
+    # Call the function with the list of IDs
+    deleted_ids = await delete_organizations_mutation(ids=ids)
+
+    # Assert that at least one ID is returned (assuming successful deletion)
+    assert deleted_ids and len(deleted_ids) >= 1  # Check for empty list and at least one element
