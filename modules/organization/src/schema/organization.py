@@ -7,8 +7,9 @@ from logic import (
     add_organizations,
     edit_organizations,
     remove_organizations,
+    add_organization,
 )
-from models import GraphQLOrganization, OrganizationFilter
+from models import GraphQLOrganization, OrganizationFilter, InputOrganization
 
 
 async def organizations_query(info: Info, filters: OrganizationFilter | None = None) -> list[GraphQLOrganization]:
@@ -18,11 +19,19 @@ async def organizations_query(info: Info, filters: OrganizationFilter | None = N
     return organizations
 
 
-async def add_organizations_mutation(info: Info, names: list[str]) -> list[GraphQLOrganization]:
+async def add_organizations_mutation(
+    info: Info, names: list[str], addresses: list[str], cities: list[str], countries: list[str]
+) -> list[GraphQLOrganization]:
     """Creates a new Organization for each name in the provided list and returns them"""
 
-    organizations = await add_organizations(names)
+    organizations = await add_organizations(names, addresses, cities, countries)
     return organizations
+
+
+async def add_organization_mutation(info: Info, organization: InputOrganization) -> GraphQLOrganization:
+    current_user = info.context["current_user"]
+    new_organization = await add_organization(organization, current_user)  # assuming you have the user_id
+    return new_organization
 
 
 async def edit_organizations_mutation(info: Info, _id: UUID, name: str) -> list[GraphQLOrganization]:

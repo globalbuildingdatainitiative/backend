@@ -3,11 +3,20 @@ input FilterOptions {
   isTrue: Boolean = null
 }
 
+input InputOrganization {
+  id: UUID! = "annotation=NoneType required=False default_factory=uuid4"
+  name: String!
+  address: String!
+  city: String!
+  country: String!
+}
+
 type Mutation {
   """
   Creates a new Organization for each name in the provided list and returns them
   """
-  addOrganizations(names: [String!]!): [Organization!]!
+  addOrganizations(names: [String!]!, addresses: [String!]!, cities: [String!]!, countries: [String!]!): [Organization!]!
+  addOrganization(organization: InputOrganization!): [Organization!]!
 
   """Updates an existing Organization"""
   updateOrganizations(Id: UUID!, name: String!): [Organization!]!
@@ -21,11 +30,17 @@ type Mutation {
 type Organization {
   id: UUID!
   name: String!
+  address: String!
+  city: String!
+  country: String!
 }
 
 input OrganizationFilter {
   id: FilterOptions = null
   name: FilterOptions = null
+  address: FilterOptions = null
+  city: FilterOptions = null
+  country: FilterOptions = null
 }
 
 type Query {

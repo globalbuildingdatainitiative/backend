@@ -11,6 +11,9 @@ class OrganizationBase(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     _id: PyDanticObjectId = None
     name: str
+    address: str
+    city: str
+    country: str
 
 
 class DBOrganization(OrganizationBase, Document):
@@ -26,9 +29,15 @@ class GraphQLOrganization:
 class InputOrganization:
     id: UUID = Field(default_factory=uuid4)
     name: str
+    address: str
+    city: str
+    country: str
 
 
 @strawberry.input
 class OrganizationFilter(BaseFilter):
     id: FilterOptions | None = None
     name: FilterOptions | None = None
+    address: FilterOptions | None = None
+    city: FilterOptions | None = None
+    country: FilterOptions | None = None

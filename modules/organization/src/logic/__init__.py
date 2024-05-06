@@ -1,6 +1,7 @@
 from .organization import (
     get_organizations,
     add_organizations,
+    add_organization,
     edit_organizations,
     remove_organizations,
     create_organizations_mutation,
@@ -12,6 +13,7 @@ from .organization import (
 __all__ = [
     get_organizations,
     add_organizations,
+    add_organization,
     edit_organizations,
     remove_organizations,
     create_organizations_mutation,

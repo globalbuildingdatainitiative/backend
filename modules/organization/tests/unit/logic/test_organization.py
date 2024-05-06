@@ -5,8 +5,9 @@ from logic import (
     create_organizations_mutation,
     update_organizations_mutation,
     delete_organizations_mutation,
+    add_organization,
 )
-from models import InputOrganization
+from models import InputOrganization, User
 
 
 @pytest.mark.asyncio
@@ -26,13 +27,41 @@ async def test_create_organizations(organizations):
     """Tests creating a new organization"""
 
     name = "New Organization"
-    organization_data = InputOrganization(name=name)  # Create InputOrganization object
+    address = "123 Main St"
+    city = "New City"
+    country = "USA"
+    organization_data = InputOrganization(
+        name=name, address=address, city=city, country=country
+    )  # Create InputOrganization object
 
     created_organization = await create_organizations_mutation(
         organizations=[organization_data],  # Pass list of InputOrganization objects
     )
 
     assert created_organization[0].name == name
+    assert created_organization[0].address == address
+    assert created_organization[0].city == city
+    assert created_organization[0].country == country
+
+
+async def test_add_organization(organizations):
+    """Tests adding a single organization"""
+
+    name = "New Organization"
+    address = "123 Main St"
+    city = "New City"
+    country = "USA"
+
+    organization_data = InputOrganization(name=name, address=address, city=city, country=country)
+
+    current_user: User = organizations[0]
+    added_organization = await add_organization(organization=organization_data, current_user=current_user)
+
+    assert added_organization.name == name
+    assert added_organization.address == address
+    assert added_organization.city == city
+    assert added_organization.country == country
+    assert added_organization.id == current_user._organization_id
 
 
 @pytest.mark.asyncio
@@ -41,14 +70,22 @@ async def test_update_organizations(organizations):
 
     organization = organizations[0]
     new_name = "Updated Organization"
+    new_address = "Updated Address"
+    new_city = "Updated City"
+    new_country = "Updated Country"
 
-    input_organization = InputOrganization(id=organization.id, name=new_name)
+    input_organization = InputOrganization(
+        id=organization.id, name=new_name, address=new_address, city=new_city, country=new_country
+    )
     updated_organizations = await update_organizations_mutation(
         organizations=[input_organization]
     )  # Assuming update_organization_mutation exists
     updated_organization = updated_organizations[0]
     assert updated_organization.id == organization.id
     assert updated_organization.name == new_name
+    assert updated_organization.address == new_address
+    assert updated_organization.city == new_city
+    assert updated_organization.country == new_country
 
 
 @pytest.mark.asyncio

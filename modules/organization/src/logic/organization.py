@@ -1,5 +1,5 @@
 from uuid import UUID
-from models import DBOrganization, GraphQLOrganization, OrganizationFilter, InputOrganization
+from models import DBOrganization, GraphQLOrganization, OrganizationFilter, InputOrganization, User
 from exceptions.exceptions import EntityNotFound
 
 
@@ -15,14 +15,27 @@ async def get_organizations(filters: OrganizationFilter | None = None) -> list[D
     return await query.to_list()
 
 
-async def add_organizations(names: list[str]) -> list[DBOrganization]:
+async def add_organizations(
+    names: list[str], addresses: list[str], cities: list[str], countries: list[str]
+) -> list[DBOrganization]:
     organizations = []
-    for name in names:
-        organization = DBOrganization(name=name)
+    for name, address, city, country in zip(names, addresses, cities, countries):
+        organization = DBOrganization(name=name, address=address, city=city, country=country)
         await organization.insert()
         organizations.append(organization)
 
     return organizations
+
+
+async def add_organization(organization: InputOrganization, current_user: User) -> DBOrganization:
+    new_organization = DBOrganization(
+        name=organization.name, address=organization.address, city=organization.city, country=organization.country
+    )
+    await new_organization.insert()
+
+    current_user._organization_id = new_organization.id
+    await current_user.save()  # Assuming your User model has a save method
+    return new_organization
 
 
 async def edit_organizations(name: str, _id: UUID) -> DBOrganization:
@@ -50,7 +63,12 @@ async def remove_organizations(ids: list[UUID]) -> list[UUID]:
 async def create_organizations_mutation(organizations: list[InputOrganization]) -> list[DBOrganization]:
     _organizations = []
     for _organization in organizations:
-        organization = DBOrganization(name=_organization.name)
+        organization = DBOrganization(
+            name=_organization.name,
+            address=_organization.address,
+            city=_organization.city,
+            country=_organization.country,
+        )
 
         await organization.insert()
         _organizations.append(organization)
@@ -66,7 +84,14 @@ async def update_organizations_mutation(organizations: list[InputOrganization]) 
         organization_id = organization_data.id
         organization = await DBOrganization.get(document_id=organization_id)
         if organization:
-            update_doc = {"$set": {"name": organization_data.name}}
+            update_doc = {
+                "$set": {
+                    "name": organization_data.name,
+                    "address": organization_data.address,
+                    "city": organization_data.city,
+                    "country": organization_data.country,
+                }
+            }
             await organization.update(update_doc)
             updated_organizations.append(organization)
         else:
