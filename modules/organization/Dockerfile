@@ -48,8 +48,6 @@ RUN rm -rf /tmp/wheels
 USER fastapi
 COPY --chown=fastapi:fastapi ./entrypoint.sh /app
 COPY --chown=fastapi:fastapi ./src /app/src
-COPY --chown=fastapi:fastapi ./alembic /app/alembic
-COPY --chown=fastapi:fastapi ./alembic.ini /app
 COPY --chown=fastapi:fastapi ./export_schema.sh /app
 COPY --chown=fastapi:fastapi ./graphql /app/graphql
 

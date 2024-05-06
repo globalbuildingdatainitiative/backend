@@ -3,8 +3,7 @@ from models import DBOrganization
 
 
 @pytest.fixture()
-async def organizations(mongo) -> list[DBOrganization]:
-    """Creates sample organizations before each test"""
+async def organizations(app) -> list[DBOrganization]:
     organizations = []
 
     for i in range(3):

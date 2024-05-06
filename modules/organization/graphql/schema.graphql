@@ -1,14 +1,44 @@
-type GraphQLItem {
-  id: ID!
-  name: String!
+input FilterOptions {
+  equal: String = null
+  isTrue: Boolean = null
 }
 
 type Mutation {
-  """Creates a new Item"""
-  addItem(name: String!): GraphQLItem!
+  """
+  Creates a new Organization for each name in the provided list and returns them
+  """
+  addOrganizations(names: [String!]!): [Organization!]!
+
+  """Updates an existing Organization"""
+  updateOrganizations(Id: UUID!, name: String!): [Organization!]!
+
+  """
+  Deletes a list of Organizations by their IDs and returns a list of deleted IDs
+  """
+  deleteOrganizations(ids: [UUID!]!): [UUID!]!
+}
+
+type Organization {
+  id: UUID!
+  name: String!
+}
+
+input OrganizationFilter {
+  id: FilterOptions = null
+  name: FilterOptions = null
 }
 
 type Query {
-  """Returns all Items"""
-  items: [GraphQLItem!]!
+  _service: _Service!
+
+  """Returns all Organizations"""
+  organizations(filters: OrganizationFilter = null): [Organization!]!
+}
+
+scalar UUID
+
+scalar _Any
+
+type _Service {
+  sdl: String!
 }

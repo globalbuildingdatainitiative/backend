@@ -1,16 +1,17 @@
-import time
 from typing import Iterator
+from uuid import uuid4
 
 import docker
 import pytest
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncEngine
-from sqlmodel import SQLModel
 
+import core.auth
+import core.context
 from core.config import settings
-from core.connection import create_postgres_engine
+from core.connection import health_check_mongo, create_mongo_client
+from models import User
 
 
 @pytest.fixture(scope="session")
@@ -19,40 +20,66 @@ def docker_client():
 
 
 @pytest.fixture(scope="session")
-def postgres(docker_client):
+async def mongo(docker_client):
     container = docker_client.containers.run(
-        "postgres:13.1-alpine",
-        ports={"5432": settings.POSTGRES_PORT},
+        "mongo:7",
+        ports={"27017": settings.MONGO_PORT},
         environment={
-            "POSTGRES_DB": settings.POSTGRES_DB,
-            "POSTGRES_PASSWORD": settings.POSTGRES_PASSWORD,
-            "POSTGRES_USER": settings.POSTGRES_USER,
+            "MONGO_INITDB_DATABASE": settings.MONGO_DB,
+            "MONGO_INITDB_ROOT_USERNAME": settings.MONGO_USER,
+            "MONGO_INITDB_ROOT_PASSWORD": settings.MONGO_PASSWORD,
         },
+        name="mongo_database",
         detach=True,
         auto_remove=True,
     )
 
-    time.sleep(3)
+    await health_check_mongo()
     try:
         yield container
     finally:
         container.stop()
 
 
-@pytest.fixture()
-async def db(postgres) -> AsyncEngine:
-    engine = create_postgres_engine()
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
-
-    yield engine
-
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.drop_all)
+@pytest.fixture(scope="session")
+def user() -> User:
+    _user = User(id=uuid4(), organization_id=uuid4())
+    yield _user
 
 
-@pytest.fixture()
-async def app(db) -> FastAPI:
+@pytest.fixture(scope="session")
+def mock_supertokens(session_mocker):
+    def fake_supertokens():
+        pass
+
+    session_mocker.patch.object(
+        core.auth,
+        "supertokens_init",
+        fake_supertokens,
+    )
+
+
+@pytest.fixture(scope="session")
+def mock_get_context(user, session_mocker):
+    async def fake_get_context():
+        return {"user": user}
+
+    session_mocker.patch.object(
+        core.context,
+        "get_context",
+        fake_get_context,
+    )
+
+
+@pytest.fixture
+def database(mongo):
+    yield
+    client = create_mongo_client()
+    client.drop_database(settings.MONGO_DB)
+
+
+@pytest.fixture
+async def app(database, mock_supertokens, mock_get_context) -> FastAPI:
     from main import app
 
     async with LifespanManager(app):
@@ -65,7 +92,7 @@ async def client(app: FastAPI) -> Iterator[AsyncClient]:
 
     async with AsyncClient(
         app=app,
-        base_url=settings.SERVER_HOST,
+        base_url=str(settings.SERVER_HOST),
     ) as _client:
         try:
             yield _client

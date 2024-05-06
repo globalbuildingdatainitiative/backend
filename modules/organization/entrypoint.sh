@@ -4,9 +4,6 @@ set -e
 # Wait for database to be online
 python /app/src/initialize.py
 
-# Run migrations
-alembic upgrade head
-
 # Start FastAPI
 cd /app/src
 echo "Running UVicorn "

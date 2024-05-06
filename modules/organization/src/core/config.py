@@ -1,48 +1,46 @@
-from typing import Any
-
-from pydantic import AnyHttpUrl, BaseSettings, PostgresDsn, validator
+from pydantic import AnyHttpUrl, MongoDsn, field_validator
+from pydantic_core.core_schema import ValidationInfo
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
     API_STR: str = "/api"
     SERVER_NAME: str
     SERVER_HOST: AnyHttpUrl
-    BACKEND_CORS_ORIGINS: list[AnyHttpUrl] = [
-        "http://localhost:3000",
-        "http://0.0.0.0:3000",
+    BACKEND_CORS_ORIGINS: list[str] = [
+        "http://localhost:8000",
     ]
+    SUPERTOKENS_CONNECTION_URI: AnyHttpUrl
+    SUPERTOKENS_API_KEY: str
 
-    @validator("BACKEND_CORS_ORIGINS", pre=True)
+    MONGO_USER: str
+    MONGO_PASSWORD: str
+    MONGO_HOST: str
+    MONGO_DB: str = ""
+    MONGO_PORT: int = 27017
+    MONGO_URI: MongoDsn | None = None
+
+    @field_validator("MONGO_URI")
+    @classmethod
+    def assemble_db_connection(cls, v: str | None, info: ValidationInfo) -> MongoDsn:
+        if isinstance(v, str):
+            return v
+        return MongoDsn.build(
+            scheme="mongodb",
+            username=info.data.get("MONGO_USER"),
+            password=info.data.get("MONGO_PASSWORD"),
+            host=info.data.get("MONGO_HOST"),
+            port=info.data.get("MONGO_PORT"),
+        )
+
+    @field_validator("BACKEND_CORS_ORIGINS")
+    @classmethod
     def assemble_cors_origins(cls, v: str | list[str]) -> list[str] | str:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
         elif isinstance(v, (list, str)):
             return v
         raise ValueError(v)
-
-    # Postgres
-    POSTGRES_HOST: str
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_DB: str
-    POSTGRES_PORT: str
-    POSTGRES_SSL: bool = False
-    POSTGRES_MAX_OVERFLOW = 30
-    POSTGRES_POOL_SIZE: int = 20
-    SQLALCHEMY_DATABASE_URI: PostgresDsn | None = None
-
-    @validator("SQLALCHEMY_DATABASE_URI", pre=True)
-    def assemble_db_connection(cls, v: str | None, values: dict[str, Any]) -> Any:
-        if isinstance(v, str):
-            return v
-        return PostgresDsn.build(
-            scheme="postgresql+asyncpg",
-            user=values.get("POSTGRES_USER"),
-            password=values.get("POSTGRES_PASSWORD"),
-            host=values.get("POSTGRES_HOST"),
-            path=f"/{values.get('POSTGRES_DB') or ''}",
-            port=values.get("POSTGRES_PORT"),
-        )
 
     class Config:
         case_sensitive = True

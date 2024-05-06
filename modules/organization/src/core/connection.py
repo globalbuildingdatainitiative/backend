@@ -1,30 +1,37 @@
-from typing import AsyncGenerator
+import logging
 
-from sqlalchemy.orm import sessionmaker
-from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlalchemy.ext.asyncio import create_async_engine
+from core.config import settings
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
 
-from .config import settings
-
-
-def create_postgres_engine():
-    return create_async_engine(
-        settings.SQLALCHEMY_DATABASE_URI,
-        pool_pre_ping=True,
-        future=True,
-        pool_size=settings.POSTGRES_POOL_SIZE,
-        max_overflow=settings.POSTGRES_MAX_OVERFLOW,
-        connect_args={"ssl": settings.POSTGRES_SSL},
-    )
+logger = logging.getLogger(__name__)
 
 
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    local_session = sessionmaker(
-        autocommit=False,
-        autoflush=False,
-        bind=create_postgres_engine(),
-        class_=AsyncSession,
-        expire_on_commit=False,
-    )
-    async with local_session() as session:
-        yield session
+def create_mongo_client() -> AsyncIOMotorClient:
+    """Create a new client to the Mongo database"""
+
+    client = AsyncIOMotorClient(settings.MONGO_URI.__str__(), uuidRepresentation="standard")
+    return client
+
+
+def get_database() -> AsyncIOMotorDatabase:
+    client = create_mongo_client()
+    return client[settings.MONGO_DB]
+
+
+@retry(
+    stop=stop_after_attempt(60 * 5),
+    wait=wait_fixed(1),
+    before=before_log(logger, logging.INFO),
+    after=after_log(logger, logging.WARN),
+)
+async def health_check_mongo():
+    try:
+        db = get_database()
+        response = await db.command("ping")
+        logger.info(f"Got response from ping: {response}")
+        if not response.get("ok"):
+            raise ConnectionError
+    except Exception as e:
+        logger.error(e)
+        raise e
