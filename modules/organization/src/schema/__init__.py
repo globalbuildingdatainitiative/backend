@@ -9,7 +9,6 @@ from .organization import (
     add_organizations_mutation,
     edit_organizations_mutation,
     remove_organizations_mutation,
-    add_organization_mutation,
 )
 
 
@@ -23,14 +22,9 @@ class Query:
 
 @strawberry.type
 class Mutation:
-    add_organizations: list[GraphQLOrganization] = strawberry.field(
+    create_organizations: list[GraphQLOrganization] = strawberry.field(
         resolver=add_organizations_mutation,
         description=getdoc(add_organizations_mutation),
-    )
-
-    add_organization: list[GraphQLOrganization] = strawberry.field(
-        resolver=add_organization_mutation,
-        description=getdoc(add_organization_mutation),
     )
 
     update_organizations: list[GraphQLOrganization] = strawberry.field(

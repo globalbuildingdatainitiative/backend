@@ -13,13 +13,12 @@ input InputOrganization {
 
 type Mutation {
   """
-  Creates a new Organization for each name in the provided list and returns them
+  Creates multiple organizations and associates them with the current user
   """
-  addOrganizations(names: [String!]!, addresses: [String!]!, cities: [String!]!, countries: [String!]!): [Organization!]!
-  addOrganization(organization: InputOrganization!): [Organization!]!
+  createOrganizations(organizations: [InputOrganization!]!): [Organization!]!
 
   """Updates an existing Organization"""
-  updateOrganizations(Id: UUID!, name: String!): [Organization!]!
+  updateOrganizations(organizations: [InputOrganization!]!): [Organization!]!
 
   """
   Deletes a list of Organizations by their IDs and returns a list of deleted IDs

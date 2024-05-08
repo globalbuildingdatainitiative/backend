@@ -5,4 +5,4 @@ from pydantic import BaseModel
 
 class User(BaseModel):
     id: UUID
-    _organization_id: UUID = None
+    organization_id: UUID = None

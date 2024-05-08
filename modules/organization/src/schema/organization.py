@@ -4,45 +4,36 @@ from strawberry.types import Info
 
 from logic import (
     get_organizations,
-    add_organizations,
-    edit_organizations,
-    remove_organizations,
-    add_organization,
+    create_organizations_mutation,
+    update_organizations_mutation,
+    delete_organizations_mutation,
 )
-from models import GraphQLOrganization, OrganizationFilter, InputOrganization
+from models import OrganizationFilter, InputOrganization, DBOrganization
 
 
-async def organizations_query(info: Info, filters: OrganizationFilter | None = None) -> list[GraphQLOrganization]:
+async def organizations_query(info: Info, filters: OrganizationFilter | None = None) -> list[DBOrganization]:
     """Returns all Organizations"""
 
     organizations = await get_organizations(filters)
     return organizations
 
 
-async def add_organizations_mutation(
-    info: Info, names: list[str], addresses: list[str], cities: list[str], countries: list[str]
-) -> list[GraphQLOrganization]:
-    """Creates a new Organization for each name in the provided list and returns them"""
-
-    organizations = await add_organizations(names, addresses, cities, countries)
-    return organizations
-
-
-async def add_organization_mutation(info: Info, organization: InputOrganization) -> GraphQLOrganization:
-    current_user = info.context["current_user"]
-    new_organization = await add_organization(organization, current_user)  # assuming you have the user_id
+async def add_organizations_mutation(info: Info, organizations: list[InputOrganization]) -> list[DBOrganization]:
+    """Creates multiple organizations and associates them with the current user"""
+    current_user = info.context.get("user")
+    new_organization = await create_organizations_mutation(organizations, current_user)
     return new_organization
 
 
-async def edit_organizations_mutation(info: Info, _id: UUID, name: str) -> list[GraphQLOrganization]:
+async def edit_organizations_mutation(info: Info, organizations: list[InputOrganization]) -> list[DBOrganization]:
     """Updates an existing Organization"""
 
-    organizations = await edit_organizations(name, _id)
+    organizations = await update_organizations_mutation(organizations)
     return organizations
 
 
 async def remove_organizations_mutation(info: Info, ids: list[UUID]) -> list[UUID]:
     """Deletes a list of Organizations by their IDs and returns a list of deleted IDs"""
 
-    organizations = await remove_organizations(ids)
+    organizations = await delete_organizations_mutation(ids)
     return organizations

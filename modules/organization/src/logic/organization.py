@@ -1,6 +1,11 @@
 from uuid import UUID
-from models import DBOrganization, GraphQLOrganization, OrganizationFilter, InputOrganization, User
+from models import DBOrganization, OrganizationFilter, InputOrganization, User
 from exceptions.exceptions import EntityNotFound
+from models.country_codes import get_country_codes_by_name
+
+
+def get_country_code(country_name: str) -> str:
+    return get_country_codes_by_name(country_name=country_name)
 
 
 async def get_organizations(filters: OrganizationFilter | None = None) -> list[DBOrganization]:
@@ -15,68 +20,26 @@ async def get_organizations(filters: OrganizationFilter | None = None) -> list[D
     return await query.to_list()
 
 
-async def add_organizations(
-    names: list[str], addresses: list[str], cities: list[str], countries: list[str]
+async def create_organizations_mutation(
+    organizations: list[InputOrganization], current_user: User
 ) -> list[DBOrganization]:
-    organizations = []
-    for name, address, city, country in zip(names, addresses, cities, countries):
-        organization = DBOrganization(name=name, address=address, city=city, country=country)
-        await organization.insert()
-        organizations.append(organization)
-
-    return organizations
-
-
-async def add_organization(organization: InputOrganization, current_user: User) -> DBOrganization:
-    new_organization = DBOrganization(
-        name=organization.name, address=organization.address, city=organization.city, country=organization.country
-    )
-    await new_organization.insert()
-
-    current_user._organization_id = new_organization.id
-    await current_user.save()  # Assuming your User model has a save method
-    return new_organization
-
-
-async def edit_organizations(name: str, _id: UUID) -> DBOrganization:
-    organization = await DBOrganization.get(document_id=_id)
-    if organization:
-        update_doc = {"$set": {"name": name}}
-        await organization.update(update_doc)
-    else:
-        raise EntityNotFound("ERROR: Organization Not Found", name)
-    return organization
-
-
-async def remove_organizations(ids: list[UUID]) -> list[UUID]:
-    deleted_ids = []
-    for organization_id in ids:
-        organization = await DBOrganization.get(document_id=organization_id)
-        if organization:
-            await organization.delete()
-            deleted_ids.append(organization_id)
-        else:
-            raise EntityNotFound("ERROR: Organization Not Found", str(organization_id))
-    return deleted_ids
-
-
-async def create_organizations_mutation(organizations: list[InputOrganization]) -> list[DBOrganization]:
-    _organizations = []
-    for _organization in organizations:
-        organization = DBOrganization(
-            name=_organization.name,
-            address=_organization.address,
-            city=_organization.city,
-            country=_organization.country,
+    new_organizations = []
+    for organization_data in organizations:
+        new_organization = DBOrganization(
+            name=organization_data.name,
+            address=organization_data.address,
+            city=organization_data.city,
+            country=get_country_code(organization_data.country),
         )
+        await new_organization.insert()
+        new_organizations.append(new_organization)
 
-        await organization.insert()
-        _organizations.append(organization)
+        current_user.organization_id = new_organization.id
 
-    return _organizations
+    return new_organizations
 
 
-async def update_organizations_mutation(organizations: list[InputOrganization]) -> list[GraphQLOrganization]:
+async def update_organizations_mutation(organizations: list[InputOrganization]) -> list[DBOrganization]:
     """Updates a list of existing Organizations"""
 
     updated_organizations = []
@@ -89,7 +52,7 @@ async def update_organizations_mutation(organizations: list[InputOrganization]) 
                     "name": organization_data.name,
                     "address": organization_data.address,
                     "city": organization_data.city,
-                    "country": organization_data.country,
+                    "country": get_country_code(organization_data.country),
                 }
             }
             await organization.update(update_doc)

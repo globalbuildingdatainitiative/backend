@@ -11,6 +11,7 @@ tenacity = "*"
 beanie = "*"
 supertokens-python = "*"
 bson = "*"
+iso3166 = "*"
 
 [dev-packages]
 asgi-lifespan="*"
