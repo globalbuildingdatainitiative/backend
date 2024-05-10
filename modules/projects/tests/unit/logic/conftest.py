@@ -1,15 +1,20 @@
 import datetime
+import uuid
 
+import lcax
 import pytest
-from models import DBProject, DBContribution
+
+from models import DBContribution
+from models import DBProject
 
 
 @pytest.fixture()
-async def projects(app) -> list[DBProject]:
+async def projects(app, datafix_dir) -> list[DBProject]:
     projects = []
 
     for i in range(3):
-        project = DBProject(name=f"Project {i}")
+        project = DBProject(**lcax.convert_lcabyg((datafix_dir / f"project.json").read_text()))
+        project.id = uuid.uuid4()
         await project.insert()
         projects.append(project)
 

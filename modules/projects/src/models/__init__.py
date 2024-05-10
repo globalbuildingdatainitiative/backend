@@ -5,13 +5,13 @@ from models.contribution import (
     ContributionSort,
     ContributionFilters,
 )
-from models.project import DBProject, GraphQLProject, InputProject
+from models.project import DBProject, GraphQLProject, GraphQLInputProject
 from models.user import User
 
 __all__ = [
     DBProject,
     GraphQLProject,
-    InputProject,
+    GraphQLInputProject,
     DBContribution,
     GraphQLContribution,
     InputContribution,

@@ -22,6 +22,7 @@ async def get_contributions(
 async def create_contributions(contributions: list[InputContribution], user: User) -> list[DBContribution]:
     _contributions = []
     for _contribution in contributions:
+        # TODO - Fix Me!
         contribution = DBContribution(
             project=DBProject(**_contribution.project.__dict__), user_id=user.id, organization_id=user.organization_id
         )

@@ -1,13 +1,18 @@
+import uuid
+
+import lcax
 import pytest
+
 from models import DBProject, DBContribution
 
 
 @pytest.fixture()
-async def projects(mongo) -> list[DBProject]:
+async def projects(mongo, datafix_dir) -> list[DBProject]:
     projects = []
 
     for i in range(3):
-        project = DBProject(name=f"Project {i}")
+        project = DBProject(**lcax.convert_lcabyg((datafix_dir / f"project.json").read_text()))
+        project.id = uuid.uuid4()
         await project.insert()
         projects.append(project)
 

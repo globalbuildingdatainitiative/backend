@@ -1,10 +1,12 @@
-from models import DBProject, GraphQLProject
 from strawberry.types import Info
+
+from logic import get_projects
+from models import GraphQLProject
 
 
 async def projects_query(info: Info) -> list[GraphQLProject]:
     """Returns all Projects"""
 
-    projects = await DBProject.find_all().to_list()
+    projects = await get_projects()
 
     return projects

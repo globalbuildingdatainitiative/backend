@@ -5,7 +5,7 @@ import strawberry
 from beanie import Document, Link
 from pydantic import BaseModel, Field
 from .sort_filter import BaseFilter, SortOptions, FilterOptions
-from .project import DBProject, GraphQLProject, InputProject
+from .project import DBProject, GraphQLProject, GraphQLInputProject
 
 
 class ContributionBase(BaseModel):
@@ -26,7 +26,7 @@ class GraphQLContribution:
 
 @strawberry.input
 class InputContribution:
-    project: InputProject
+    project: GraphQLInputProject
 
 
 @strawberry.input

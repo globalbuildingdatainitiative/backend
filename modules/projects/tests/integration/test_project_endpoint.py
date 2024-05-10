@@ -10,6 +10,10 @@ async def test_projects_query(client: AsyncClient, projects):
             projects {
                 id
                 name
+                assemblies {
+                    id
+                    name
+                }
             }
         }
     """
@@ -26,3 +30,4 @@ async def test_projects_query(client: AsyncClient, projects):
 
     assert not data.get("errors")
     assert data.get("data", {}).get("projects")
+    assert data.get("data", {}).get("projects", [])[0].get("assemblies")
