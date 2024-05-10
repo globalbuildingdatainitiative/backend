@@ -1,5 +1,5 @@
 from uuid import UUID
-from models import DBOrganization, GraphQLOrganization, OrganizationFilter, InputOrganization
+from models import DBOrganization, OrganizationFilter, InputOrganization, User
 from exceptions.exceptions import EntityNotFound
 
 
@@ -15,50 +15,28 @@ async def get_organizations(filters: OrganizationFilter | None = None) -> list[D
     return await query.to_list()
 
 
-async def add_organizations(names: list[str]) -> list[DBOrganization]:
-    organizations = []
-    for name in names:
-        organization = DBOrganization(name=name)
-        await organization.insert()
-        organizations.append(organization)
+async def create_organizations_mutation(
+    organizations: list[InputOrganization], current_user: User
+) -> list[DBOrganization]:
+    from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
 
-    return organizations
+    new_organizations = []
+    for i, organization_data in enumerate(organizations):
+        new_organization = DBOrganization(
+            name=organization_data.name,
+            address=organization_data.address,
+            city=organization_data.city,
+            country=organization_data.country,
+        )
+        await new_organization.insert()
+        new_organizations.append(new_organization)
 
+    await update_user_metadata(str(current_user.id), {"organization_id": str(new_organizations[0].id)})
 
-async def edit_organizations(name: str, _id: UUID) -> DBOrganization:
-    organization = await DBOrganization.get(document_id=_id)
-    if organization:
-        update_doc = {"$set": {"name": name}}
-        await organization.update(update_doc)
-    else:
-        raise EntityNotFound("ERROR: Organization Not Found", name)
-    return organization
-
-
-async def remove_organizations(ids: list[UUID]) -> list[UUID]:
-    deleted_ids = []
-    for organization_id in ids:
-        organization = await DBOrganization.get(document_id=organization_id)
-        if organization:
-            await organization.delete()
-            deleted_ids.append(organization_id)
-        else:
-            raise EntityNotFound("ERROR: Organization Not Found", str(organization_id))
-    return deleted_ids
+    return new_organizations
 
 
-async def create_organizations_mutation(organizations: list[InputOrganization]) -> list[DBOrganization]:
-    _organizations = []
-    for _organization in organizations:
-        organization = DBOrganization(name=_organization.name)
-
-        await organization.insert()
-        _organizations.append(organization)
-
-    return _organizations
-
-
-async def update_organizations_mutation(organizations: list[InputOrganization]) -> list[GraphQLOrganization]:
+async def update_organizations_mutation(organizations: list[InputOrganization]) -> list[DBOrganization]:
     """Updates a list of existing Organizations"""
 
     updated_organizations = []
@@ -66,7 +44,14 @@ async def update_organizations_mutation(organizations: list[InputOrganization]) 
         organization_id = organization_data.id
         organization = await DBOrganization.get(document_id=organization_id)
         if organization:
-            update_doc = {"$set": {"name": organization_data.name}}
+            update_doc = {
+                "$set": {
+                    "name": organization_data.name,
+                    "address": organization_data.address,
+                    "city": organization_data.city,
+                    "country": organization_data.country,
+                }
+            }
             await organization.update(update_doc)
             updated_organizations.append(organization)
         else:

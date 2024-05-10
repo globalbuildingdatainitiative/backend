@@ -1,16 +1,275 @@
+enum CountryCodes {
+  AFG
+  ALA
+  ALB
+  DZA
+  ASM
+  AND
+  AGO
+  AIA
+  ATA
+  ATG
+  ARG
+  ARM
+  ABW
+  AUS
+  AUT
+  AZE
+  BHS
+  BHR
+  BGD
+  BRB
+  BLR
+  BEL
+  BLZ
+  BEN
+  BMU
+  BTN
+  BOL
+  BES
+  BIH
+  BWA
+  BVT
+  BRA
+  IOT
+  BRN
+  BGR
+  BFA
+  BDI
+  CPV
+  KHM
+  CMR
+  CAN
+  CYM
+  CAF
+  TCD
+  CHL
+  CHN
+  CXR
+  CCK
+  COL
+  COM
+  COG
+  COD
+  COK
+  CRI
+  CIV
+  HRV
+  CUB
+  CUW
+  CYP
+  CZE
+  DNK
+  DJI
+  DMA
+  DOM
+  ECU
+  EGY
+  SLV
+  GNQ
+  ERI
+  EST
+  SWZ
+  ETH
+  FLK
+  FRO
+  FJI
+  FIN
+  FRA
+  GUF
+  PYF
+  ATF
+  GAB
+  GMB
+  GEO
+  DEU
+  GHA
+  GIB
+  GRC
+  GRL
+  GRD
+  GLP
+  GUM
+  GTM
+  GGY
+  GIN
+  GNB
+  GUY
+  HTI
+  HMD
+  VAT
+  HND
+  HKG
+  HUN
+  ISL
+  IND
+  IDN
+  IRN
+  IRQ
+  IRL
+  ISR
+  ITA
+  JAM
+  JPN
+  JEY
+  JOR
+  KAZ
+  KEN
+  KIR
+  PRK
+  KOR
+  KWT
+  KGZ
+  LAO
+  LVA
+  LBN
+  LSO
+  LBR
+  LBY
+  LIE
+  LTU
+  LUX
+  MAC
+  MDG
+  MWI
+  MYS
+  MDV
+  MLI
+  MLT
+  MHL
+  MTQ
+  MRT
+  MUS
+  MYT
+  MEX
+  FSM
+  MDA
+  MCO
+  MNG
+  MNE
+  MSR
+  MAR
+  MOZ
+  MMR
+  NAM
+  NRU
+  NPL
+  NLD
+  NCL
+  NZL
+  NIC
+  NER
+  NGA
+  NIU
+  NFK
+  MNP
+  NOR
+  OMN
+  PAK
+  PLW
+  PSE
+  PAN
+  PNG
+  PRY
+  PER
+  PHL
+  PCN
+  POL
+  PRT
+  PRI
+  QAT
+  REU
+  ROU
+  RUS
+  RWA
+  RYU
+  SBH
+  SHN
+  KNA
+  LCA
+  MAF
+  SPM
+  VCT
+  WSM
+  SMR
+  STP
+  SAU
+  SEN
+  SRB
+  SYC
+  SLE
+  SGP
+  SXM
+  SVK
+  SVN
+  SLB
+  SOM
+  ZAF
+  SGS
+  SSD
+  ESP
+  LKA
+  SDN
+  SUR
+  SJM
+  SWE
+  CHE
+  SYR
+  TWN
+  TJK
+  TZA
+  THA
+  TLS
+  TGO
+  TKL
+  TON
+  TTO
+  TUN
+  TUR
+  TKM
+  TCA
+  TUV
+  UGA
+  UKR
+  ARE
+  GBR
+  UMI
+  USA
+  URY
+  UZB
+  VUT
+  VEN
+  VNM
+  VGB
+  VIR
+  WLF
+  ESH
+  YEM
+  ZMB
+  ZWE
+}
+
 input FilterOptions {
   equal: String = null
   isTrue: Boolean = null
 }
 
+input InputOrganization {
+  id: UUID! = "annotation=NoneType required=False default_factory=uuid4"
+  name: String!
+  address: String!
+  city: String!
+  country: CountryCodes!
+}
+
 type Mutation {
   """
-  Creates a new Organization for each name in the provided list and returns them
+  Creates multiple organizations and associates them with the current user
   """
-  addOrganizations(names: [String!]!): [Organization!]!
+  createOrganizations(organizations: [InputOrganization!]!): [Organization!]!
 
   """Updates an existing Organization"""
-  updateOrganizations(Id: UUID!, name: String!): [Organization!]!
+  updateOrganizations(organizations: [InputOrganization!]!): [Organization!]!
 
   """
   Deletes a list of Organizations by their IDs and returns a list of deleted IDs
@@ -21,11 +280,17 @@ type Mutation {
 type Organization {
   id: UUID!
   name: String!
+  address: String!
+  city: String!
+  country: CountryCodes!
 }
 
 input OrganizationFilter {
   id: FilterOptions = null
   name: FilterOptions = null
+  address: FilterOptions = null
+  city: FilterOptions = null
+  country: FilterOptions = null
 }
 
 type Query {

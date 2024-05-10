@@ -22,7 +22,7 @@ class Query:
 
 @strawberry.type
 class Mutation:
-    add_organizations: list[GraphQLOrganization] = strawberry.field(
+    create_organizations: list[GraphQLOrganization] = strawberry.field(
         resolver=add_organizations_mutation,
         description=getdoc(add_organizations_mutation),
     )
