@@ -9,7 +9,6 @@ from logic import (
 from models import InputOrganization, CountryCodes
 
 
-
 @pytest.mark.asyncio
 async def test_get_organizations(organizations):
     """Tests retrieving all organizations"""
@@ -31,9 +30,7 @@ async def test_create_organizations(organizations, user, mock_update_user_metada
     city = "New City"
     country = CountryCodes.USA
 
-    organization_data = InputOrganization(
-        name=name, address=address, city=city, country=country
-    )
+    organization_data = InputOrganization(name=name, address=address, city=city, country=country)
 
     created_organization = await create_organizations_mutation(organizations=[organization_data], current_user=user)
 
@@ -56,9 +53,7 @@ async def test_update_organizations(organizations):
     input_organization = InputOrganization(
         id=organization.id, name=new_name, address=new_address, city=new_city, country=new_country
     )
-    updated_organizations = await update_organizations_mutation(
-        organizations=[input_organization]
-    )
+    updated_organizations = await update_organizations_mutation(organizations=[input_organization])
 
     updated_organization = updated_organizations[0]
 

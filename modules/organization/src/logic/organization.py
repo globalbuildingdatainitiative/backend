@@ -3,7 +3,6 @@ from models import DBOrganization, OrganizationFilter, InputOrganization, User
 from exceptions.exceptions import EntityNotFound
 
 
-
 async def get_organizations(filters: OrganizationFilter | None = None) -> list[DBOrganization]:
     query = DBOrganization.find()
     if filters:
@@ -20,6 +19,7 @@ async def create_organizations_mutation(
     organizations: list[InputOrganization], current_user: User
 ) -> list[DBOrganization]:
     from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
+
     new_organizations = []
     for i, organization_data in enumerate(organizations):
         new_organization = DBOrganization(
