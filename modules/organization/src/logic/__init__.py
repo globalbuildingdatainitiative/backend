@@ -1,5 +1,4 @@
 from .organization import (
-    get_country_code,
     get_organizations,
     create_organizations_mutation,
     update_organizations_mutation,
@@ -8,7 +7,6 @@ from .organization import (
 
 
 __all__ = [
-    get_country_code,
     get_organizations,
     create_organizations_mutation,
     update_organizations_mutation,

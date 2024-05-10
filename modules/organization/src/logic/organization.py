@@ -1,11 +1,7 @@
 from uuid import UUID
 from models import DBOrganization, OrganizationFilter, InputOrganization, User
 from exceptions.exceptions import EntityNotFound
-from models.country_codes import get_country_codes_by_name
 
-
-def get_country_code(country_name: str) -> str:
-    return get_country_codes_by_name(country_name=country_name)
 
 
 async def get_organizations(filters: OrganizationFilter | None = None) -> list[DBOrganization]:
@@ -23,18 +19,19 @@ async def get_organizations(filters: OrganizationFilter | None = None) -> list[D
 async def create_organizations_mutation(
     organizations: list[InputOrganization], current_user: User
 ) -> list[DBOrganization]:
+    from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
     new_organizations = []
-    for organization_data in organizations:
+    for i, organization_data in enumerate(organizations):
         new_organization = DBOrganization(
             name=organization_data.name,
             address=organization_data.address,
             city=organization_data.city,
-            country=get_country_code(organization_data.country),
+            country=organization_data.country,
         )
         await new_organization.insert()
         new_organizations.append(new_organization)
 
-        current_user.organization_id = new_organization.id
+    await update_user_metadata(str(current_user.id), {"organization_id": str(new_organizations[0].id)})
 
     return new_organizations
 
@@ -52,7 +49,7 @@ async def update_organizations_mutation(organizations: list[InputOrganization]) 
                     "name": organization_data.name,
                     "address": organization_data.address,
                     "city": organization_data.city,
-                    "country": get_country_code(organization_data.country),
+                    "country": organization_data.country,
                 }
             }
             await organization.update(update_doc)

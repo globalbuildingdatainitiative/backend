@@ -4,6 +4,7 @@ from beanie import Document
 from pydantic import BaseModel, Field
 
 from .sort_filter import BaseFilter, FilterOptions
+from .country_codes import CountryCodes
 
 
 class OrganizationBase(BaseModel):
@@ -11,7 +12,7 @@ class OrganizationBase(BaseModel):
     name: str
     address: str
     city: str
-    country: str
+    country: CountryCodes
 
 
 class DBOrganization(OrganizationBase, Document):
@@ -29,7 +30,7 @@ class InputOrganization:
     name: str
     address: str
     city: str
-    country: str
+    country: CountryCodes
 
 
 @strawberry.input
