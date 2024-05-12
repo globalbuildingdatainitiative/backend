@@ -7,7 +7,6 @@ type AreaType {
 }
 
 type Assembly {
-  products: [Product!]!
   category: String
   classification: [Classification!]
   comment: String
@@ -15,6 +14,7 @@ type Assembly {
   id: UUID!
   metaData: JSON!
   name: String!
+  products: [Product!]!
   quantity: Float!
   results: JSON!
   unit: Unit!

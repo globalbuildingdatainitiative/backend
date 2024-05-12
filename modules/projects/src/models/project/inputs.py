@@ -17,9 +17,19 @@ from lcax import TechFlow as LCAxTechFlow
 from lcax import ValueUnit as LCAxValueUnit
 from strawberry.scalars import JSON
 
-from models.project.enums import GraphQLUnit, GraphQLCountry, GraphQLStandard, GraphQLSubType, \
-    GraphQLGeneralEnergyClass, GraphQLRoofType, GraphQLImpactCategoryKey, \
-    GraphQLLifeCycleStage, GraphQLProjectPhase, GraphQLBuildingType, GraphQLBuildingTypology
+from models.project.enums import (
+    GraphQLUnit,
+    GraphQLCountry,
+    GraphQLStandard,
+    GraphQLSubType,
+    GraphQLGeneralEnergyClass,
+    GraphQLRoofType,
+    GraphQLImpactCategoryKey,
+    GraphQLLifeCycleStage,
+    GraphQLProjectPhase,
+    GraphQLBuildingType,
+    GraphQLBuildingTypology,
+)
 
 
 @strawberry.experimental.pydantic.input(model=LCAxConversion, name="InputConversion")
@@ -170,7 +180,7 @@ class GraphQLInputSoftwareInfo:
     pass
 
 
-@strawberry.experimental.pydantic.input(model=LCAxProject, name="InputProject")
+@strawberry.experimental.pydantic.type(model=LCAxProject, name="InputProject", is_input=True)
 class GraphQLInputProject:
     assemblies: list[GraphQLInputAssembly]
     classification_system: strawberry.auto

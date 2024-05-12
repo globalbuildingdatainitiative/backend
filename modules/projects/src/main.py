@@ -6,9 +6,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from supertokens_python.recipe.session.exceptions import UnauthorisedError
+
 from core.auth import supertokens_init
 from core.config import settings
 from core.connection import get_database
+from models import DBAssembly, DBProduct, DBEPD, DBTechFlow, DBImpactData
 from routes import graphql_app
 
 if "test" not in settings.SERVER_NAME.lower():
@@ -41,7 +43,9 @@ async def app_init():
     from models import DBProject, DBContribution
 
     db = get_database()
-    await init_beanie(database=db, document_models=[DBProject, DBContribution])
+    await init_beanie(
+        database=db, document_models=[DBProject, DBAssembly, DBProduct, DBEPD, DBTechFlow, DBImpactData, DBContribution]
+    )
 
 
 @app.exception_handler(UnauthorisedError)

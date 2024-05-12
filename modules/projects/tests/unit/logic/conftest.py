@@ -3,6 +3,7 @@ import uuid
 
 import lcax
 import pytest
+from beanie import WriteRules
 
 from models import DBContribution
 from models import DBProject
@@ -13,9 +14,17 @@ async def projects(app, datafix_dir) -> list[DBProject]:
     projects = []
 
     for i in range(3):
-        project = DBProject(**lcax.convert_lcabyg((datafix_dir / f"project.json").read_text()))
+        input_project = lcax.convert_lcabyg((datafix_dir / "project.json").read_text())
+        assemblies = []
+        for assembly in input_project.get("assemblies").values():
+            assembly.update({"products": list(assembly.get("products").values())})
+            assemblies.append(assembly)
+
+        input_project.update({"assemblies": assemblies})
+
+        project = DBProject(**input_project)
         project.id = uuid.uuid4()
-        await project.insert()
+        await project.insert(link_rule=WriteRules.WRITE)
         projects.append(project)
 
     yield projects
@@ -32,7 +41,7 @@ async def contributions(projects, user) -> list[DBContribution]:
             uploaded_at=datetime.datetime.now(),
             project=projects[i],
         )
-        await contribution.insert()
+        await contribution.insert(link_rule=WriteRules.WRITE)
         _contributions.append(contribution)
 
     yield _contributions

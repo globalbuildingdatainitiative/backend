@@ -1,4 +1,4 @@
-from typing import Union, TYPE_CHECKING
+from typing import Union
 from uuid import UUID
 
 import strawberry
@@ -18,13 +18,20 @@ from lcax import TechFlow as LCAxTechFlow
 from lcax import ValueUnit as LCAxValueUnit
 from strawberry.scalars import JSON
 
+from models.project.enums import (
+    GraphQLUnit,
+    GraphQLCountry,
+    GraphQLStandard,
+    GraphQLSubType,
+    GraphQLBuildingType,
+    GraphQLBuildingTypology,
+    GraphQLGeneralEnergyClass,
+    GraphQLRoofType,
+    GraphQLImpactCategoryKey,
+    GraphQLLifeCycleStage,
+    GraphQLProjectPhase,
+)
 
-from models.project.enums import GraphQLUnit, GraphQLCountry, GraphQLStandard, GraphQLSubType, GraphQLBuildingType, \
-    GraphQLBuildingTypology, GraphQLGeneralEnergyClass, GraphQLRoofType, GraphQLImpactCategoryKey, \
-    GraphQLLifeCycleStage, GraphQLProjectPhase
-
-if TYPE_CHECKING:
-    from models import DBProject
 
 @strawberry.experimental.pydantic.type(model=LCAxConversion, name="Conversion")
 class GraphQLConversion:
@@ -99,9 +106,7 @@ class GraphQLAssembly:
     id: UUID
     meta_data: JSON
     name: strawberry.auto
-    @strawberry.field
-    def products(self) -> list[GraphQLProduct]:
-        return list(self.products.values())
+    products: list[GraphQLProduct]
     quantity: strawberry.auto
     results: JSON
     unit: GraphQLUnit
@@ -166,10 +171,7 @@ class GraphQLSoftwareInfo:
 
 @strawberry.experimental.pydantic.type(model=LCAxProject, name="Project")
 class GraphQLProject:
-    @strawberry.field
-    def assemblies(self: "DBProject") -> list[GraphQLAssembly]:
-        return list(self.assemblies.values())
-
+    assemblies: list[GraphQLAssembly]
     classification_system: strawberry.auto
     comment: strawberry.auto
     description: strawberry.auto

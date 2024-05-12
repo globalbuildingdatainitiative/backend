@@ -42,7 +42,9 @@ async def test_add_contributions_mutation(client: AsyncClient, datafix_dir):
         }
     """
 
-    input_project = lcax.convert_lcabyg((datafix_dir / f"project.json").read_text(), as_type=lcax.Project).model_dump(mode='json', by_alias=True)
+    input_project = lcax.convert_lcabyg((datafix_dir / "project.json").read_text(), as_type=lcax.Project).model_dump(
+        mode="json", by_alias=True
+    )
     assemblies = []
     for assembly in input_project.get("assemblies").values():
         assembly.update({"products": list(assembly.get("products").values())})
@@ -53,9 +55,7 @@ async def test_add_contributions_mutation(client: AsyncClient, datafix_dir):
         f"{settings.API_STR}/graphql",
         json={
             "query": query,
-            "variables": {"contributions": [
-                {"project": input_project}
-            ]},
+            "variables": {"contributions": [{"project": input_project}]},
         },
     )
 
@@ -64,4 +64,4 @@ async def test_add_contributions_mutation(client: AsyncClient, datafix_dir):
 
     assert not data.get("errors")
     assert data.get("data", {}).get("addContributions")
-    assert len(data.get("data", {}).get("addContributions")) == 2
+    assert len(data.get("data", {}).get("addContributions")) == 1

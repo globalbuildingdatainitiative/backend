@@ -22,7 +22,8 @@ GraphQLBuildingType = strawberry.enum(Enum("BuildingType", [_enum.value for _enu
 GraphQLBuildingTypology = strawberry.enum(Enum("BuildingTypology", [_enum.value for _enum in LCAxBuildingTypology]))
 GraphQLRoofType = strawberry.enum(Enum("RoofType", [_enum.value for _enum in LCAxRoofType]))
 GraphQLGeneralEnergyClass = strawberry.enum(
-    Enum("GeneralEnergyClass", [_enum.value for _enum in LCAxGeneralEnergyClass]))
+    Enum("GeneralEnergyClass", [_enum.value for _enum in LCAxGeneralEnergyClass])
+)
 GraphQLImpactCategoryKey = strawberry.enum(Enum("ImpactCategoryKey", [_enum.value for _enum in LCAxImpactCategoryKey]))
 GraphQLProjectPhase = strawberry.enum(Enum("ProjectPhase", [_enum.value for _enum in LCAxProjectPhase]))
 GraphQLLifeCycleStage = strawberry.enum(Enum("LifeCycleStage", [_enum.value for _enum in LCAxLifeCycleStage]))
