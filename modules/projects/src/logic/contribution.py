@@ -1,3 +1,5 @@
+import dataclasses
+from enum import Enum
 from uuid import UUID
 
 from beanie import WriteRules
@@ -23,7 +25,7 @@ async def create_contributions(contributions: list[InputContribution], user: Use
     _contributions = []
     for _contribution in contributions:
         contribution = DBContribution(
-            project=DBProject(**_contribution.project.__dict__), user_id=user.id, organization_id=user.organization_id
+            project=DBProject(**as_dict(_contribution.project)), user_id=user.id, organization_id=user.organization_id
         )
         await contribution.insert(link_rule=WriteRules.WRITE)
         _contributions.append(contribution)
@@ -37,3 +39,19 @@ def check_fetch_projects(info: Info) -> bool:
             return True
 
     return False
+
+
+def as_dict(obj):
+    def asdict_factory(data):
+        def convert_value(obj):
+            if isinstance(obj, Enum):
+                return obj.name
+            elif isinstance(obj, list):
+                return [convert_value(v) for v in obj]
+            return obj
+
+        return dict((k, convert_value(v)) for k, v in data)
+
+    data = dataclasses.asdict(obj, dict_factory=asdict_factory)
+
+    return data

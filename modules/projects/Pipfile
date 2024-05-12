@@ -6,10 +6,11 @@ name = "pypi"
 [packages]
 fastapi = {extras = ["all"], version = ">=0.94.1"}
 uvicorn = {extras = ["standard"], version = "*"}
-strawberry-graphql = {extras = ["fastapi", "cli"], version = ">=0.134.0"}
+strawberry-graphql = {extras = ["fastapi", "cli"], version = "==0.227.0.dev.1713463204"}
 tenacity = "*"
 beanie = "*"
 supertokens-python = "*"
+lcax = ">=2.1.2"
 
 [dev-packages]
 asgi-lifespan="*"
