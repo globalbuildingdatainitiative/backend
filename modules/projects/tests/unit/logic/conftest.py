@@ -1,16 +1,30 @@
 import datetime
+import uuid
 
+import lcax
 import pytest
-from models import DBProject, DBContribution
+from beanie import WriteRules
+
+from models import DBContribution
+from models import DBProject
 
 
 @pytest.fixture()
-async def projects(app) -> list[DBProject]:
+async def projects(app, datafix_dir) -> list[DBProject]:
     projects = []
 
     for i in range(3):
-        project = DBProject(name=f"Project {i}")
-        await project.insert()
+        input_project = lcax.convert_lcabyg((datafix_dir / "project.json").read_text())
+        assemblies = []
+        for assembly in input_project.get("assemblies").values():
+            assembly.update({"products": list(assembly.get("products").values())})
+            assemblies.append(assembly)
+
+        input_project.update({"assemblies": assemblies})
+
+        project = DBProject(**input_project)
+        project.id = uuid.uuid4()
+        await project.insert(link_rule=WriteRules.WRITE)
         projects.append(project)
 
     yield projects
@@ -27,7 +41,7 @@ async def contributions(projects, user) -> list[DBContribution]:
             uploaded_at=datetime.datetime.now(),
             project=projects[i],
         )
-        await contribution.insert()
+        await contribution.insert(link_rule=WriteRules.WRITE)
         _contributions.append(contribution)
 
     yield _contributions

@@ -1,14 +1,28 @@
+import uuid
+
+import lcax
 import pytest
+from beanie import WriteRules
+
 from models import DBProject, DBContribution
 
 
 @pytest.fixture()
-async def projects(mongo) -> list[DBProject]:
+async def projects(app, datafix_dir) -> list[DBProject]:
     projects = []
 
     for i in range(3):
-        project = DBProject(name=f"Project {i}")
-        await project.insert()
+        input_project = lcax.convert_lcabyg((datafix_dir / "project.json").read_text())
+        assemblies = []
+        for assembly in input_project.get("assemblies").values():
+            assembly.update({"products": list(assembly.get("products").values())})
+            assemblies.append(assembly)
+
+        input_project.update({"assemblies": assemblies})
+
+        project = DBProject(**input_project)
+        project.id = uuid.uuid4()
+        await project.insert(link_rule=WriteRules.WRITE)
         projects.append(project)
 
     yield projects
