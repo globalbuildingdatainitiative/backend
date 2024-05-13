@@ -1,7 +1,11 @@
+from datetime import datetime
+from typing import Self
 from uuid import UUID
 
 import strawberry
 from pydantic import BaseModel
+
+from .sort_filter import BaseFilter, FilterOptions, SortOptions
 
 
 class SuperTokensUser(BaseModel):
@@ -12,3 +16,37 @@ class SuperTokensUser(BaseModel):
 @strawberry.type(name="User")
 class GraphQLUser:
     id: UUID
+    first_name: str | None
+    last_name: str | None
+    email: str
+    time_joined: datetime
+    organization_id: UUID | None
+
+    @classmethod
+    def from_supertokens(cls, supertokens_user: dict) -> Self:
+        return cls(
+            id=supertokens_user["id"],
+            email=supertokens_user["email"],
+            time_joined=datetime.fromtimestamp(round(supertokens_user["timeJoined"] / 1000)),
+            first_name=None,
+            last_name=None,
+            organization_id=None,
+        )
+
+
+@strawberry.input
+class UserFilters(BaseFilter):
+    id: FilterOptions | None = None
+    first_name: FilterOptions | None = None
+    last_name: FilterOptions | None = None
+    email: FilterOptions | None = None
+    organization_id: FilterOptions | None = None
+
+
+@strawberry.input
+class UserSort(BaseFilter):
+    id: SortOptions | None = None
+    first_name: SortOptions | None = None
+    last_name: SortOptions | None = None
+    name: SortOptions | None = None
+    organization_id: SortOptions | None = None

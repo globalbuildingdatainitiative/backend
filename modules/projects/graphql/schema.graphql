@@ -525,7 +525,7 @@ input InputProject {
   metaData: JSON = null
   name: String!
   owner: String = null
-  projectInfo: GraphQLInputProjectInfo!
+  projectInfo: GraphQLInputProjectInfo = null
   projectPhase: ProjectPhase!
   referenceStudyPeriod: Int = null
   results: JSON = null
@@ -577,7 +577,7 @@ input InputTechFlow {
   id: UUID
   impacts: JSON!
   location: Country!
-  metaData: JSON!
+  metaData: JSON = null
   name: String!
   source: InputSource = null
 }

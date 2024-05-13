@@ -51,12 +51,18 @@ spec:
             - /app/supergraph.graphql
 
           env:
-            - name: PROJECTS_URL
-              value: "{{ .Values.projectsUrl }}"
             - name: CLIENT_ORIGIN
               value: "{{ .Values.clientOrigin }}"
+
+            - name: AUTH_URL
+              value: "{{ .Values.authUrl }}"
+
             - name: ORGANIZATION_URL
               value: "{{ .Values.organizationUrl }}"
+
+            - name: PROJECTS_URL
+              value: "{{ .Values.projectsUrl }}"
+
             - name: ENABLE_INTROSPECTION
               value: "true"
 
