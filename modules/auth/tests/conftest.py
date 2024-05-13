@@ -1,8 +1,11 @@
+import dataclasses
+import json
 from typing import Iterator
 from uuid import uuid4
 
 import docker
 import pytest
+import supertokens_python.asyncio
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from httpx import AsyncClient
@@ -68,3 +71,41 @@ async def client(app: FastAPI) -> Iterator[AsyncClient]:
             yield _client
         except Exception as exc:
             print(exc)
+
+
+@pytest.fixture
+def users(datafix_dir):
+    yield json.loads((datafix_dir / "users.json").read_text())
+
+
+@pytest.fixture
+def mock_get_users_newest_first(users, session_mocker):
+    async def fake_get_users_newest_first(tenant_id: str):
+        @dataclasses.dataclass
+        class FakeUser:
+            id: str
+            email: str
+            timeJoined: int
+            tenantIds: list[str]
+
+            def to_json(self):
+                return {
+                    "user": {
+                        "id": self.id,
+                        "email": self.email,
+                        "timeJoined": self.timeJoined,
+                        "tenantIds": self.tenantIds,
+                    }
+                }
+
+        @dataclasses.dataclass
+        class FakeResponse:
+            users: list[FakeUser]
+
+        return FakeResponse(users=[FakeUser(**user) for user in users])
+
+    session_mocker.patch.object(
+        supertokens_python.asyncio,
+        "get_users_newest_first",
+        fake_get_users_newest_first,
+    )

@@ -73,7 +73,7 @@ class GraphQLInputTechFlow:
     id: UUID | None = None
     impacts: JSON
     location: GraphQLCountry
-    meta_data: JSON
+    meta_data: JSON | None = None
     name: strawberry.auto
     source: GraphQLInputSource | None = None
 
@@ -195,7 +195,7 @@ class GraphQLInputProject:
     meta_data: JSON | None = None
     name: strawberry.auto
     owner: strawberry.auto
-    project_info: GraphQLInputProjectInfo
+    project_info: GraphQLInputProjectInfo | None = None
     project_phase: GraphQLProjectPhase
     reference_study_period: strawberry.auto
     results: JSON | None = None

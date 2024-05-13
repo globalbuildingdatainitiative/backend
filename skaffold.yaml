@@ -8,9 +8,11 @@ build:
       context: ./modules/router
       hooks:
         before:
-          - command: [ 'cp', 'modules/projects/graphql/schema.graphql', './modules/router/schemas/projects/']
+          - command: [ 'cp', 'modules/auth/graphql/schema.graphql', './modules/router/schemas/auth/' ]
             os: [ darwin, linux ]
-          - command: [ 'cp', 'modules/organization/graphql/schema.graphql', './modules/router/schemas/organization/']
+          #          - command: [ 'cp', 'modules/organization/graphql/schema.graphql', './modules/router/schemas/organization/' ]
+          #            os: [ darwin, linux ]
+          - command: [ 'cp', 'modules/projects/graphql/schema.graphql', './modules/router/schemas/projects/' ]
             os: [ darwin, linux ]
       docker:
         dockerfile: Dockerfile
@@ -20,13 +22,9 @@ build:
       context: ./modules/auth/
       docker:
         dockerfile: Dockerfile
-      sync:
-        infer:
-          - 'src/**/*'
-
-
-    - image: gbdi/organization
-      context: ./modules/organization/
+        buildArgs:
+          BUILD_STAGE: DEV
+          BUILD_VERSION: DEV
       sync:
         infer:
           - 'src/**/*'
@@ -39,16 +37,21 @@ build:
             - host:
                 command:
                   - bash
-                  - modules/organization/extract_schema.sh
+                  - modules/auth/extract_schema.sh
                 os:
                   - darwin
                   - linux
-      docker:
-        dockerfile: Dockerfile
-        buildArgs:
-          BUILD_STAGE: DEV
-          BUILD_VERSION: DEV
-
+    #    - image: gbdi/organization
+    #      context: ./modules/organization/
+    #      sync:
+    #        infer:
+    #          - 'src/**/*'
+    #      docker:
+    #        dockerfile: ./modules/organization/Dockerfile
+    #        buildArgs:
+    #          BUILD_STAGE: DEV
+    #          BUILD_VERSION: DEV
+    #
 
     - image: gbdi/projects
       context: ./modules/projects/
@@ -85,6 +88,7 @@ manifests:
         chartPath: ./modules/router/helm
         namespace: router
         setValues:
+          authUrl: http://backend-service.auth:7001/api/graphql
           organizationUrl: http://backend-service.organization:7002/api/graphql
           projectsUrl: http://backend-service.projects:7003/api/graphql
           clientOrigin: http://localhost:8000
@@ -140,6 +144,8 @@ manifests:
           backend.serverName: "Projects"
           backend.authApiKey: fakeKey
           backend.authConnectionUri: http://supertokens-service.auth:3567
+          appDomain: "localhost:8000"
+          appProtocol: "http"
         createNamespace: true
 
 deploy:

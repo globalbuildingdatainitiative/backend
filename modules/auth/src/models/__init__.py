@@ -1,3 +1,3 @@
-from .user import GraphQLUser, SuperTokensUser
+from .user import GraphQLUser, SuperTokensUser, UserFilters, UserSort
 
-__all__ = [GraphQLUser, SuperTokensUser]
+__all__ = [GraphQLUser, SuperTokensUser, UserFilters, UserSort]

@@ -1,9 +1,8 @@
-from strawberry.types import Info
+from logic import get_users
+from models import GraphQLUser, UserFilters, UserSort
 
-from models import GraphQLUser
 
-
-async def users_query(info: Info) -> list[GraphQLUser]:
+async def users_query(filters: UserFilters | None = None, sort_by: UserSort | None = None) -> list[GraphQLUser]:
     """Returns all Users"""
 
-    return [GraphQLUser()]
+    return await get_users(filters, sort_by)
