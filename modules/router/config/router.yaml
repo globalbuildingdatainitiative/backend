@@ -24,5 +24,7 @@ include_subgraph_errors:
 override_subgraph_url:
   organization: ${env.ORGANIZATION_URL:-http://localhost:7002}
   projects: ${env.PROJECTS_URL:-http://localhost:7003}
-
+limits:
+  # Network-based limits
+  http_max_request_bytes: 20000000
 
