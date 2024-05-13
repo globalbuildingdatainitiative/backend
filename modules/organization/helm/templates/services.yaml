@@ -10,11 +10,11 @@ spec:
   selector:
     app: {{ .Values.db.appName }}
   ports:
-    - name: postgres
+    - name: mongo
       port: {{ .Values.db.port}}
-      targetPort: 5432
+      targetPort: 27017
 ---
-{{- end}}
+{{- end }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -29,4 +29,3 @@ spec:
     - name: fastapi
       port: {{ .Values.backend.servicePort }}
       targetPort: 8000
-

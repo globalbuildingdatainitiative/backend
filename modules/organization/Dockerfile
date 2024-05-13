@@ -1,8 +1,15 @@
-FROM python:3.11-slim as builder
+FROM python:3.12-bookworm as builder
 
 ARG BUILD_STAGE
 RUN python -m pip install --upgrade pip
 RUN pip install pipenv
+
+# Install Rust and Cargo before other installations
+RUN apt update && apt upgrade -y && apt install -y curl build-essential gcc make
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+# Verify installation
+RUN rustc --version && cargo --version
 
 RUN mkdir /tmp/pip
 WORKDIR /tmp/pip
@@ -16,7 +23,7 @@ RUN bash -c "if [ $BUILD_STAGE = 'DEV' ]; \
 
 RUN pip wheel -r requirements.txt -w /tmp/wheels
 
-FROM python:3.11-slim
+FROM python:3.12-bookworm
 
 # Copy from previous stage
 COPY --from=builder /tmp /tmp
@@ -29,6 +36,7 @@ ARG BUILD_VERSION
 ENV PATH=/app/.local/bin:$PATH
 ENV PYTHONPATH "${PYTHONPATH}:/app/src"
 ENV BUILD_VERSION $BUILD_VERSION
+ENV SUPERTOKENS_CONNECTION_URI="http://test.gbdi.io"
 
 # Create fastapi user
 RUN useradd --home-dir /app --create-home fastapi

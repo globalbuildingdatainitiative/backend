@@ -2,38 +2,31 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-namespace: ASYNC_STRAWBERRY
+namespace: organization
 
-appDomain: example.com
-tlsSecret: 'example-com'
-appProtocol: https
 deployType: "PROD"
+appProtocol: https
+appDomain: localhost:7000
 
 imageKey:
-  registry: registry.example.com
-  repository: ASYNC_STRAWBERRY
+  registry: ghcr.io/gbdi
+  repository: organization
   tag: 1
-
-secretStore:
-  name: ASYNC_STRAWBERRY
-  tenantId: ""
-  userAssignedIdentityID: ""
 
 db:
   appName: database
   serviceName: database-service
-  databaseName: ASYNC_STRAWBERRY
+  databaseName: organization
   configmap: db-config
   replicas: 1
-  dockerImageTag: 13.1-alpine
-  port: 5432
+  dockerImageTag: 7
+  port: 27017
   passwordSecret:
-    name: postgres-password
+    name: database-password
     value: 'YWRnYWtqMjM1NGpoc2tsaDc4MzU0'
   usernameSecret:
-    name: postgres-username
+    name: database-username
     value: 'cG9zdGdyZXN1c2Vy'
-  ssl: false
 
 backend:
   appName: backend
@@ -42,5 +35,7 @@ backend:
   replicas: 1
   servicePort: 8000
   secretName: backend-secret
+  authApiKey: ""
+  authConnectionUri: ""
 
 

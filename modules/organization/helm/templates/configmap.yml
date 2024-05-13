@@ -4,10 +4,9 @@ metadata:
   name: {{ .Values.db.configmap }}
   namespace: {{ .Values.namespace }}
 data:
-  POSTGRES_HOST: {{ .Values.db.serviceName }}
-  POSTGRES_DB: {{ .Values.db.databaseName }}
-  POSTGRES_PORT: "{{ .Values.db.port }}"
-  POSTGRES_SSL: "{{ .Values.db.ssl }}"
+  DATABASE_HOST: "{{ .Values.db.serviceName }}"
+  DATABASE_NAME: "{{ .Values.db.databaseName }}"
+  DATABASE_PORT: "{{ .Values.db.port }}"
 ---
 apiVersion: v1
 kind: ConfigMap

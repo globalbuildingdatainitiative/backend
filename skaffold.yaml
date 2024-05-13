@@ -8,12 +8,13 @@ build:
       context: ./modules/router
       hooks:
         before:
-          #          - command: [ 'cp', 'modules/organization/graphql/schema.graphql', './modules/router/schemas/organization/' ]
-          #            os: [ darwin, linux ]
-          - command: [ 'cp', 'modules/projects/graphql/schema.graphql', './modules/router/schemas/projects/' ]
+          - command: [ 'cp', 'modules/projects/graphql/schema.graphql', './modules/router/schemas/projects/']
+            os: [ darwin, linux ]
+          - command: [ 'cp', 'modules/organization/graphql/schema.graphql', './modules/router/schemas/organization/']
             os: [ darwin, linux ]
       docker:
         dockerfile: Dockerfile
+
 
     - image: gbdi/auth
       context: ./modules/auth/
@@ -23,17 +24,31 @@ build:
         infer:
           - 'src/**/*'
 
-    #    - image: gbdi/organization
-    #      context: ./modules/organization/
-    #      sync:
-    #        infer:
-    #          - 'src/**/*'
-    #      docker:
-    #        dockerfile: ./modules/organization/Dockerfile
-    #        buildArgs:
-    #          BUILD_STAGE: DEV
-    #          BUILD_VERSION: DEV
-    #
+
+    - image: gbdi/organization
+      context: ./modules/organization/
+      sync:
+        infer:
+          - 'src/**/*'
+        hooks:
+          after:
+            - container:
+                command:
+                  - bash
+                  - /app/export_schema.sh
+            - host:
+                command:
+                  - bash
+                  - modules/organization/extract_schema.sh
+                os:
+                  - darwin
+                  - linux
+      docker:
+        dockerfile: Dockerfile
+        buildArgs:
+          BUILD_STAGE: DEV
+          BUILD_VERSION: DEV
+
 
     - image: gbdi/projects
       context: ./modules/projects/
@@ -96,16 +111,22 @@ manifests:
           appProtocol: "http"
         createNamespace: true
 
-      #      - name: organization
-      #        chartPath: ./modules/organization/helm
-      #        namespace: organization
-      #        setValues:
-      #          backend.servicePort: "7002"
-      #          deployType: DEV
-      #          imageKey.registry: gbdi
-      #          imageKey.repository: organization
-      #          imageKey.tag: latest
-      #        createNamespace: true
+      - name: organization
+        chartPath: ./modules/organization/helm
+        namespace: organization
+        setValues:
+          backend.servicePort: "7002"
+          deployType: DEV
+          imageKey.registry: gbdi
+          imageKey.repository: organization
+          imageKey.tag: latest
+          backend.apiKey: fakeKey
+          backend.connectionUri: http://supertokens-service.auth:3567
+          backend.serverName: "Organization"
+          backend.serverHost: "http://localhost:7002"
+          appDomain: "localhost:8000"
+          appProtocol: "http"
+        createNamespace: true
 
       - name: projects
         chartPath: ./modules/projects/helm
@@ -136,10 +157,10 @@ portForward:
     namespace: auth
     port: 7001
 
-  #  - resourceType: service
-  #    resourceName: backend-service
-  #    namespace: organization
-  #    port: 7002
+  - resourceType: service
+    resourceName: backend-service
+    namespace: organization
+    port: 7002
 
   - resourceType: service
     resourceName: backend-service
