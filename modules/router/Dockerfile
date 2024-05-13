@@ -18,6 +18,7 @@ COPY --chown=rover:rover ./build_graph.sh /app/build_graph.sh
 RUN chmod +x /app/build_graph.sh
 
 # Copy GraphQL schemas from services
+COPY --chown=rover:rover ./schemas/auth/schema.graphql /app/schemas/auth.graphql
 COPY --chown=rover:rover ./schemas/projects/schema.graphql /app/schemas/projects.graphql
 #COPY --chown=rover:rover ./schemas/organization/schema.graphql /app/schemas/organization.graphql
 

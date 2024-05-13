@@ -18,5 +18,6 @@ router:
   logLevel: info
 
 clientOrigin: 'http://localhost:8000'
-organizationUrl: 'http://localhost:7001'
-projectsUrl: 'http://localhost:7002'
+authUrl: 'http://localhost:7001'
+organizationUrl: 'http://localhost:7002'
+projectsUrl: 'http://localhost:7003'

@@ -22,6 +22,7 @@ headers:
 include_subgraph_errors:
   all: true
 override_subgraph_url:
+  auth: ${env.AUTH_URL:-http://localhost:7001}
   organization: ${env.ORGANIZATION_URL:-http://localhost:7002}
   projects: ${env.PROJECTS_URL:-http://localhost:7003}
 limits:
