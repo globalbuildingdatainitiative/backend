@@ -1,5 +1,9 @@
 federation_version: =2.3.2
 subgraphs:
+  auth:
+    routing_url: "http://localhost:7001/api/graphql"
+    schema:
+      file: /app/schemas/auth.graphql
 #  organization:
 #    routing_url: "http://localhost:7002/api/graphql"
 #    schema:
