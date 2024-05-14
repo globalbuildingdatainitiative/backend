@@ -8,8 +8,6 @@ RUN pip install pipenv
 RUN apt update && apt upgrade -y && apt install -y curl build-essential gcc make
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
-# Verify installation
-RUN rustc --version && cargo --version
 
 RUN mkdir /tmp/pip
 WORKDIR /tmp/pip
@@ -23,7 +21,7 @@ RUN bash -c "if [ $BUILD_STAGE = 'DEV' ]; \
 
 RUN pip wheel -r requirements.txt -w /tmp/wheels
 
-FROM python:3.12-bookworm
+FROM python:3.12-slim
 
 # Copy from previous stage
 COPY --from=builder /tmp /tmp
