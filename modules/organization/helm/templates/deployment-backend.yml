@@ -36,41 +36,35 @@ spec:
           ports:
             - containerPort: 8000
           env:
-            - name: POSTGRES_USER
+            - name: MONGO_USER
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.db.usernameSecret.name }}
                   key: username
 
-            - name: POSTGRES_PASSWORD
+            - name: MONGO_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.db.passwordSecret.name }}
                   key: password
 
-            - name: POSTGRES_DB
+            - name: MONGO_DB
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Values.db.configmap }}
-                  key: POSTGRES_DB
+                  key: DATABASE_NAME
 
-            - name: POSTGRES_HOST
+            - name: MONGO_HOST
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Values.db.configmap }}
-                  key: POSTGRES_HOST
+                  key: DATABASE_HOST
 
-            - name: POSTGRES_PORT
+            - name: MONGO_PORT
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Values.db.configmap }}
-                  key: POSTGRES_PORT
-
-            - name: POSTGRES_SSL
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Values.db.configmap }}
-                  key: POSTGRES_SSL
+                  key: DATABASE_PORT
 
             - name: BACKEND_CORS_ORIGINS
               valueFrom:
@@ -92,3 +86,9 @@ spec:
 
             - name: RUN_STAGE
               value: {{ .Values.deployType }}
+
+            - name: SUPERTOKENS_API_KEY
+              value: {{ .Values.backend.authApiKey }}
+
+            - name: SUPERTOKENS_CONNECTION_URI
+              value: {{ .Values.backend.authConnectionUri }}

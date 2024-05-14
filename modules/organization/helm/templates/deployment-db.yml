@@ -18,29 +18,26 @@ spec:
 
     spec:
       containers:
-        - name: postgres
-          image: "postgres:{{ .Values.db.dockerImageTag }}"
+        - name: mongodb
+          image: "mongo:{{ .Values.db.dockerImageTag }}"
           ports:
             - containerPort: {{ .Values.db.port }}
           env:
-            - name: PGDATA
-              value: "/var/lib/postgresql/data/pgdata"
-
-            - name: POSTGRES_USER
+            - name: MONGO_INITDB_ROOT_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.db.usernameSecret.name }}
                   key: username
 
-            - name: POSTGRES_PASSWORD
+            - name: MONGO_INITDB_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.db.passwordSecret.name }}
                   key: password
 
-            - name: POSTGRES_DB
+            - name: MONGO_INITDB_DATABASE
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Values.db.configmap }}
-                  key: POSTGRES_DB
+                  key: DATABASE_NAME
 {{- end}}
