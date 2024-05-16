@@ -143,7 +143,6 @@ manifests:
           backend.serverHost: "http://localhost:7002"
           appDomain: "localhost:8000"
           appProtocol: "http"
-          #SUPERTOKENS_CONNECTION_URI: "http://test.gbdi.io"
         createNamespace: true
 
       - name: projects
