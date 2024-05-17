@@ -148,3 +148,8 @@ cython_debug/
 
 # skaffold
 .kpt-pipeline
+
+
+.DS_Store
+modules/.DS_Store
+modules/router/.DS_Store
