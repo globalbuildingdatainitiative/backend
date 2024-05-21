@@ -1,6 +1,7 @@
 from supertokens_python import init, InputAppInfo, SupertokensConfig
 from supertokens_python.framework.request import BaseRequest
 from supertokens_python.recipe import session, userroles, usermetadata, emailpassword, dashboard
+from supertokens_python.recipe.emailpassword import InputFormField
 
 from core.config import settings
 
@@ -35,6 +36,17 @@ def supertokens_init():
         ),
         supertokens_config=SupertokensConfig(connection_uri=str(settings.CONNECTION_URI), api_key=settings.API_KEY),
         framework="fastapi",
-        recipe_list=[session.init(), emailpassword.init(), dashboard.init(), userroles.init(), usermetadata.init()],
+        recipe_list=[
+            session.init(),
+            emailpassword.init(
+                sign_up_feature=emailpassword.InputSignUpFeature(
+                    form_fields=[
+                        InputFormField(id="firstName"),
+                        InputFormField(id="lastName"),
+                    ]
+            )),
+            dashboard.init(),
+            userroles.init(),
+            usermetadata.init()],
         mode="asgi",
     )
