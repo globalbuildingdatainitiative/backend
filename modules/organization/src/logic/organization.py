@@ -21,7 +21,7 @@ async def create_organizations_mutation(
     from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
 
     new_organizations = []
-    for i, organization_data in enumerate(organizations):
+    for organization_data in organizations:
         new_organization = DBOrganization(
             name=organization_data.name,
             address=organization_data.address,
