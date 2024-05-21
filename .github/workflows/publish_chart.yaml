@@ -26,7 +26,7 @@ jobs:
 
       - name: Log into registry ${{ env.REGISTRY }}
         if: github.event_name != 'pull_request'
-        uses: docker/login-action
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io/${{ inputs.registry }}
           username: ${{ github.actor }}
