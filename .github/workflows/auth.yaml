@@ -18,7 +18,7 @@ on:
 
 jobs:
   test:
-    uses: .github/workflows/run_tests.yaml
+    uses: ./.github/workflows/run_tests.yaml
     with:
       working-directory: modules/auth/
 
@@ -36,7 +36,7 @@ jobs:
 #      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
   build-container:
-    uses: .github/workflows/publish_image.yaml
+    uses: ./.github/workflows/publish_image.yaml
     needs: test
     with:
       tag: "${{ github.run_number }}${{ (github.ref_name != 'main' && '-dev') || ''}}"
@@ -44,7 +44,7 @@ jobs:
       name: 'auth'
 
   publish-chart:
-    uses: .github/workflows/publish_chart.yaml
+    uses: ./.github/workflows/publish_chart.yaml
     needs:
       - test
       - build-container
