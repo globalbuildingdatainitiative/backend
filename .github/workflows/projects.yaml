@@ -6,11 +6,13 @@ on:
       - main
     paths:
       - modules/projects/**
+      - .github/workflows/**.yaml
   pull_request:
     branches:
       - main
     paths:
       - modules/projects/**
+      - .github/workflows/**.yaml
 
   workflow_dispatch:
 
