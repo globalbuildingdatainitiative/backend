@@ -1,0 +1,42 @@
+name: Build Container Image
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      registry:
+        required: true
+        type: string
+      name:
+        required: true
+        type: string
+
+jobs:
+  build-image:
+    name: Build and Push Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action
+        with:
+          registry: ghcr.io/${{ inputs.registry }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Image
+        working-directory: modules/${{ inputsname }}
+        run: docker build -t ghcr.io/${{ inputs.registry }}/${{ inputs.name }}:${{ inputs.tag }} .
+
+      - name: Push Image
+        if: github.event_name != 'pull_request'
+        working-directory: modules/${{ inputs.name }}
+        run: docker push ghcr.io/${{ inputs.registry }}/${{ inputs.name }}:${{ inputs.tag }}
