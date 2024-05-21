@@ -44,9 +44,11 @@ def supertokens_init():
                         InputFormField(id="firstName"),
                         InputFormField(id="lastName"),
                     ]
-            )),
+                )
+            ),
             dashboard.init(),
             userroles.init(),
-            usermetadata.init()],
+            usermetadata.init(),
+        ],
         mode="asgi",
     )
