@@ -45,7 +45,7 @@ jobs:
       name: 'projects'
 
   publish-chart:
-    uses: ./.github/workflows/publish-chart.yaml
+    uses: ./.github/workflows/publish_chart.yaml
     needs:
       - test
       - build-container
