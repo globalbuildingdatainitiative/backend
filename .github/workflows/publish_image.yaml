@@ -33,7 +33,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Image
-        working-directory: modules/${{ inputsname }}
+        working-directory: modules/${{ inputs.name }}
         run: docker build -t ghcr.io/${{ inputs.registry }}/${{ inputs.name }}:${{ inputs.tag }} .
 
       - name: Push Image
