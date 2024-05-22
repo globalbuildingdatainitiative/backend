@@ -177,6 +177,11 @@ portForward:
     port: 7001
 
   - resourceType: service
+    resourceName: supertokens-service
+    namespace: auth
+    port: 3567
+
+  - resourceType: service
     resourceName: backend-service
     namespace: organization
     port: 7002

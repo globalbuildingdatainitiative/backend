@@ -28,8 +28,8 @@ class GraphQLUser:
             id=supertokens_user["id"],
             email=supertokens_user["email"],
             time_joined=datetime.fromtimestamp(round(supertokens_user["timeJoined"] / 1000)),
-            first_name=None,
-            last_name=None,
+            first_name=supertokens_user.get("firstName"),
+            last_name=supertokens_user.get("lastName"),
             organization_id=None,
         )
 
