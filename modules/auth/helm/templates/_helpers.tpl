@@ -5,12 +5,12 @@ Create env list.
 - name: DATABASE_PASSWORD
   valueFrom:
     secretKeyRef:
-      name: {{.Values.db.passwordSecret.name }}
+      name: {{.Values.db.secret.name }}
       key: password
 - name: DATABASE_USERNAME
   valueFrom:
     secretKeyRef:
-      name: {{.Values.db.usernameSecret.name }}
+      name: {{.Values.db.secret.name }}
       key: username
 - name: DATABASE_HOST
   valueFrom:

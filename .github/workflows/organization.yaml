@@ -6,44 +6,55 @@ on:
       - main
     paths:
       - modules/organization/**
+      - .github/workflows/**.yaml
   pull_request:
     branches:
       - main
     paths:
       - modules/organization/**
+      - .github/workflows/**.yaml
 
   workflow_dispatch:
 
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
 jobs:
   test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    uses: ./.github/workflows/run_tests.yaml
+    with:
+      working-directory: modules/organization/
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: "pipenv"
+#  publish-graphql:
+#    uses: ./.github/workflows/publish_graphql.yaml
+#    if: github.event_name != 'pull_request'
+#    needs: test
+#    with:
+#      module-name: 'organization'
+#      bucket-name: 'graphql'
+#      branch: "${{ github.ref_name }}"
+#      aws-region: ${{ vars.AWS_REGION }}
+#    secrets:
+#      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: Run image
-        uses: tiagovrtr/actions-pipenv@v1
-        with:
-          pipenv-version: 2023.12.1
+  build-container:
+    uses: ./.github/workflows/publish_image.yaml
+    needs: test
+    with:
+      tag: "${{ github.run_number }}${{ (github.ref_name != 'main' && '-dev') || ''}}"
+      registry: "globalbuildingdatainitiative"
+      name: 'organization'
 
-      - name: Install Dependencies
-        working-directory: modules/organization
-        run: pipenv sync --dev
-
-      - name: Run Linting
-        working-directory: modules/organization
-        run: pipenv run ruff check src/ tests/
-
-      - name: Check Formatting
-        working-directory: modules/organization
-        run: pipenv run ruff format --check
-
-      - name: Run Tests
-        working-directory: modules/organization
-        run: pipenv run pytest tests/
+  publish-chart:
+    uses: ./.github/workflows/publish_chart.yaml
+    needs:
+      - test
+      - build-container
+    with:
+      tag: "${{ github.run_number }}${{ (github.ref_name != 'main' && '-dev') || ''}}"
+      registry: "globalbuildingdatainitiative"
+      name: 'organization'

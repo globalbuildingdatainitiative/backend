@@ -4,20 +4,14 @@
 
 namespace: auth
 
-appDomain: example.com
-tlsSecret: 'example-com'
-appProtocol: https
 deployType: "PROD"
+appProtocol: https
+appDomain: localhost:7000
 
 imageKey:
   registry: gbdi
   repository: auth
   tag: 1
-
-secretStore:
-  name: ASYNC_STRAWBERRY
-  tenantId: ""
-  userAssignedIdentityID: ""
 
 db:
   appName: database
@@ -27,12 +21,11 @@ db:
   replicas: 1
   dockerImageTag: 13.1-alpine
   port: 5432
-  passwordSecret:
-    name: postgres-password
-    value: 'YWRnYWtqMjM1NGpoc2tsaDc4MzU0'
-  usernameSecret:
-    name: postgres-username
-    value: 'cG9zdGdyZXN1c2Vy'
+  secret:
+    name: postgres-secret
+    passwordValue: 'YWRnYWtqMjM1NGpoc2tsaDc4MzU0'
+    usernameValue: 'cG9zdGdyZXN1c2Vy'
+
   ssl: false
 
 backend:

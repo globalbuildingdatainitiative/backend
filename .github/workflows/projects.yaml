@@ -1,20 +1,21 @@
-name: Auth Module Workflow
+name: Project Module Workflow
 
 on:
   push:
     branches:
       - main
     paths:
-      - modules/auth/**
+      - modules/projects/**
       - .github/workflows/**.yaml
   pull_request:
     branches:
       - main
     paths:
-      - modules/auth/**
+      - modules/projects/**
       - .github/workflows/**.yaml
 
   workflow_dispatch:
+
 
 permissions:
   contents: read
@@ -25,14 +26,14 @@ jobs:
   test:
     uses: ./.github/workflows/run_tests.yaml
     with:
-      working-directory: modules/auth/
+      working-directory: modules/projects/
 
 #  publish-graphql:
 #    uses: ./.github/workflows/publish_graphql.yaml
 #    if: github.event_name != 'pull_request'
 #    needs: test
 #    with:
-#      module-name: 'auth'
+#      module-name: 'projects'
 #      bucket-name: 'graphql'
 #      branch: "${{ github.ref_name }}"
 #      aws-region: ${{ vars.AWS_REGION }}
@@ -40,13 +41,14 @@ jobs:
 #      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
 #      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
+
   build-container:
     uses: ./.github/workflows/publish_image.yaml
     needs: test
     with:
       tag: "${{ github.run_number }}${{ (github.ref_name != 'main' && '-dev') || ''}}"
       registry: "globalbuildingdatainitiative"
-      name: 'auth'
+      name: 'projects'
 
   publish-chart:
     uses: ./.github/workflows/publish_chart.yaml
@@ -56,4 +58,4 @@ jobs:
     with:
       tag: "${{ github.run_number }}${{ (github.ref_name != 'main' && '-dev') || ''}}"
       registry: "globalbuildingdatainitiative"
-      name: 'auth'
+      name: 'projects'
