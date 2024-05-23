@@ -21,12 +21,10 @@ db:
   replicas: 1
   dockerImageTag: 7
   port: 27017
-  passwordSecret:
-    name: database-password
-    value: 'YWRnYWtqMjM1NGpoc2tsaDc4MzU0'
-  usernameSecret:
-    name: database-username
-    value: 'cG9zdGdyZXN1c2Vy'
+  secret:
+    name: database-secret
+    passwordValue: 'YWRnYWtqMjM1NGpoc2tsaDc4MzU0'
+    usernameValue: 'cG9zdGdyZXN1c2Vy'
 
 backend:
   appName: backend

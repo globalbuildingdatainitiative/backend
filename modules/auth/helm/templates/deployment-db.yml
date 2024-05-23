@@ -1,4 +1,3 @@
-{{- if eq .Values.deployType "DEV" }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -29,13 +28,13 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.db.usernameSecret.name }}
+                  name: {{ .Values.db.secret.name }}
                   key: username
 
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.db.passwordSecret.name }}
+                  name: {{ .Values.db.secret.name }}
                   key: password
 
             - name: POSTGRES_DB
@@ -53,4 +52,3 @@ spec:
                 - $(POSTGRES_USER)
                 - -d
                 - $(POSTGRES_DB)
-{{- end}}

@@ -15,37 +15,22 @@ spec:
       labels:
         app: {{ .Values.backend.appName }}
     spec:
-      {{- if eq .Values.deployType "PROD" }}
-      volumes:
-        - name: secrets-store01-inline
-          csi:
-            driver: secrets-store.csi.k8s.io
-            readOnly: true
-            volumeAttributes:
-              secretProviderClass: {{ .Values.backend.secretName }}
-      {{- end }}
       containers:
         - name: {{ .Values.backend.appName }}
           image: "{{.Values.imageKey.registry }}/{{ .Values.imageKey.repository }}:{{ .Values.imageKey.tag }}"
-          {{- if eq .Values.deployType "PROD" }}
-          volumeMounts:
-            - name: secrets-store01-inline
-              mountPath: "/mnt/secrets"
-              readOnly: true
-          {{- end}}
           ports:
             - containerPort: 8000
           env:
             - name: MONGO_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.db.usernameSecret.name }}
+                  name: {{ .Values.db.secret.name }}
                   key: username
 
             - name: MONGO_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.db.passwordSecret.name }}
+                  name: {{ .Values.db.secret.name }}
                   key: password
 
             - name: MONGO_DB
