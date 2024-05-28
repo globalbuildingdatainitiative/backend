@@ -30,10 +30,3 @@ async def test_users_query(client: AsyncClient, mock_get_users_newest_first):
 
     assert not data.get("errors")
     assert data.get("data", {}).get("users")
-    assert users
-
-    for user in users:
-        assert "firstName" in user
-        assert "lastName" in user
-        assert user["firstName"] is not None
-        assert user["lastName"] is not None

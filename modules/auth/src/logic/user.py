@@ -17,6 +17,7 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
         metadata_response = await get_user_metadata(user_id)
         first_name = metadata_response.metadata.get("first_name")
         last_name = metadata_response.metadata.get("last_name")
+        organization_id = metadata_response.metadata.get("organization_id")
 
         graphQLUser = GraphQLUser(
             id=user_id,
@@ -24,7 +25,7 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
             time_joined=user_data["timeJoined"],
             first_name=first_name,
             last_name=last_name,
-            organization_id=None
+            organization_id=organization_id,
         )
 
         graphQLUsers.append(graphQLUser)
