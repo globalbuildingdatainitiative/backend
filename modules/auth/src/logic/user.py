@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from models import GraphQLUser, UserFilters, UserSort
 
 
@@ -22,7 +24,7 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
         graphQLUser = GraphQLUser(
             id=user_id,
             email=user_data["email"],
-            time_joined=user_data["timeJoined"],
+            time_joined=datetime.fromtimestamp(round(user_data["timeJoined"] / 1000)),
             first_name=first_name,
             last_name=last_name,
             organization_id=organization_id,

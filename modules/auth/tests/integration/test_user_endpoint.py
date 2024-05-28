@@ -5,7 +5,7 @@ from core.config import settings
 
 
 @pytest.mark.asyncio
-async def test_users_query(client: AsyncClient, mock_get_users_newest_first):
+async def test_users_query(client: AsyncClient, mock_get_users_newest_first, mock_get_user_metadata):
     query = """
         query {
             users {
