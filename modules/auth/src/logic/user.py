@@ -13,7 +13,7 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
         user_data = user.to_json().get("user")
         user_id = user_data["id"]
 
-        #Fetch metadata for each user
+        # Fetch metadata for each user
         metadata_response = await get_user_metadata(user_id)
         first_name = metadata_response.metadata.get("first_name")
         last_name = metadata_response.metadata.get("last_name")
