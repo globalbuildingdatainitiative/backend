@@ -5,7 +5,10 @@
     "tenantIds": [
       "public"
     ],
-    "timeJoined": 1715606572589
+    "timeJoined": 1715606572589,
+    "firstName": "Christian",
+    "lastName": "Kongsgaard",
+    "organizationId": "55363466436"
   },
   {
     "email": "hassan.shahzad@epfl.ch",
@@ -13,6 +16,9 @@
     "tenantIds": [
       "public"
     ],
-    "timeJoined": 1715606573589
+    "timeJoined": 1715606573589,
+    "firstName": "Hassan",
+    "lastName": "Shahzad",
+    "organizationId": "55363436436456"
   }
 ]

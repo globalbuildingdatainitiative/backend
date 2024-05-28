@@ -5,13 +5,16 @@ from core.config import settings
 
 
 @pytest.mark.asyncio
-async def test_users_query(client: AsyncClient, mock_get_users_newest_first):
+async def test_users_query(client: AsyncClient, mock_get_users_newest_first, mock_get_user_metadata):
     query = """
         query {
             users {
                 id
                 email
                 timeJoined
+                firstName
+                lastName
+                organizationId
             }
         }
     """
@@ -28,3 +31,11 @@ async def test_users_query(client: AsyncClient, mock_get_users_newest_first):
 
     assert not data.get("errors")
     assert data.get("data", {}).get("users")
+
+    for user in data["data"]["users"]:
+        assert "id" in user
+        assert "email" in user
+        assert "timeJoined" in user
+        assert "firstName" in user
+        assert "lastName" in user
+        assert "organizationId" in user
