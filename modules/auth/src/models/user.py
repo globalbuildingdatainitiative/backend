@@ -30,7 +30,7 @@ class GraphQLUser:
             time_joined=datetime.fromtimestamp(round(supertokens_user["timeJoined"] / 1000)),
             first_name=supertokens_user.get("firstName"),
             last_name=supertokens_user.get("lastName"),
-            organization_id=None,
+            organization_id=supertokens_user.get("organization_id"),
         )
 
 

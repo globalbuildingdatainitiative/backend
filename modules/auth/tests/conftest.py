@@ -87,6 +87,9 @@ def mock_get_users_newest_first(users, session_mocker):
             email: str
             timeJoined: int
             tenantIds: list[str]
+            firstName: str
+            lastName: str
+            organizationId: str
 
             def to_json(self):
                 return {
@@ -95,6 +98,9 @@ def mock_get_users_newest_first(users, session_mocker):
                         "email": self.email,
                         "timeJoined": self.timeJoined,
                         "tenantIds": self.tenantIds,
+                        "firstName": self.firstName,
+                        "lastName": self.lastName,
+                        "organizationId": self.organizationId,
                     }
                 }
 
@@ -108,4 +114,25 @@ def mock_get_users_newest_first(users, session_mocker):
         supertokens_python.asyncio,
         "get_users_newest_first",
         fake_get_users_newest_first,
+    )
+
+
+@pytest.fixture
+def mock_get_user_metadata(session_mocker):
+    @dataclasses.dataclass
+    class FakeMetadata:
+        metadata: dict
+
+    async def fake_get_user_metadata(user_id: str):
+        metadata = {
+            "first_name": f"First Name {user_id}",
+            "last_name": f"Last Name {user_id}",
+            "organization_id": f"org-{user_id}",
+        }
+        return FakeMetadata(metadata=metadata)
+
+    session_mocker.patch.object(
+        supertokens_python.recipe.usermetadata.asyncio,
+        "get_user_metadata",
+        fake_get_user_metadata,
     )
