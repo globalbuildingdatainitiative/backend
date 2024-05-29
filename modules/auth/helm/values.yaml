@@ -23,9 +23,9 @@ db:
   port: 5432
   secret:
     name: postgres-secret
+    provider: ''
     passwordValue: 'YWRnYWtqMjM1NGpoc2tsaDc4MzU0'
     usernameValue: 'cG9zdGdyZXN1c2Vy'
-
   ssl: false
 
 backend:
