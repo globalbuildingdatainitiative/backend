@@ -12,6 +12,7 @@ imageKey:
   registry: gbdi
   repository: auth
   tag: 1
+  secretName: ''
 
 db:
   appName: database
@@ -24,6 +25,7 @@ db:
   secret:
     name: postgres-secret
     provider: ''
+    providerNamespace: ''
     passwordValue: 'YWRnYWtqMjM1NGpoc2tsaDc4MzU0'
     usernameValue: 'cG9zdGdyZXN1c2Vy'
   ssl: false
