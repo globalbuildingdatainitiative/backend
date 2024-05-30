@@ -15,10 +15,6 @@ spec:
       labels:
         app: {{ .Values.backend.appName }}
     spec:
-      {{- if eq .Values.deployType "PROD"}}
-      imagePullSecrets:
-        - name: {{ .Values.imageKey.secretName }}
-      {{- end}}
       containers:
         - name: {{ .Values.backend.appName }}
           image: "{{.Values.imageKey.registry }}/{{ .Values.imageKey.repository }}:{{ .Values.imageKey.tag }}"
