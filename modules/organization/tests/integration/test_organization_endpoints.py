@@ -31,10 +31,9 @@ async def test_organizations_query(client: AsyncClient, organizations):
 
 
 @pytest.mark.asyncio
-async def test_create_organizations_mutation(client: AsyncClient, organizations, mock_update_user_metadata):
+async def test_create_organizations_mutation(client: AsyncClient, mock_update_user_metadata):
     """Tests creating a new organization"""
 
-    organization = organizations[0]
     name = "New Organization"
     address = "123 Main St"
     city = "New City"
@@ -57,7 +56,6 @@ async def test_create_organizations_mutation(client: AsyncClient, organizations,
             "variables": {
                 "organizations": [
                     {
-                        "id": str(organization.id),
                         "name": name,
                         "address": address,
                         "city": city,

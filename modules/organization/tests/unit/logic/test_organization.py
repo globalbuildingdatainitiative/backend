@@ -22,7 +22,7 @@ async def test_get_organizations(organizations):
 
 
 @pytest.mark.asyncio
-async def test_create_organizations(organizations, user, mock_update_user_metadata):
+async def test_create_organizations(app, user, mock_update_user_metadata):
     """Tests creating a new organization"""
 
     name = "New Organization"
