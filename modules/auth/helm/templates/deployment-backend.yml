@@ -100,7 +100,37 @@ spec:
           image: registry.supertokens.io/supertokens/supertokens-postgresql:9.0
           ports:
             - containerPort: 3567
-          env: {{ include "supertokens.env" . | indent 18 }}
+          env:
+            - name: POSTGRESQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secret.name }}
+                  key: username
+
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secret.name }}
+                  key: password
+
+            - name: POSTGRESQL_DATABASE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.db.configmap }}
+                  key: POSTGRES_DB
+
+            - name: POSTGRESQL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.db.configmap }}
+                  key: POSTGRES_HOST
+
+            - name: POSTGRESQL_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.db.configmap }}
+                  key: POSTGRES_PORT
+
           startupProbe:
             httpGet:
               port: 3567
