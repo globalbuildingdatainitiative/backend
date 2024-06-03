@@ -1,4 +1,3 @@
-{{- if eq .Values.deployType "DEV" }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -14,7 +13,6 @@ spec:
       port: {{ .Values.db.port}}
       targetPort: 27017
 ---
-{{- end }}
 apiVersion: v1
 kind: Service
 metadata:
