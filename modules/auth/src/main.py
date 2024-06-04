@@ -1,8 +1,11 @@
 import logging.config
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 from supertokens_python.framework.fastapi import get_middleware
+from supertokens_python.recipe.session.exceptions import UnauthorisedError
 
 from core.auth import supertokens_init
 from core.config import settings
@@ -34,3 +37,23 @@ if settings.BACKEND_CORS_ORIGINS:
     )
 
 app.include_router(graphql_app, prefix=settings.API_STR)
+
+
+@app.exception_handler(UnauthorisedError)
+async def unauthorised_exception_handler(request: Request, exc: UnauthorisedError):
+    logger.error(exc)
+
+    return JSONResponse(
+        status_code=401,
+        content={"data": "User not authenticated"},
+    )
+
+
+@app.exception_handler(ValidationError)
+async def validation_exception_handler(request: Request, exc: ValidationError):
+    logger.error(exc)
+
+    return JSONResponse(
+        status_code=400,
+        content={"data": "Invalid request data"},
+    )

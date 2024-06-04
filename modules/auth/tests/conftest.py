@@ -9,6 +9,9 @@ import supertokens_python.asyncio
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from httpx import AsyncClient
+import supertokens_python.recipe.session.asyncio
+import supertokens_python.recipe.usermetadata.asyncio
+from fastapi.requests import Request
 
 import core.auth
 import core.context
@@ -136,3 +139,37 @@ def mock_get_user_metadata(session_mocker):
         "get_user_metadata",
         fake_get_user_metadata,
     )
+
+
+@pytest.fixture
+async def app_unauthenticated(mock_supertokens, mock_get_session) -> FastAPI:
+    from main import app
+
+    async with LifespanManager(app):
+        yield app
+
+
+@pytest.fixture(scope="session")
+def mock_get_session(session_mocker):
+    async def fake_get_session(request: Request):
+        return {}
+
+    session_mocker.patch.object(
+        supertokens_python.recipe.session.asyncio,
+        "get_session",
+        fake_get_session,
+    )
+
+
+@pytest.fixture()
+async def client_unauthenticated(app_unauthenticated: FastAPI) -> Iterator[AsyncClient]:
+    """Async server client that handles lifespan and teardown"""
+
+    async with AsyncClient(
+        app=app_unauthenticated,
+        base_url=str(settings.SERVER_HOST),
+    ) as _client:
+        try:
+            yield _client
+        except Exception as exc:
+            print(exc)

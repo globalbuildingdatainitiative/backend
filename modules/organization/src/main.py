@@ -46,6 +46,8 @@ async def app_init():
 
 @app.exception_handler(UnauthorisedError)
 async def unauthorised_exception_handler(request: Request, exc: UnauthorisedError):
+    logger.error(exc)
+
     return JSONResponse(
         status_code=401,
         content={"data": "User not authenticated"},
