@@ -10,7 +10,7 @@ from .sort_filter import BaseFilter, FilterOptions, SortOptions
 
 class SuperTokensUser(BaseModel):
     id: UUID
-    organization_id: UUID
+    organization_id: UUID | None
 
 
 @strawberry.type(name="User")
