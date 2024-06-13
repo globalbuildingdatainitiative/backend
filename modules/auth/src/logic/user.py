@@ -32,4 +32,7 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
 
         graphQLUsers.append(graphQLUser)
 
+        if filters and filters.id and filters.id.equal:
+            graphQLUsers = [user for user in graphQLUsers if user.id == filters.id.equal]
+
     return graphQLUsers
