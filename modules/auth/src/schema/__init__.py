@@ -4,7 +4,7 @@ import strawberry
 
 from models import GraphQLUser
 from schema.permisions import IsAuthenticated
-from schema.user import users_query
+from schema.user import users_query, update_user_mutation
 
 
 @strawberry.type
@@ -14,4 +14,11 @@ class Query:
     )
 
 
-schema = strawberry.federation.Schema(query=Query, enable_federation_2=True)
+@strawberry.type
+class Mutation:
+    update_user: GraphQLUser = strawberry.field(
+        resolver=update_user_mutation, description=getdoc(update_user_mutation), permission_classes=[IsAuthenticated]
+    )
+
+
+schema = strawberry.federation.Schema(query=Query, mutation=Mutation, enable_federation_2=True)

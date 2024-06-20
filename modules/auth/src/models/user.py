@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Self
+from typing import Self, Optional
 from uuid import UUID
 
 import strawberry
@@ -50,3 +50,13 @@ class UserSort(BaseFilter):
     last_name: SortOptions | None = None
     name: SortOptions | None = None
     organization_id: SortOptions | None = None
+
+
+@strawberry.input
+class UpdateUserInput:
+    id: UUID
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[str] = None
+    current_password: Optional[str] = None
+    new_password: Optional[str] = None

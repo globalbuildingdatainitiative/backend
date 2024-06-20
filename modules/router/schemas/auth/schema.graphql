@@ -6,6 +6,11 @@ input FilterOptions {
   isTrue: Boolean = null
 }
 
+type Mutation {
+  """Update user details"""
+  updateUser(userInput: UpdateUserInput!): User!
+}
+
 type Query {
   _service: _Service!
 
@@ -19,6 +24,15 @@ enum SortOptions {
 }
 
 scalar UUID
+
+input UpdateUserInput {
+  id: UUID!
+  firstName: String = null
+  lastName: String = null
+  email: String = null
+  currentPassword: String = null
+  newPassword: String = null
+}
 
 type User {
   id: UUID!
