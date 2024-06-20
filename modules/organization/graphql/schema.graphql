@@ -1,3 +1,8 @@
+schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key"]) {
+  query: Query
+  mutation: Mutation
+}
+
 enum CountryCodes {
   AFG
   ALA
@@ -294,6 +299,7 @@ input OrganizationFilter {
 }
 
 type Query {
+  _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
 
   """Returns all Organizations"""
@@ -302,7 +308,15 @@ type Query {
 
 scalar UUID
 
+type User @key(fields: "id") {
+  id: UUID!
+  organizationId: UUID
+  organization: Organization
+}
+
 scalar _Any
+
+union _Entity = User
 
 type _Service {
   sdl: String!

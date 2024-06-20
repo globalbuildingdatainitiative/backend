@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     API_STR: str = "/api"
     SERVER_NAME: str
     SERVER_HOST: AnyHttpUrl
+    ROUTER_URL: AnyHttpUrl
     BACKEND_CORS_ORIGINS: list[str] = [
         "http://localhost:8000",
     ]

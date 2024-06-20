@@ -1,6 +1,7 @@
 from .organization import DBOrganization, GraphQLOrganization, InputOrganization, OrganizationFilter, OrganizationBase
-from .user import User
+from .user import GraphQLUser
 from .country_codes import CountryCodes
+from .supertokens import SuperTokensUser
 
 __all__ = [
     DBOrganization,
@@ -8,6 +9,7 @@ __all__ = [
     InputOrganization,
     OrganizationFilter,
     OrganizationBase,
-    User,
+    SuperTokensUser,
     CountryCodes,
+    GraphQLUser,
 ]
