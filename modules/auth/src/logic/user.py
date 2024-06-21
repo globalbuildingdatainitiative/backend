@@ -1,19 +1,8 @@
 from datetime import datetime
-from typing import Optional
 
-from models import GraphQLUser, UserFilters, UserSort
-from pydantic import BaseModel
-
+from core.exceptions import EntityNotFound
+from models import GraphQLUser, UserFilters, UserSort, UpdateUserInput
 from models.sort_filter import FilterOptions
-
-
-class UpdateUserInput(BaseModel):
-    id: str
-    first_name: Optional[str]
-    last_name: Optional[str]
-    email: Optional[str]
-    current_password: Optional[str]
-    new_password: Optional[str]
 
 
 def filter_users(users: list[GraphQLUser], filters: UserFilters) -> list[GraphQLUser]:
@@ -89,7 +78,8 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
 
     # Fetch the updated user data to return
     user_data = await get_users(UserFilters(id=FilterOptions(equal=str(user_input.id))))
-    print("user data:", user_data[0])
+
     if not user_data:
-        raise Exception("No user found with the provided ID")
+        raise EntityNotFound("No user found with the provided ID", "Auth")
+
     return user_data[0]

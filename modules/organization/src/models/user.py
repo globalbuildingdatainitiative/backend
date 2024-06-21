@@ -2,6 +2,7 @@ from typing import Self
 from uuid import UUID
 
 import strawberry
+from strawberry.federation.schema_directives import Shareable
 
 from models import GraphQLOrganization, OrganizationFilter
 
@@ -22,7 +23,7 @@ async def get_user_organization(root: "GraphQLUser") -> GraphQLOrganization | No
 @strawberry.federation.type(name="User", keys=["id"])
 class GraphQLUser:
     id: UUID
-    organizationId: UUID | None
+    organizationId: UUID | None = strawberry.field(directives=[Shareable()])
     organization: GraphQLOrganization | None = strawberry.field(resolver=get_user_organization)
 
     @classmethod

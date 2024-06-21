@@ -1,3 +1,8 @@
+schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key", "@shareable"]) {
+  query: Query
+  mutation: Mutation
+}
+
 """Date with time (isoformat)"""
 scalar DateTime
 
@@ -12,6 +17,7 @@ type Mutation {
 }
 
 type Query {
+  _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
 
   """Returns all Users"""
@@ -34,13 +40,13 @@ input UpdateUserInput {
   newPassword: String = null
 }
 
-type User {
+type User @key(fields: "id") {
   id: UUID!
   firstName: String
   lastName: String
   email: String!
   timeJoined: DateTime!
-  organizationId: UUID
+  organizationId: UUID @shareable
 }
 
 input UserFilters {
@@ -60,6 +66,8 @@ input UserSort {
 }
 
 scalar _Any
+
+union _Entity = User
 
 type _Service {
   sdl: String!

@@ -1,4 +1,4 @@
-schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key"]) {
+schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key", "@shareable"]) {
   query: Query
   mutation: Mutation
 }
@@ -310,6 +310,7 @@ scalar UUID
 
 type User @key(fields: "id") {
   id: UUID!
+  organizationId: UUID @shareable
   organization: Organization
 }
 

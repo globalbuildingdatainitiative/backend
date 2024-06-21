@@ -4,6 +4,7 @@ from uuid import UUID
 
 import strawberry
 from pydantic import BaseModel
+from strawberry.federation.schema_directives import Shareable
 
 from .sort_filter import BaseFilter, FilterOptions, SortOptions
 
@@ -20,7 +21,7 @@ class GraphQLUser:
     last_name: str | None
     email: str
     time_joined: datetime
-    organization_id: UUID | None
+    organization_id: UUID | None = strawberry.field(directives=[Shareable()])
 
     @classmethod
     def from_supertokens(cls, supertokens_user: dict) -> Self:
