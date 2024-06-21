@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import dataclasses
 import json
 from typing import Iterator
@@ -15,8 +17,9 @@ from fastapi.requests import Request
 
 import core.auth
 import core.context
+import logic as logic
 from core.config import settings
-from models import SuperTokensUser
+from models import SuperTokensUser, GraphQLUser, UserFilters, UserSort
 
 
 @pytest.fixture(scope="session")
@@ -121,23 +124,104 @@ def mock_get_users_newest_first(users, session_mocker):
 
 
 @pytest.fixture
-def mock_get_user_metadata(session_mocker):
+def mock_get_user_metadata(session_mocker, users):
     @dataclasses.dataclass
     class FakeMetadata:
         metadata: dict
 
     async def fake_get_user_metadata(user_id: str):
-        metadata = {
-            "first_name": f"First Name {user_id}",
-            "last_name": f"Last Name {user_id}",
-            "organization_id": f"org-{user_id}",
-        }
-        return FakeMetadata(metadata=metadata)
+        for user in users:
+            if user["id"] == user_id:
+                metadata = {
+                    "first_name": user["firstName"],
+                    "last_name": user["lastName"],
+                    "organization_id": f"org-{user_id}",
+                }
+                return FakeMetadata(metadata=metadata)
 
     session_mocker.patch.object(
         supertokens_python.recipe.usermetadata.asyncio,
         "get_user_metadata",
         fake_get_user_metadata,
+    )
+
+
+@pytest.fixture
+def mock_update_user_metadata(session_mocker, users):
+    async def fake_update_user_metadata(user_id: str, metadata: dict):
+        for user in users:
+            if user["id"] == user_id:
+                if "first_name" in metadata:
+                    user["firstName"] = metadata.get("first_name")
+                if "last_name" in metadata:
+                    user["lastName"] = metadata.get("last_name")
+                if "email" in metadata:
+                    user["email"] = metadata.get("email")
+
+    session_mocker.patch.object(
+        supertokens_python.recipe.usermetadata.asyncio,
+        "update_user_metadata",
+        fake_update_user_metadata,
+    )
+
+
+@pytest.fixture
+def mock_update_email_or_password(session_mocker):
+    async def fake_update_email_or_password(user_id: str, email: str, password: str):
+        return
+
+    session_mocker.patch.object(
+        supertokens_python.recipe.emailpassword.asyncio,
+        "update_email_or_password",
+        fake_update_email_or_password,
+    )
+
+
+@pytest.fixture
+def mock_sign_in(session_mocker):
+    @dataclasses.dataclass
+    class SignInOkResult:
+        status: str = "OK"
+
+    @dataclasses.dataclass
+    class SignInWrongCredentialsError:
+        status: str = "WRONG_CREDENTIALS_ERROR"
+
+    async def fake_sign_in(tenant_id: str, email: str, password: str):
+        if password == "currentPassword123":
+            return SignInOkResult()
+        else:
+            return SignInWrongCredentialsError()
+
+    session_mocker.patch.object(
+        supertokens_python.recipe.emailpassword.asyncio,
+        "sign_in",
+        fake_sign_in,
+    )
+
+
+@pytest.fixture
+def mock_get_users(session_mocker, users):
+    async def fake_get_users(filters: UserFilters = None, sort_by: UserSort = None):
+        filtered_users = [
+            GraphQLUser(
+                id=user["id"],
+                email=user["email"],
+                time_joined=datetime.fromtimestamp(user["timeJoined"] / 1000),
+                first_name=user["firstName"],
+                last_name=user["lastName"],
+                organization_id=user["organizationId"],
+            )
+            for user in users
+            if not filters or (filters.id and filters.id.equal == user["id"])
+        ]
+
+        return filtered_users
+
+    session_mocker.patch.object(
+        logic,
+        "get_users",
+        fake_get_users,
     )
 
 

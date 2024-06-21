@@ -1,9 +1,10 @@
 from datetime import datetime
-from typing import Self
+from typing import Self, Optional
 from uuid import UUID
 
 import strawberry
 from pydantic import BaseModel
+from strawberry.federation.schema_directives import Shareable
 
 from .sort_filter import BaseFilter, FilterOptions, SortOptions
 
@@ -20,7 +21,7 @@ class GraphQLUser:
     last_name: str | None
     email: str
     time_joined: datetime
-    organization_id: UUID | None
+    organization_id: UUID | None = strawberry.field(directives=[Shareable()])
 
     @classmethod
     def from_supertokens(cls, supertokens_user: dict) -> Self:
@@ -50,3 +51,13 @@ class UserSort(BaseFilter):
     last_name: SortOptions | None = None
     name: SortOptions | None = None
     organization_id: SortOptions | None = None
+
+
+@strawberry.input
+class UpdateUserInput:
+    id: UUID
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[str] = None
+    current_password: Optional[str] = None
+    new_password: Optional[str] = None

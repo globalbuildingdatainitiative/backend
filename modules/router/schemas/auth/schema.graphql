@@ -1,5 +1,6 @@
-schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key"]) {
+schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key", "@shareable"]) {
   query: Query
+  mutation: Mutation
 }
 
 """Date with time (isoformat)"""
@@ -8,6 +9,11 @@ scalar DateTime
 input FilterOptions {
   equal: String = null
   isTrue: Boolean = null
+}
+
+type Mutation {
+  """Update user details"""
+  updateUser(userInput: UpdateUserInput!): User!
 }
 
 type Query {
@@ -25,13 +31,22 @@ enum SortOptions {
 
 scalar UUID
 
+input UpdateUserInput {
+  id: UUID!
+  firstName: String = null
+  lastName: String = null
+  email: String = null
+  currentPassword: String = null
+  newPassword: String = null
+}
+
 type User @key(fields: "id") {
   id: UUID!
   firstName: String
   lastName: String
   email: String!
   timeJoined: DateTime!
-  organizationId: UUID
+  organizationId: UUID @shareable
 }
 
 input UserFilters {

@@ -1,3 +1,3 @@
-from .user import get_users
+from .user import get_users, update_user
 
-__all__ = [get_users]
+__all__ = [get_users, update_user]
