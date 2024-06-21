@@ -19,6 +19,8 @@ headers:
         matching: origin
     - propagate:
         named: cookie
+    - propagate:
+        matching: authorization
 include_subgraph_errors:
   all: true
 override_subgraph_url:

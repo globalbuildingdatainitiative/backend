@@ -2,7 +2,7 @@ from fastapi.requests import Request
 from strawberry.types import Info
 from supertokens_python.recipe.usermetadata.asyncio import get_user_metadata
 
-from models import User
+from models import SuperTokensUser
 
 
 async def get_context(request: Request):
@@ -16,8 +16,8 @@ async def get_context(request: Request):
     metadata = await get_user_metadata(user_id)
     organization_id = metadata.metadata.get("organization_id", None)
 
-    return {"user": User(id=user_id, organization_id=organization_id)}
+    return {"user": SuperTokensUser(id=user_id, organization_id=organization_id)}
 
 
-def get_user(info: Info) -> User:
+def get_user(info: Info) -> SuperTokensUser:
     return info.context.get("user")

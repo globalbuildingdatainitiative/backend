@@ -13,7 +13,7 @@ class SuperTokensUser(BaseModel):
     organization_id: UUID | None
 
 
-@strawberry.type(name="User")
+@strawberry.federation.type(name="User", keys=["id"])
 class GraphQLUser:
     id: UUID
     first_name: str | None

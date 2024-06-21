@@ -1,3 +1,7 @@
+schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key"]) {
+  query: Query
+}
+
 """Date with time (isoformat)"""
 scalar DateTime
 
@@ -7,6 +11,7 @@ input FilterOptions {
 }
 
 type Query {
+  _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
 
   """Returns all Users"""
@@ -20,7 +25,7 @@ enum SortOptions {
 
 scalar UUID
 
-type User {
+type User @key(fields: "id") {
   id: UUID!
   firstName: String
   lastName: String
@@ -46,6 +51,8 @@ input UserSort {
 }
 
 scalar _Any
+
+union _Entity = User
 
 type _Service {
   sdl: String!

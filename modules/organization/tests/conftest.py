@@ -13,7 +13,7 @@ import core.auth
 import core.context
 from core.config import settings
 from core.connection import health_check_mongo, create_mongo_client
-from models import User
+from models import SuperTokensUser
 
 
 @pytest.fixture(scope="session")
@@ -44,8 +44,8 @@ async def mongo(docker_client):
 
 
 @pytest.fixture(scope="session")
-def user() -> User:
-    _user = User(id=uuid4(), organization_id=uuid4())
+def user() -> SuperTokensUser:
+    _user = SuperTokensUser(id=uuid4(), organization_id=uuid4())
     yield _user
 
 
