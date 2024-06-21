@@ -3,7 +3,7 @@ from uuid import UUID
 
 import strawberry
 
-from models import GraphQLOrganization
+from models import GraphQLOrganization, GraphQLUser
 from .organization import (
     organizations_query,
     add_organizations_mutation,
@@ -41,4 +41,4 @@ class Mutation:
     )
 
 
-schema = strawberry.federation.Schema(query=Query, mutation=Mutation, enable_federation_2=True)
+schema = strawberry.federation.Schema(query=Query, mutation=Mutation, types=[GraphQLUser], enable_federation_2=True)

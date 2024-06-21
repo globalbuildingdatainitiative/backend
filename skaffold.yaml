@@ -115,11 +115,12 @@ manifests:
         chartPath: ./modules/auth/helm
         namespace: auth
         setValues:
-          backend.servicePort: "7001"
           deployType: DEV
           imageKey.registry: gbdi
           imageKey.repository: auth
           imageKey.tag: latest
+          backend.appName: "backend-auth"
+          backend.servicePort: "7001"
           backend.apiKey: fakeKey
           backend.connectionUri: http://supertokens-service.auth:3567
           backend.serverName: "Auth"
@@ -132,15 +133,17 @@ manifests:
         chartPath: ./modules/organization/helm
         namespace: organization
         setValues:
-          backend.servicePort: "7002"
           deployType: DEV
           imageKey.registry: gbdi
           imageKey.repository: organization
           imageKey.tag: latest
+          backend.appName: "backend-organization"
+          backend.servicePort: "7002"
           backend.authApiKey: fakeKey
           backend.authConnectionUri: http://supertokens-service.auth:3567
           backend.serverName: "Organization"
           backend.serverHost: "http://localhost:7002"
+          backend.routerUrl: "http://router-service.router:7000"
           appDomain: "localhost:8000"
           appProtocol: "http"
         createNamespace: true
@@ -149,11 +152,12 @@ manifests:
         chartPath: ./modules/projects/helm
         namespace: projects
         setValues:
-          backend.servicePort: "7003"
           deployType: DEV
           imageKey.registry: gbdi
           imageKey.repository: projects
           imageKey.tag: latest
+          backend.appName: "backend-projects"
+          backend.servicePort: "7003"
           backend.serverName: "Projects"
           backend.authApiKey: fakeKey
           backend.authConnectionUri: http://supertokens-service.auth:3567

@@ -6,6 +6,7 @@ asyncio_mode = "auto"
 env = [
     "SERVER_NAME=Organization Test",
     "SERVER_HOST=http://test.gbdi.io",
+    "ROUTER_URL=http://test.gbdi.io",
     "MONGO_HOST=localhost",
     "MONGO_USER=testuser",
     "MONGO_PASSWORD=mypassword",

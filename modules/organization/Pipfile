@@ -10,6 +10,7 @@ strawberry-graphql = {extras = ["fastapi", "cli"], version = ">=0.134.0"}
 tenacity = "*"
 beanie = "*"
 supertokens-python = "*"
+httpx = "*"
 
 [dev-packages]
 asgi-lifespan="*"

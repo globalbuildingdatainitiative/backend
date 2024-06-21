@@ -20,3 +20,15 @@ class InvalidOperationError(GBDIApiError):
     """Raised when an invalid operation is attempted"""
 
     pass
+
+
+class MicroServiceConnectionError(GBDIApiError):
+    """Raised when the connection to another microservice fails"""
+
+    pass
+
+
+class MicroServiceResponseError(GBDIApiError):
+    """Raised when another microservice responds with an error"""
+
+    pass

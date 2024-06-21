@@ -16,13 +16,23 @@ class UpdateUserInput(BaseModel):
     new_password: Optional[str]
 
 
+def filter_users(users: list[GraphQLUser], filters: UserFilters) -> list[GraphQLUser]:
+    for filter_key in filters.keys():
+        _filter = getattr(filters, filter_key)
+
+        if _filter.equal:
+            users = [user for user in users if getattr(user, filter_key) == _filter.equal]
+
+    return users
+
+
 async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None = None) -> list[GraphQLUser]:
     """Returns all Users"""
     from supertokens_python.asyncio import get_users_newest_first
     from supertokens_python.recipe.usermetadata.asyncio import get_user_metadata
 
     users = await get_users_newest_first("public")
-    graphQLUsers = []
+    gql_users = []
 
     for user in users.users:
         user_data = user.to_json().get("user")
@@ -34,7 +44,7 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
         last_name = metadata_response.metadata.get("last_name")
         organization_id = metadata_response.metadata.get("organization_id")
 
-        graphQLUser = GraphQLUser(
+        user = GraphQLUser(
             id=user_id,
             email=user_data["email"],
             time_joined=datetime.fromtimestamp(round(user_data["timeJoined"] / 1000)),
@@ -43,12 +53,12 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
             organization_id=organization_id,
         )
 
-        graphQLUsers.append(graphQLUser)
+        gql_users.append(user)
 
-        if filters and filters.id and filters.id.equal:
-            graphQLUsers = [user for user in graphQLUsers if user.id == filters.id.equal]
+        if filters:
+            gql_users = filter_users(gql_users, filters)
 
-    return graphQLUsers
+    return gql_users
 
 
 async def update_user(user_input: UpdateUserInput) -> GraphQLUser:

@@ -1,5 +1,5 @@
 from uuid import UUID
-from models import DBOrganization, OrganizationFilter, InputOrganization, User
+from models import DBOrganization, OrganizationFilter, InputOrganization, SuperTokensUser
 from exceptions.exceptions import EntityNotFound
 
 
@@ -16,7 +16,7 @@ async def get_organizations(filters: OrganizationFilter | None = None) -> list[D
 
 
 async def create_organizations_mutation(
-    organizations: list[InputOrganization], current_user: User
+    organizations: list[InputOrganization], current_user: SuperTokensUser
 ) -> list[DBOrganization]:
     from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
 
