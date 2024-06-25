@@ -6,6 +6,7 @@ from models.contribution import (
     ContributionFilters,
 )
 from models.project import (
+    Aggregation,
     DBProject,
     DBAssembly,
     DBProduct,
@@ -14,10 +15,15 @@ from models.project import (
     DBImpactData,
     GraphQLProject,
     GraphQLInputProject,
+    ProjectFilters,
+    ProjectLocation,
+    ProjectAggregation,
 )
+
 from models.user import User
 
 __all__ = [
+    Aggregation,
     DBProject,
     DBAssembly,
     DBProduct,
@@ -29,7 +35,10 @@ __all__ = [
     DBContribution,
     GraphQLContribution,
     InputContribution,
+    ProjectLocation,
     ContributionSort,
     ContributionFilters,
+    ProjectFilters,
+    ProjectAggregation,
     User,
 ]

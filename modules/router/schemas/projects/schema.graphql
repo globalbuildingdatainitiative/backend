@@ -654,6 +654,11 @@ type Project {
   softwareInfo: SoftwareInfo!
 }
 
+type ProjectAggregation {
+  location: ProjectLocation!
+  count: Int!
+}
+
 type ProjectInfo {
   buildingCompletionYear: Int
   buildingFootprint: ValueUnit
@@ -680,6 +685,11 @@ type ProjectInfo {
   roofType: RoofType!
 }
 
+type ProjectLocation {
+  latitude: Float!
+  longitude: Float!
+}
+
 enum ProjectPhase {
   design
   ongoing
@@ -690,8 +700,8 @@ enum ProjectPhase {
 type Query {
   _service: _Service!
 
-  """Returns all Projects"""
-  projects: [Project!]!
+  """Returns aggregated Projects with location and count by country"""
+  projectsCountsByCountry: [ProjectAggregation!]!
 
   """Returns all contributions assigned to user"""
   contributions(filters: ContributionFilters = null, sortBy: ContributionSort = null): [Contribution!]!
