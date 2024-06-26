@@ -1,4 +1,6 @@
 import requests
+from motor.motor_asyncio import AsyncIOMotorCollection
+
 from models import DBProject
 
 
@@ -14,19 +16,29 @@ async def get_coordinates(country_name: str) -> dict:
 
 
 async def get_projects_counts_by_country() -> list[dict]:
+    collection: AsyncIOMotorCollection = DBProject.get_motor_collection()
     pipeline = [
         {"$group": {
-            "_id": "$stock_region_code",
+            "_id": "$location_country",
             "count": {"$sum": 1}
         }}
     ]
 
-    results = await DBProject.get_motor_collection().aggregate(pipeline).to_list(None)
+    results = await collection.aggregate(pipeline).to_list(None)
 
+    print(results)
+    country_data = []
     # Fetch coordinates for each country and add to results
     for result in results:
-        coordinates = await get_coordinates(result["_id"])
-        result.update(coordinates)
+        country = result["_id"]
+        count = result["count"]
+        coordinates = await get_coordinates(country)
+        if coordinates:
+            country_data.append({
+                "country": country,
+                "count": count,
+                "latitude": coordinates["latitude"],
+                "longitude": coordinates["longitude"]
+            })
 
-    return results
-
+    return country_data
