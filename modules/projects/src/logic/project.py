@@ -1,7 +1,7 @@
 import requests
 from motor.motor_asyncio import AsyncIOMotorCollection
 
-from models import DBProject
+from models import DBProject, ProjectFilters, ProjectSortOptions, GraphQLProject
 
 
 # Function to get coordinates from country name
@@ -61,3 +61,27 @@ async def get_projects_counts_by_country() -> list[dict]:
                 })
     print("Country Data: ", country_data)
     return country_data
+
+
+async def get_projects(filters: ProjectFilters = None, sort: ProjectSortOptions = None) -> list[GraphQLProject]:
+    collection: AsyncIOMotorCollection = DBProject.get_motor_collection()
+
+    query = {}
+    if filters:
+        if filters.country:
+            query['location.country'] = filters.country
+        if filters.city:
+            query['location.city'] = filters.city
+        if filters.classification_system:
+            query['classificationSystem'] = filters.classification_system
+        if filters.project_phase:
+            query['projectPhase'] = filters.project_phase
+
+    cursor = collection.find(query)
+
+    if sort:
+        sort_order = 1 if sort.order == 'asc' else -1
+        cursor = cursor.sort(sort.field, sort_order)
+
+    projects = [GraphQLProject(**doc) for doc in await cursor.to_list(length=None)]
+    return projects

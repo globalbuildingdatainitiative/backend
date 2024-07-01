@@ -18,6 +18,7 @@ from models.project import (
     ProjectFilters,
     ProjectLocation,
     ProjectAggregation,
+    ProjectSortOptions,
 )
 
 from models.user import User
@@ -41,4 +42,6 @@ __all__ = [
     ProjectFilters,
     ProjectAggregation,
     User,
+    ProjectSortOptions,
+    ProjectFilters,
 ]

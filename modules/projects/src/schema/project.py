@@ -1,21 +1,6 @@
-"""
 from strawberry.types import Info
-
-from logic import get_projects
-from models import GraphQLProject
-
-
-async def projects_query(info: Info) -> list[GraphQLProject]:
-    # Returns all Projects
-
-    projects = await get_projects()
-
-    return projects
-"""
-
-from strawberry.types import Info
-from logic import get_projects_counts_by_country
-from models import ProjectAggregation, ProjectLocation
+from logic import get_projects_counts_by_country, get_projects
+from models import ProjectAggregation, ProjectLocation, ProjectFilters, ProjectSortOptions, GraphQLProject
 
 
 async def projects_counts_by_country_query(info: Info) -> list[ProjectAggregation]:
@@ -29,3 +14,8 @@ async def projects_counts_by_country_query(info: Info) -> list[ProjectAggregatio
         )
         for proj in projects if proj.get('latitude') and proj.get('longitude')
     ]
+
+
+async def get_projects_query(info: Info, filters: ProjectFilters = None, sort: ProjectSortOptions = None) -> list[GraphQLProject]:
+    """Returns filtered and sorted Projects"""
+    return await get_projects(filters, sort)

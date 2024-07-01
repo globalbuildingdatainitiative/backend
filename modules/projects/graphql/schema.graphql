@@ -659,6 +659,13 @@ type ProjectAggregation {
   count: Int!
 }
 
+input ProjectFilters {
+  country: String = null
+  city: String = null
+  classificationSystem: String = null
+  projectPhase: String = null
+}
+
 type ProjectInfo {
   buildingCompletionYear: Int
   buildingFootprint: ValueUnit
@@ -697,6 +704,11 @@ enum ProjectPhase {
   other
 }
 
+input ProjectSortOptions {
+  field: String!
+  order: String!
+}
+
 type Query {
   _service: _Service!
 
@@ -705,6 +717,9 @@ type Query {
 
   """Returns all contributions assigned to user"""
   contributions(filters: ContributionFilters = null, sortBy: ContributionSort = null): [Contribution!]!
+
+  """Returns filtered and sorted Projects"""
+  projects(filters: ProjectFilters!, sort: ProjectSortOptions!): [Project!]!
 }
 
 enum RoofType {

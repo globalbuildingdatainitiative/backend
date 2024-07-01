@@ -1,7 +1,6 @@
 from .db_model import DBProject, DBAssembly, DBProduct, DBEPD, DBTechFlow, DBImpactData
-from .inputs import GraphQLInputProject
+from .inputs import GraphQLInputProject, ProjectFilters, ProjectSortOptions
 from .types import GraphQLProject
-from .filters import ProjectFilters
 from .project import ProjectLocation, ProjectAggregation, Aggregation
 
 __all__ = [
@@ -17,4 +16,6 @@ __all__ = [
     ProjectFilters,
     ProjectLocation,
     ProjectAggregation,
+    ProjectFilters,
+    ProjectSortOptions,
 ]

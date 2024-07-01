@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import UUID
 
 import strawberry
@@ -200,3 +201,17 @@ class GraphQLInputProject:
     reference_study_period: strawberry.auto
     results: JSON | None = None
     software_info: GraphQLInputSoftwareInfo
+
+
+@strawberry.input
+class ProjectFilters:
+    country: str | None = None
+    city: str | None = None
+    classification_system: str | None = None
+    project_phase: str | None = None
+
+
+@strawberry.input
+class ProjectSortOptions:
+    field: str
+    order: str  # Should be either 'asc' or 'desc'
