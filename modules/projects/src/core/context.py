@@ -8,7 +8,7 @@ from models import User
 async def get_context(request: Request):
     from supertokens_python.recipe.session.asyncio import get_session
 
-    session = await get_session(request)
+    session = await get_session(request, session_required=False)
     if not session:
         return {"user": None}
 
