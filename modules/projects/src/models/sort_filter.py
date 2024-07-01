@@ -1,4 +1,6 @@
 from enum import Enum
+from typing import Type, Generic
+from uuid import UUID
 
 import strawberry
 from beanie import Document
@@ -6,8 +8,8 @@ from beanie.odm.queries.find import FindMany, FindQueryResultType
 
 
 @strawberry.input
-class FilterOptions:
-    equal: str | None = None
+class FilterOptions[T]:
+    equal: T | None = None
     # contains: str | None = None
     # starts_with: str | None = None
     # ends_with: str | None = None
@@ -26,19 +28,20 @@ class BaseFilter:  # pragma: no cover
 
 
 def filter_model_query(
-    model: Document, filters: BaseFilter, query: FindMany[FindQueryResultType] | None = None
+    model: Type[Document], filters: BaseFilter, query: FindMany[FindQueryResultType] | None = None
 ) -> FindMany[FindQueryResultType]:
     if query is None:
-        query = model.find_all()
+        query = model.find_all(fetch_links=True)
 
-    for filter_key in filters.keys():
-        _filter = getattr(filters, filter_key)
-        field = getattr(model, filter_key)
+    if filters:
+        for filter_key in filters.keys():
+            _filter = getattr(filters, filter_key)
+            field = getattr(model, filter_key)
 
-        if _filter.equal:
-            query = query.find(field == _filter.equal)
-        elif _filter.is_true is not None:
-            query = query.find(field == _filter.is_true)
+            if _filter.equal:
+                query = query.find(field == _filter.equal)
+            elif _filter.is_true is not None:
+                query = query.find(field == _filter.is_true)
 
     return query
 
@@ -50,18 +53,35 @@ class SortOptions(Enum):
 
 
 def sort_model_query(
-    model: Document, sorters: BaseFilter, query: FindMany[FindQueryResultType] | None = None
+    model: Type[Document], sorters: BaseFilter, query: FindMany[FindQueryResultType] | None = None
 ) -> FindMany[FindQueryResultType]:
     if query is None:
-        query = model.find_all()
+        query = model.find_all(fetch_links=True)
 
-    for sort_key in sorters.keys():
-        sort_by = getattr(sorters, sort_key)
-        field = getattr(model, sort_key)
+    if sorters:
+        for sort_key in sorters.keys():
+            sort_by = getattr(sorters, sort_key)
+            field = getattr(model, sort_key)
 
-        if sort_by == SortOptions.DSC:
-            query = query.sort(f"-{field}")
-        else:
-            query = query.sort(f"+{field}")
+            if sort_by == SortOptions.DSC:
+                query = query.sort(f"-{field}")
+            else:
+                query = query.sort(f"+{field}")
 
     return query
+
+
+@strawberry.input
+class ProjectFilters(BaseFilter):
+    id: FilterOptions[UUID] | None = None
+    name: FilterOptions[str] | None = None
+    description: FilterOptions[str] | None = None
+    # location: FilterOptions | None = None
+
+
+@strawberry.input
+class ProjectSort(BaseFilter):
+    id: SortOptions | None = None
+    name: SortOptions | None = None
+    description: SortOptions | None = None
+    # location: SortOptions | None = None

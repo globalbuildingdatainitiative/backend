@@ -1,12 +1,11 @@
-from models.contribution import (
+from .contribution import (
     DBContribution,
     GraphQLContribution,
     InputContribution,
     ContributionSort,
     ContributionFilters,
 )
-from models.project import (
-    Aggregation,
+from .project import (
     DBProject,
     DBAssembly,
     DBProduct,
@@ -15,15 +14,12 @@ from models.project import (
     DBImpactData,
     GraphQLProject,
     GraphQLInputProject,
-    ProjectFilters,
-    ProjectLocation,
-    ProjectAggregation,
 )
-
-from models.user import User
+from .response import GraphQLResponse
+from .user import User
+from .sort_filter import ProjectFilters, ProjectSort, sort_model_query, filter_model_query
 
 __all__ = [
-    Aggregation,
     DBProject,
     DBAssembly,
     DBProduct,
@@ -35,10 +31,12 @@ __all__ = [
     DBContribution,
     GraphQLContribution,
     InputContribution,
-    ProjectLocation,
     ContributionSort,
     ContributionFilters,
     ProjectFilters,
-    ProjectAggregation,
+    ProjectSort,
     User,
+    GraphQLResponse,
+    sort_model_query,
+    filter_model_query
 ]

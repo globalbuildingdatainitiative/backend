@@ -31,10 +31,10 @@ class InputContribution:
 
 @strawberry.input
 class ContributionFilters(BaseFilter):
-    id: FilterOptions | None = None
-    upload_at: FilterOptions | None = None
-    user_id: FilterOptions | None = None
-    organization_id: FilterOptions | None = None
+    id: FilterOptions[UUID] | None = None
+    upload_at: FilterOptions[datetime.datetime] | None = None
+    user_id: FilterOptions[UUID] | None = None
+    organization_id: FilterOptions[UUID] | None = None
 
 
 @strawberry.input
