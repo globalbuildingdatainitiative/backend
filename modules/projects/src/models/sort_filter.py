@@ -85,3 +85,11 @@ class ProjectSort(BaseFilter):
     name: SortOptions | None = None
     description: SortOptions | None = None
     # location: SortOptions | None = None
+
+
+@strawberry.input
+class ProjectGroups(BaseFilter):
+    id: UUID | None = None
+    name: str | None = None
+    description: str | None = None
+    # location: str | None = None

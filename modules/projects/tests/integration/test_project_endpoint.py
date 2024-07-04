@@ -17,6 +17,7 @@ async def test_projects_query(client: AsyncClient, projects):
                         name
                     }
                 }
+                count
             }
         }
     """
@@ -33,6 +34,7 @@ async def test_projects_query(client: AsyncClient, projects):
 
     assert not data.get("errors")
     assert data.get("data", {}).get("projects", {}).get("items")
+    assert data.get("data", {}).get("projects", {}).get("count") == len(projects)
     assert data.get("data", {}).get("projects", {}).get("items", [])[0].get("assemblies")
 
 
@@ -40,8 +42,8 @@ async def test_projects_query(client: AsyncClient, projects):
 async def test_projects_query_filter(client: AsyncClient, projects):
     query = """
         query($id: UUID!) {
-            projects(filterBy: {id: {equal: $id}}) {
-                items {
+            projects {
+                items(filterBy: {id: {equal: $id}}) {
                     id
                     name
                 }
@@ -69,8 +71,8 @@ async def test_projects_query_filter(client: AsyncClient, projects):
 async def test_projects_query_sort(client: AsyncClient, projects):
     query = """
         query {
-            projects(sortBy: {id: ASC}) {
-                items {
+            projects {
+                items(sortBy: {id: ASC}) {
                     id
                     name
                 }
@@ -98,8 +100,8 @@ async def test_projects_query_sort(client: AsyncClient, projects):
 async def test_projects_query_offset(client: AsyncClient, projects):
     query = """
         query {
-            projects(offset: 2) {
-                items {
+            projects {
+                items(offset: 2) {
                     id
                     name
                 }
@@ -123,15 +125,18 @@ async def test_projects_query_offset(client: AsyncClient, projects):
 
 
 @pytest.mark.asyncio
-async def test_projects_query_groups(client: AsyncClient, projects):
+@pytest.mark.parametrize("group_by", ["name", "location.country"])
+async def test_projects_query_groups(client: AsyncClient, projects, group_by):
     query = """
-        query {
+        query($groupBy: String!) {
             projects {
-                groups(groupBy: "location.country") {
+                groups(groupBy: $groupBy) {
+                    group
                     items {
                         id
                         name
                     }
+                    count
                 }  
             }
         }
@@ -141,6 +146,9 @@ async def test_projects_query_groups(client: AsyncClient, projects):
         f"{settings.API_STR}/graphql",
         json={
             "query": query,
+            "variables": {
+                "groupBy": group_by
+            },
         },
     )
 
@@ -148,18 +156,20 @@ async def test_projects_query_groups(client: AsyncClient, projects):
     data = response.json()
 
     assert not data.get("errors")
-    assert data.get("data", {}).get("projects", {}).get("items")
-    assert data.get("data", {}).get("projects", {}).get("items", [])[0].get("id") == str(projects[2].id)
+    assert data.get("data", {}).get("projects", {}).get("groups")
+    assert data.get("data", {}).get("projects", {}).get("groups")[0].get("items", [])[0].get("id") == str(
+        projects[0].id)
 
 
 @pytest.mark.asyncio
 async def test_projects_query_aggregate(client: AsyncClient, projects):
     query = """
         query {
-            projects(offset: 2) {
-                items {
-                    id
-                    name
+            projects {
+                aggregation(apply: [{method: AVG, field: "reference_study_period"}]) {
+                    method
+                    field
+                    value
                 }
             }
         }
@@ -176,5 +186,7 @@ async def test_projects_query_aggregate(client: AsyncClient, projects):
     data = response.json()
 
     assert not data.get("errors")
-    assert data.get("data", {}).get("projects", {}).get("items")
-    assert data.get("data", {}).get("projects", {}).get("items", [])[0].get("id") == str(projects[2].id)
+    assert data.get("data", {}).get("projects", {}).get("aggregation")
+    assert data.get("data", {}).get("projects", {}).get("aggregation", [])[0] == {"method": "AVG",
+                                                                                  "field": "reference_study_period",
+                                                                                  "value": 50}

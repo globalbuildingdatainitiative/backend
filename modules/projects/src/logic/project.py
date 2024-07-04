@@ -1,5 +1,4 @@
 import requests
-from motor.motor_asyncio import AsyncIOMotorCollection
 
 from models import DBProject, ProjectFilters, ProjectSort, filter_model_query, sort_model_query
 
