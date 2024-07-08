@@ -2,6 +2,7 @@ from typing import Union
 from uuid import UUID
 
 import strawberry
+from iso3166 import countries
 from lcax import AreaType as LCAxAreaType
 from lcax import Assembly as LCAxAssembly
 from lcax import BuildingInfo as LCAxProjectInfo
@@ -99,7 +100,6 @@ class GraphQLClassification:
 
 @strawberry.experimental.pydantic.type(model=LCAxAssembly, name="Assembly")
 class GraphQLAssembly:
-    category: strawberry.auto
     classification: list[GraphQLClassification] | None = None
     comment: strawberry.auto
     description: strawberry.auto
@@ -117,6 +117,24 @@ class GraphQLLocation:
     address: strawberry.auto
     city: strawberry.auto
     country: GraphQLCountry
+
+    @strawberry.field
+    def country_name(self) -> str:
+        return countries.get(self.country.value).name
+
+    @strawberry.field
+    async def longitude(self) -> float:
+        from models.project.methods import get_coordinates
+
+        location = await get_coordinates(countries.get(self.country.value).name)
+        return location.get("longitude", 0.0)
+
+    @strawberry.field
+    async def latitude(self) -> float:
+        from models.project.methods import get_coordinates
+
+        location = await get_coordinates(countries.get(self.country.value).name)
+        return location.get("latitude", 0.0)
 
 
 @strawberry.experimental.pydantic.type(model=LCAxValueUnit, name="ValueUnit")

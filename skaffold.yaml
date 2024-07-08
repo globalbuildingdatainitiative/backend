@@ -194,3 +194,9 @@ portForward:
     resourceName: backend-service
     namespace: projects
     port: 7003
+
+  - resourceType: service
+    resourceName: database-service
+    namespace: projects
+    port: 27017
+    localPort: 7103

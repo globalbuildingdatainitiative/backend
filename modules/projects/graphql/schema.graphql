@@ -1,5 +1,22 @@
 directive @oneOf on INPUT_OBJECT
 
+enum AggregationMethod {
+  AVG
+  SUM
+  MIN
+  MAX
+  MEDIAN
+  PCT25
+  PCT75
+  STD
+}
+
+type AggregationResult {
+  method: AggregationMethod!
+  field: String!
+  value: Float
+}
+
 type AreaType {
   definition: String!
   unit: Unit!
@@ -7,7 +24,6 @@ type AreaType {
 }
 
 type Assembly {
-  category: String
   classification: [Classification!]
   comment: String
   description: String
@@ -64,10 +80,10 @@ type Contribution {
 }
 
 input ContributionFilters {
-  id: FilterOptions = null
-  uploadAt: FilterOptions = null
-  userId: FilterOptions = null
-  organizationId: FilterOptions = null
+  id: UUIDFilterOptions = null
+  uploadAt: DatetimeFilterOptions = null
+  userId: UUIDFilterOptions = null
+  organizationId: UUIDFilterOptions = null
 }
 
 input ContributionSort {
@@ -342,6 +358,11 @@ scalar Date
 """Date with time (isoformat)"""
 scalar DateTime
 
+input DatetimeFilterOptions {
+  equal: DateTime = null
+  isTrue: Boolean = null
+}
+
 type EPD {
   comment: String
   conversions: [Conversion!]
@@ -362,11 +383,6 @@ type EPD {
 }
 
 union EPDTechFlow = EPD | TechFlow
-
-input FilterOptions {
-  equal: String = null
-  isTrue: Boolean = null
-}
 
 enum GeneralEnergyClass {
   existing
@@ -423,6 +439,11 @@ enum ImpactCategoryKey {
   mer
   eee
   eet
+}
+
+input InputAggregation {
+  method: AggregationMethod!
+  field: String!
 }
 
 input InputAreaType {
@@ -611,6 +632,9 @@ enum LifeCycleStage {
 }
 
 type Location {
+  countryName: String!
+  longitude: Float!
+  latitude: Float!
   address: String
   city: String
   country: Country!
@@ -654,6 +678,29 @@ type Project {
   softwareInfo: SoftwareInfo!
 }
 
+input ProjectFilters {
+  id: UUIDFilterOptions = null
+  name: StrFilterOptions = null
+  description: StrFilterOptions = null
+}
+
+type ProjectGraphQLGroupResponse {
+  group: String!
+  count: Int!
+  items(limit: Int = null): [Project!]!
+  aggregation(apply: [InputAggregation!]!): [AggregationResult!]!
+}
+
+type ProjectGraphQLResponse {
+  """The list of items in this pagination window."""
+  items(filterBy: ProjectFilters!, sortBy: ProjectSort!, offset: Int! = 0, limit: Int! = 50): [Project!]
+
+  """Total number of items in the filtered dataset."""
+  count: Int!
+  groups(groupBy: String!, limit: Int! = 50): [ProjectGraphQLGroupResponse!]!
+  aggregation(apply: [InputAggregation!]!): [AggregationResult!]!
+}
+
 type ProjectInfo {
   buildingCompletionYear: Int
   buildingFootprint: ValueUnit
@@ -687,14 +734,18 @@ enum ProjectPhase {
   other
 }
 
+input ProjectSort {
+  id: SortOptions = null
+  name: SortOptions = null
+  description: SortOptions = null
+}
+
 type Query {
   _service: _Service!
 
-  """Returns all Projects"""
-  projects: [Project!]!
-
   """Returns all contributions assigned to user"""
   contributions(filters: ContributionFilters = null, sortBy: ContributionSort = null): [Contribution!]!
+  projects: ProjectGraphQLResponse!
 }
 
 enum RoofType {
@@ -727,6 +778,11 @@ enum Standard {
   unknown
 }
 
+input StrFilterOptions {
+  equal: String = null
+  isTrue: Boolean = null
+}
+
 enum SubType {
   generic
   specific
@@ -748,6 +804,11 @@ type TechFlow {
 }
 
 scalar UUID
+
+input UUIDFilterOptions {
+  equal: UUID = null
+  isTrue: Boolean = null
+}
 
 enum Unit {
   m

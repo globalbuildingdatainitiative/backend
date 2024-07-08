@@ -105,8 +105,8 @@ class GraphQLInputClassification:
 
 @strawberry.experimental.pydantic.input(model=LCAxAssembly, name="InputAssembly")
 class GraphQLInputAssembly:
-    category: strawberry.auto
     classification: list[GraphQLInputClassification] | None = None
+    category: str | None = None
     comment: strawberry.auto
     description: strawberry.auto
     id: UUID | None = None
