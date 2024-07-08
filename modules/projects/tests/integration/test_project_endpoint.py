@@ -53,10 +53,7 @@ async def test_projects_query_filter(client: AsyncClient, projects):
 
     response = await client.post(
         f"{settings.API_STR}/graphql",
-        json={
-            "query": query,
-            "variables": {"id": str(projects[0].id)}
-        },
+        json={"query": query, "variables": {"id": str(projects[0].id)}},
     )
 
     assert response.status_code == 200
@@ -93,7 +90,8 @@ async def test_projects_query_sort(client: AsyncClient, projects):
     assert not data.get("errors")
     assert data.get("data", {}).get("projects", {}).get("items")
     assert data.get("data", {}).get("projects", {}).get("items", []) == [
-        project.model_dump(include={"id", "name"}, mode='json') for project in sorted(projects, key=lambda p: p.id)]
+        project.model_dump(include={"id", "name"}, mode="json") for project in sorted(projects, key=lambda p: p.id)
+    ]
 
 
 @pytest.mark.asyncio
@@ -132,7 +130,7 @@ async def test_projects_query_groups(client: AsyncClient, projects, group_by):
             projects {
                 groups(groupBy: $groupBy) {
                     group
-                    items {
+                    items(limit: 2) {
                         id
                         name
                     }
@@ -146,9 +144,7 @@ async def test_projects_query_groups(client: AsyncClient, projects, group_by):
         f"{settings.API_STR}/graphql",
         json={
             "query": query,
-            "variables": {
-                "groupBy": group_by
-            },
+            "variables": {"groupBy": group_by},
         },
     )
 
@@ -157,8 +153,7 @@ async def test_projects_query_groups(client: AsyncClient, projects, group_by):
 
     assert not data.get("errors")
     assert data.get("data", {}).get("projects", {}).get("groups")
-    assert data.get("data", {}).get("projects", {}).get("groups")[0].get("items", [])[0].get("id") == str(
-        projects[0].id)
+    assert len(data.get("data", {}).get("projects", {}).get("groups")[0].get("items", [])) == 2
 
 
 @pytest.mark.asyncio
@@ -166,7 +161,7 @@ async def test_projects_query_aggregate(client: AsyncClient, projects):
     query = """
         query {
             projects {
-                aggregation(apply: [{method: AVG, field: "reference_study_period"}]) {
+                aggregation(apply: [{method: AVG, field: "referenceStudyPeriod"}]) {
                     method
                     field
                     value
@@ -187,6 +182,48 @@ async def test_projects_query_aggregate(client: AsyncClient, projects):
 
     assert not data.get("errors")
     assert data.get("data", {}).get("projects", {}).get("aggregation")
-    assert data.get("data", {}).get("projects", {}).get("aggregation", [])[0] == {"method": "AVG",
-                                                                                  "field": "reference_study_period",
-                                                                                  "value": 50}
+    assert data.get("data", {}).get("projects", {}).get("aggregation", [])[0] == {
+        "method": "AVG",
+        "field": "referenceStudyPeriod",
+        "value": 50,
+    }
+
+
+@pytest.mark.asyncio
+async def test_projects_query_group_aggregate(client: AsyncClient, projects):
+    query = """
+        query($groupBy: String!) {
+            projects {
+                groups(groupBy: $groupBy) {
+                    group
+                    items {
+                        id
+                    }
+                    aggregation(apply: [{method: AVG, field: "referenceStudyPeriod"}]) {
+                        method
+                        field
+                        value
+                    }
+                    count
+                }  
+            }
+        }
+    """
+
+    response = await client.post(
+        f"{settings.API_STR}/graphql",
+        json={
+            "query": query,
+            "variables": {"groupBy": "name"},
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert not data.get("errors")
+    assert data.get("data", {}).get("projects", {}).get("groups")
+    assert (
+        data.get("data", {}).get("projects", {}).get("groups")[0].get("aggregation", [])[0].get("field")
+        == "referenceStudyPeriod"
+    )

@@ -17,7 +17,7 @@ from .project import (
 )
 from .response import GraphQLResponse
 from .user import User
-from .sort_filter import ProjectFilters, ProjectSort, sort_model_query, filter_model_query, ProjectGroups
+from .sort_filter import ProjectFilters, ProjectSort, sort_model_query, filter_model_query
 
 __all__ = [
     DBProject,
@@ -39,5 +39,4 @@ __all__ = [
     GraphQLResponse,
     sort_model_query,
     filter_model_query,
-    ProjectGroups
 ]

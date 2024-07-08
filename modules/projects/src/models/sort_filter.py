@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Type, Generic
+from typing import Type
 from uuid import UUID
 
 import strawberry
@@ -85,11 +85,3 @@ class ProjectSort(BaseFilter):
     name: SortOptions | None = None
     description: SortOptions | None = None
     # location: SortOptions | None = None
-
-
-@strawberry.input
-class ProjectGroups(BaseFilter):
-    id: UUID | None = None
-    name: str | None = None
-    description: str | None = None
-    # location: str | None = None
