@@ -2,7 +2,7 @@ from strawberry.types import Info
 
 from core.context import get_user
 from logic import get_contributions, create_contributions, check_fetch_projects
-from models import GraphQLContribution, InputContribution, ContributionFilters, ContributionSort
+from models import GraphQLContribution, InputContribution, ContributionFilters, ContributionSort, GraphQLResponse
 
 
 async def contributions_query(
@@ -14,7 +14,7 @@ async def contributions_query(
 
     contributions = await get_contributions(user.organization_id, filters, sort_by, check_fetch_projects(info))
 
-    return contributions
+    return GraphQLResponse(items=contributions, count=len(contributions))
 
 
 async def add_contributions_mutation(info: Info, contributions: list[InputContribution]) -> list[GraphQLContribution]:
