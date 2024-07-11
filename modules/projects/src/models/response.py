@@ -5,7 +5,7 @@ import strawberry
 from strawberry import Info
 
 if TYPE_CHECKING:
-    from models import ProjectFilters, ProjectSort
+    from models import Filters, ProjectSort
 
 
 @strawberry.enum
@@ -62,21 +62,29 @@ class GraphQLResponse[T]:
         description="The list of items in this pagination window.",
     )
     async def items(
-        self,
-        filter_by: Annotated["ProjectFilters", strawberry.lazy("models")] = None,
-        sort_by: Annotated["ProjectSort", strawberry.lazy("models")] = None,
-        offset: int = 0,
-        limit: int = 50,
+            self,
+            info: Info,
+            filter_by: Annotated["Filters[T]", strawberry.lazy("models")] = None,
+            sort_by: Annotated["ProjectSort", strawberry.lazy("models")] = None,
+            offset: int = 0,
+            limit: int = 50,
     ) -> list[T] | None:
+        from core.context import get_user
+        user = get_user(info)
+
         if self._type == "Project":
             from logic import get_projects
 
             return await get_projects(filter_by, sort_by, limit, offset)
+        elif self._type == "Contribution":
+            from logic import get_contributions, check_fetch_projects
+
+            return await get_contributions(user.organization_id, filter_by, sort_by, limit, offset, check_fetch_projects(info))
         return None
 
     @strawberry.field(description="Total number of items in the filtered dataset.")
-    async def count(self) -> int:
-        return len(await self.items())
+    async def count(self, info: Info) -> int:
+        return len(await self.items(info))
 
     @strawberry.field()
     async def groups(self, info: Info, group_by: str, limit: int = 50) -> list[GraphQLGroupResponse[T]]:

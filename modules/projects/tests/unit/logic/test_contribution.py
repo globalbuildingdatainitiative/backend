@@ -7,7 +7,7 @@ from models import InputContribution, GraphQLInputProject
 
 @pytest.mark.asyncio
 async def test_get_contributions(user, contributions):
-    _contributions = await get_contributions(user.organization_id)
+    _contributions = await get_contributions(user.organization_id, None, None, 10, 0, fetch_links=False)
 
     assert _contributions
     assert len(_contributions) == len(contributions)

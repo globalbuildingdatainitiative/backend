@@ -72,6 +72,11 @@ def sort_model_query(
 
 
 @strawberry.input
+class Filters[T](BaseFilter):
+    id: FilterOptions[UUID] | None = None
+
+
+@strawberry.input
 class ProjectFilters(BaseFilter):
     id: FilterOptions[UUID] | None = None
     name: FilterOptions[str] | None = None

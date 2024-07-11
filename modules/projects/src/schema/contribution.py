@@ -7,7 +7,7 @@ from models import GraphQLContribution, InputContribution, ContributionFilters, 
 
 async def contributions_query(
     info: Info, filters: ContributionFilters | None = None, sort_by: ContributionSort | None = None
-) -> list[GraphQLContribution]:
+) -> GraphQLResponse[GraphQLContribution]:
     """Returns all contributions assigned to user"""
 
     user = get_user(info)

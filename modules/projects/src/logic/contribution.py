@@ -6,18 +6,26 @@ from beanie import WriteRules
 from strawberry import Info
 
 from models import DBContribution, InputContribution, User, ContributionFilters, ContributionSort, DBProject
-from models.sort_filter import sort_model_query
+from models.sort_filter import sort_model_query, filter_model_query
 
 
 async def get_contributions(
-    organization_id: UUID,
-    filters: ContributionFilters | None = None,
-    sort_by: ContributionSort | None = None,
-    fetch_links: bool = False,
+        organization_id: UUID,
+        filter_by: ContributionFilters | None,
+        sort_by: ContributionSort | None,
+        limit: int,
+        offset: int,
+        fetch_links: bool = False,
 ) -> list[DBContribution]:
     query = DBContribution.find(DBContribution.organization_id == organization_id, fetch_links=fetch_links)
-    if sort_by:
-        query = sort_model_query(DBContribution, sort_by, query)
+
+    query = filter_model_query(DBContribution, filter_by, query)
+    query = sort_model_query(DBContribution, sort_by, query)
+    query = query.limit(limit)
+
+    if offset:
+        query = query.skip(offset)
+
     return await query.to_list()
 
 
