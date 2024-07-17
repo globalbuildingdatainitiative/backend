@@ -43,7 +43,7 @@ async def test_projects_query_filter(client: AsyncClient, projects):
     query = """
         query($id: UUID!) {
             projects {
-                items(filterBy: {id: {equal: $id}}) {
+                items(filterBy: {equal: {id: $id}}) {
                     id
                     name
                 }
@@ -69,7 +69,7 @@ async def test_projects_query_sort(client: AsyncClient, projects):
     query = """
         query {
             projects {
-                items(sortBy: {id: ASC}) {
+                items(sortBy: {dsc: "name"}) {
                     id
                     name
                 }
@@ -90,7 +90,7 @@ async def test_projects_query_sort(client: AsyncClient, projects):
     assert not data.get("errors")
     assert data.get("data", {}).get("projects", {}).get("items")
     assert data.get("data", {}).get("projects", {}).get("items", []) == [
-        project.model_dump(include={"id", "name"}, mode="json") for project in sorted(projects, key=lambda p: p.id)
+        project.model_dump(include={"id", "name"}, mode="json") for project in sorted(projects, key=lambda p: p.name)
     ]
 
 

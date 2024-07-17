@@ -1,22 +1,10 @@
-from enum import Enum
+import re
 from typing import Type
-from uuid import UUID
 
 import strawberry
 from beanie import Document
 from beanie.odm.queries.find import FindMany, FindQueryResultType
-
-
-@strawberry.input
-class FilterOptions[T]:
-    equal: T | None = None
-    # contains: str | None = None
-    # starts_with: str | None = None
-    # ends_with: str | None = None
-    # is_empty: bool | None = None
-    # is_not_empty: bool | None = None
-    # is_any_of: list[str] | None = None
-    is_true: bool | None = None
+from strawberry.scalars import JSON
 
 
 class BaseFilter:  # pragma: no cover
@@ -26,6 +14,9 @@ class BaseFilter:  # pragma: no cover
     def keys(self):
         return [key for key, value in self.dict().items() if value]
 
+    def items(self):
+        return [(key, value) for key, value in self.dict().items() if value]
+
 
 def filter_model_query(
     model: Type[Document], filters: BaseFilter, query: FindMany[FindQueryResultType] | None = None
@@ -34,36 +25,47 @@ def filter_model_query(
         query = model.find_all(fetch_links=True)
 
     if filters:
-        for filter_key in filters.keys():
-            _filter = getattr(filters, filter_key)
-            field = getattr(model, filter_key)
+        for _filter, fields in filters.items():
+            for _field, value in fields.items():
+                if not _field:
+                    continue
+                _field = to_snake(_field)
 
-            if _filter.equal:
-                query = query.find(field == _filter.equal)
-            elif _filter.is_true is not None:
-                query = query.find(field == _filter.is_true)
+                field = getattr(model, _field)
+
+                if _filter == "equal":
+                    query = query.find(field == value)
+                elif _filter == "is_true" and value is not None:
+                    query = query.find(field is True)
 
     return query
 
 
-@strawberry.enum
-class SortOptions(Enum):
-    ASC = "asc"
-    DSC = "dsc"
+def to_camel(string: str) -> str:
+    return "".join(word.capitalize() for word in string.split("_"))
+
+
+def to_snake(string: str) -> str:
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", string).lower()
 
 
 def sort_model_query(
-    model: Type[Document], sorters: BaseFilter, query: FindMany[FindQueryResultType] | None = None
+    model: Type[Document], sort_by: BaseFilter, query: FindMany[FindQueryResultType] | None = None
 ) -> FindMany[FindQueryResultType]:
     if query is None:
         query = model.find_all(fetch_links=True)
 
-    if sorters:
-        for sort_key in sorters.keys():
-            sort_by = getattr(sorters, sort_key)
-            field = getattr(model, sort_key)
+    if sort_by:
+        for sort_direction in ["asc", "dsc"]:
+            field = getattr(sort_by, sort_direction)
+            if not field:
+                continue
+            field = to_snake(field)
 
-            if sort_by == SortOptions.DSC:
+            if not hasattr(model, field):
+                raise AttributeError(f"Field {field} does not exist in model {model}")
+
+            if sort_direction == "dsc":
                 query = query.sort(f"-{field}")
             else:
                 query = query.sort(f"+{field}")
@@ -72,16 +74,18 @@ def sort_model_query(
 
 
 @strawberry.input
-class ProjectFilters(BaseFilter):
-    id: FilterOptions[UUID] | None = None
-    name: FilterOptions[str] | None = None
-    description: FilterOptions[str] | None = None
-    # location: FilterOptions | None = None
+class FilterBy(BaseFilter):
+    equal: JSON | None = None
+    # contains: str | None = None
+    # starts_with: str | None = None
+    # ends_with: str | None = None
+    # is_empty: bool | None = None
+    # is_not_empty: bool | None = None
+    # is_any_of: list[str] | None = None
+    is_true: bool | None = None
 
 
-@strawberry.input
-class ProjectSort(BaseFilter):
-    id: SortOptions | None = None
-    name: SortOptions | None = None
-    description: SortOptions | None = None
-    # location: SortOptions | None = None
+@strawberry.input(one_of=True)
+class SortBy(BaseFilter):
+    asc: str | None = strawberry.UNSET
+    dsc: str | None = strawberry.UNSET

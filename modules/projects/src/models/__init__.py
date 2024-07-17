@@ -2,8 +2,6 @@ from .contribution import (
     DBContribution,
     GraphQLContribution,
     InputContribution,
-    ContributionSort,
-    ContributionFilters,
 )
 from .project import (
     DBProject,
@@ -17,7 +15,7 @@ from .project import (
 )
 from .response import GraphQLResponse
 from .user import User
-from .sort_filter import ProjectFilters, ProjectSort, sort_model_query, filter_model_query
+from .sort_filter import sort_model_query, filter_model_query, FilterBy, SortBy
 
 __all__ = [
     DBProject,
@@ -31,12 +29,10 @@ __all__ = [
     DBContribution,
     GraphQLContribution,
     InputContribution,
-    ContributionSort,
-    ContributionFilters,
-    ProjectFilters,
-    ProjectSort,
     User,
     GraphQLResponse,
     sort_model_query,
     filter_model_query,
+    FilterBy,
+    SortBy,
 ]

@@ -10,9 +10,13 @@ async def test_contributions_query(client: AsyncClient, contributions):
     query = """
         query {
             contributions {
-                id
-                uploadedAt
-                userId
+                items {
+                    id
+                    project {
+                        name
+                    }
+                }
+                count
             }
         }
     """
@@ -28,7 +32,8 @@ async def test_contributions_query(client: AsyncClient, contributions):
     data = response.json()
 
     assert not data.get("errors")
-    assert data.get("data", {}).get("contributions")
+    assert data.get("data", {}).get("contributions", {}).get("items")
+    assert data.get("data", {}).get("contributions", {}).get("count")
 
 
 @pytest.mark.asyncio
@@ -67,3 +72,61 @@ async def test_add_contributions_mutation(client: AsyncClient, datafix_dir):
     assert not data.get("errors")
     assert data.get("data", {}).get("addContributions")
     assert len(data.get("data", {}).get("addContributions")) == 1
+
+
+@pytest.mark.asyncio
+async def test_contributions_query_filter(client: AsyncClient, contributions):
+    query = """
+        query($id: UUID!) {
+            contributions {
+                items(filterBy: {equal: {organizationId: $id}}) {
+                    id
+                    organizationId
+                }
+            }
+        }
+    """
+
+    response = await client.post(
+        f"{settings.API_STR}/graphql",
+        json={"query": query, "variables": {"id": str(contributions[0].organization_id)}},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert not data.get("errors")
+    assert len(data.get("data", {}).get("contributions", {}).get("items")) == 3
+    assert data.get("data", {}).get("contributions", {}).get("items", [])[0].get("organizationId") == str(
+        contributions[0].organization_id
+    )
+
+
+@pytest.mark.asyncio
+async def test_contributions_query_sort(client: AsyncClient, contributions):
+    query = """
+        query {
+            contributions {
+                items(sortBy: {asc: "uploadedAt"}) {
+                    id
+                }
+            }
+        }
+    """
+
+    response = await client.post(
+        f"{settings.API_STR}/graphql",
+        json={
+            "query": query,
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert not data.get("errors")
+    assert data.get("data", {}).get("contributions", {}).get("items")
+    assert data.get("data", {}).get("contributions", {}).get("items", []) == [
+        contribution.model_dump(include={"id"}, mode="json")
+        for contribution in sorted(contributions, key=lambda p: p.uploaded_at)
+    ]
