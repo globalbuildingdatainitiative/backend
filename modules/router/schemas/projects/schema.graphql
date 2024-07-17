@@ -79,18 +79,21 @@ type Contribution {
   organizationId: UUID!
 }
 
-input ContributionFilters {
-  id: UUIDFilterOptions = null
-  uploadAt: DatetimeFilterOptions = null
-  userId: UUIDFilterOptions = null
-  organizationId: UUIDFilterOptions = null
+type ContributionGraphQLGroupResponse {
+  group: String!
+  count: Int!
+  items(limit: Int = null): [Contribution!]!
+  aggregation(apply: [InputAggregation!]!): [AggregationResult!]!
 }
 
-input ContributionSort {
-  id: SortOptions = null
-  uploadAt: SortOptions = null
-  userId: SortOptions = null
-  organizationId: SortOptions = null
+type ContributionGraphQLResponse {
+  """The list of items in this pagination window."""
+  items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int! = 50): [Contribution!]
+
+  """Total number of items in the filtered dataset."""
+  count: Int!
+  groups(groupBy: String!, limit: Int! = 50): [ContributionGraphQLGroupResponse!]!
+  aggregation(apply: [InputAggregation!]!): [AggregationResult!]!
 }
 
 type Conversion {
@@ -358,11 +361,6 @@ scalar Date
 """Date with time (isoformat)"""
 scalar DateTime
 
-input DatetimeFilterOptions {
-  equal: DateTime = null
-  isTrue: Boolean = null
-}
-
 type EPD {
   comment: String
   conversions: [Conversion!]
@@ -384,6 +382,11 @@ type EPD {
 
 union EPDTechFlow = EPD | TechFlow
 
+input FilterBy {
+  equal: JSON = null
+  isTrue: Boolean = null
+}
+
 enum GeneralEnergyClass {
   existing
   standard
@@ -391,9 +394,9 @@ enum GeneralEnergyClass {
   unknown
 }
 
-input GraphQLInputImpactData @oneOf {
-  EPD: InputEPD
-  techFlow: InputTechFlow
+input GraphQLInputImpactData {
+  EPD: InputEPD = null
+  techFlow: InputTechFlow = null
 }
 
 input GraphQLInputProjectInfo {
@@ -609,9 +612,9 @@ input InputValueUnit {
 }
 
 """
-The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).
 """
-scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
 
 enum LifeCycleStage {
   a1a3
@@ -678,12 +681,6 @@ type Project {
   softwareInfo: SoftwareInfo!
 }
 
-input ProjectFilters {
-  id: UUIDFilterOptions = null
-  name: StrFilterOptions = null
-  description: StrFilterOptions = null
-}
-
 type ProjectGraphQLGroupResponse {
   group: String!
   count: Int!
@@ -693,7 +690,7 @@ type ProjectGraphQLGroupResponse {
 
 type ProjectGraphQLResponse {
   """The list of items in this pagination window."""
-  items(filterBy: ProjectFilters!, sortBy: ProjectSort!, offset: Int! = 0, limit: Int! = 50): [Project!]
+  items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int! = 50): [Project!]
 
   """Total number of items in the filtered dataset."""
   count: Int!
@@ -734,18 +731,14 @@ enum ProjectPhase {
   other
 }
 
-input ProjectSort {
-  id: SortOptions = null
-  name: SortOptions = null
-  description: SortOptions = null
-}
-
 type Query {
   _service: _Service!
 
-  """Returns all contributions assigned to user"""
-  contributions(filters: ContributionFilters = null, sortBy: ContributionSort = null): [Contribution!]!
+  """Returns all projects of a user's organization"""
   projects: ProjectGraphQLResponse!
+
+  """Returns all contributions of a user's organization"""
+  contributions: ContributionGraphQLResponse!
 }
 
 enum RoofType {
@@ -762,9 +755,9 @@ type SoftwareInfo {
   lcaSoftware: String!
 }
 
-enum SortOptions {
-  ASC
-  DSC
+input SortBy @oneOf {
+  asc: String
+  dsc: String
 }
 
 type Source {
@@ -776,11 +769,6 @@ enum Standard {
   en15804a1
   en15804a2
   unknown
-}
-
-input StrFilterOptions {
-  equal: String = null
-  isTrue: Boolean = null
 }
 
 enum SubType {
@@ -804,11 +792,6 @@ type TechFlow {
 }
 
 scalar UUID
-
-input UUIDFilterOptions {
-  equal: UUID = null
-  isTrue: Boolean = null
-}
 
 enum Unit {
   m

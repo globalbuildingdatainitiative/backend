@@ -5,17 +5,17 @@ from uuid import UUID
 from beanie import WriteRules
 from strawberry import Info
 
-from models import DBContribution, InputContribution, User, ContributionFilters, ContributionSort, DBProject
-from models.sort_filter import sort_model_query, filter_model_query
+from models import DBContribution, InputContribution, User, DBProject
+from models.sort_filter import sort_model_query, filter_model_query, FilterBy, SortBy
 
 
 async def get_contributions(
-        organization_id: UUID,
-        filter_by: ContributionFilters | None,
-        sort_by: ContributionSort | None,
-        limit: int,
-        offset: int,
-        fetch_links: bool = False,
+    organization_id: UUID,
+    filter_by: FilterBy | None,
+    sort_by: SortBy | None,
+    limit: int,
+    offset: int,
+    fetch_links: bool = False,
 ) -> list[DBContribution]:
     query = DBContribution.find(DBContribution.organization_id == organization_id, fetch_links=fetch_links)
 
@@ -26,7 +26,8 @@ async def get_contributions(
     if offset:
         query = query.skip(offset)
 
-    return await query.to_list()
+    contributions = await query.to_list()
+    return contributions
 
 
 async def create_contributions(contributions: list[InputContribution], user: User) -> list[DBContribution]:
@@ -42,7 +43,7 @@ async def create_contributions(contributions: list[InputContribution], user: Use
 
 
 def check_fetch_projects(info: Info) -> bool:
-    if contribution_field := [field for field in info.selected_fields if field.name == "contributions"]:
+    if contribution_field := [field for field in info.selected_fields if field.name == "items"]:
         if [_field for _field in contribution_field[0].selections if _field.name == "project"]:
             return True
 

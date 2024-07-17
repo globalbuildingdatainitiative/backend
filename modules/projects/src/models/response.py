@@ -1,11 +1,9 @@
 from enum import Enum
-from typing import Type, Annotated, TYPE_CHECKING
 
 import strawberry
 from strawberry import Info
 
-if TYPE_CHECKING:
-    from models import Filters, ProjectSort
+from models.sort_filter import FilterBy, SortBy
 
 
 @strawberry.enum
@@ -37,7 +35,6 @@ class AggregationResult:
 class GraphQLGroupResponse[T]:
     group: str
 
-    # items: list[T] = strawberry.field()
     @strawberry.field()
     def items(self, limit: int | None = None) -> list[T]:
         return self.items
@@ -51,7 +48,7 @@ class GraphQLGroupResponse[T]:
 
 @strawberry.type
 class GraphQLResponse[T]:
-    def __init__(self, generic_type: Type[T]):
+    def __init__(self, generic_type: type[T]):
         self._generic_type = generic_type
 
     @property
@@ -62,14 +59,15 @@ class GraphQLResponse[T]:
         description="The list of items in this pagination window.",
     )
     async def items(
-            self,
-            info: Info,
-            filter_by: Annotated["Filters[T]", strawberry.lazy("models")] = None,
-            sort_by: Annotated["ProjectSort", strawberry.lazy("models")] = None,
-            offset: int = 0,
-            limit: int = 50,
+        self,
+        info: Info,
+        filter_by: FilterBy | None = None,
+        sort_by: SortBy | None = None,
+        offset: int = 0,
+        limit: int = 50,
     ) -> list[T] | None:
         from core.context import get_user
+
         user = get_user(info)
 
         if self._type == "Project":
@@ -79,12 +77,15 @@ class GraphQLResponse[T]:
         elif self._type == "Contribution":
             from logic import get_contributions, check_fetch_projects
 
-            return await get_contributions(user.organization_id, filter_by, sort_by, limit, offset, check_fetch_projects(info))
+            return await get_contributions(
+                user.organization_id, filter_by, sort_by, limit, offset, check_fetch_projects(info)
+            )
         return None
 
     @strawberry.field(description="Total number of items in the filtered dataset.")
     async def count(self, info: Info) -> int:
-        return len(await self.items(info))
+        items = await self.items(info)
+        return len(items)
 
     @strawberry.field()
     async def groups(self, info: Info, group_by: str, limit: int = 50) -> list[GraphQLGroupResponse[T]]:

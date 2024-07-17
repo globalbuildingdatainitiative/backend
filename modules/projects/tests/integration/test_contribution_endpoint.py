@@ -12,8 +12,9 @@ async def test_contributions_query(client: AsyncClient, contributions):
             contributions {
                 items {
                     id
-                    uploadedAt
-                    userId
+                    project {
+                        name
+                    }
                 }
                 count
             }
@@ -78,25 +79,27 @@ async def test_contributions_query_filter(client: AsyncClient, contributions):
     query = """
         query($id: UUID!) {
             contributions {
-                items(filterBy: {organizationId: {equal: $id}}) {
+                items(filterBy: {equal: {organizationId: $id}}) {
                     id
+                    organizationId
                 }
-                count
             }
         }
     """
 
     response = await client.post(
         f"{settings.API_STR}/graphql",
-        json={"query": query, "variables": {"id": str(contributions[0].id)}},
+        json={"query": query, "variables": {"id": str(contributions[0].organization_id)}},
     )
 
     assert response.status_code == 200
     data = response.json()
 
     assert not data.get("errors")
-    assert len(data.get("data", {}).get("contributions", {}).get("items")) == 1
-    assert data.get("data", {}).get("contributions", {}).get("items", [])[0].get("organizationId") == str(contributions[0].organization_id)
+    assert len(data.get("data", {}).get("contributions", {}).get("items")) == 3
+    assert data.get("data", {}).get("contributions", {}).get("items", [])[0].get("organizationId") == str(
+        contributions[0].organization_id
+    )
 
 
 @pytest.mark.asyncio
@@ -104,7 +107,7 @@ async def test_contributions_query_sort(client: AsyncClient, contributions):
     query = """
         query {
             contributions {
-                items(sortBy: {uploadedAt: ASC}) {
+                items(sortBy: {asc: "uploadedAt"}) {
                     id
                 }
             }
@@ -124,5 +127,6 @@ async def test_contributions_query_sort(client: AsyncClient, contributions):
     assert not data.get("errors")
     assert data.get("data", {}).get("contributions", {}).get("items")
     assert data.get("data", {}).get("contributions", {}).get("items", []) == [
-        contribution.model_dump(include={"id", "name"}, mode="json") for contribution in sorted(contributions, key=lambda p: p.id)
+        contribution.model_dump(include={"id"}, mode="json")
+        for contribution in sorted(contributions, key=lambda p: p.uploaded_at)
     ]

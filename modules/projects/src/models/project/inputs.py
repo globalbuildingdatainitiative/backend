@@ -78,10 +78,10 @@ class GraphQLInputTechFlow:
     source: GraphQLInputSource | None = None
 
 
-@strawberry.one_of_input()
+@strawberry.input()
 class GraphQLInputImpactData:
-    epd: GraphQLInputEPD | None = strawberry.field(name="EPD", default=strawberry.UNSET)
-    tech_flow: GraphQLInputTechFlow | None = strawberry.UNSET
+    epd: GraphQLInputEPD | None = strawberry.field(name="EPD", default=None)
+    tech_flow: GraphQLInputTechFlow | None = None
 
 
 @strawberry.experimental.pydantic.input(model=LCAxProduct, name="InputProduct")

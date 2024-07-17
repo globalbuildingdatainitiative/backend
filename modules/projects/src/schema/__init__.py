@@ -3,7 +3,7 @@ from inspect import getdoc
 import strawberry
 
 from models import GraphQLContribution, GraphQLResponse, GraphQLProject
-from schema.contribution import add_contributions_mutation, contributions_query
+from schema.contribution import add_contributions_mutation
 from schema.permisions import IsAuthenticated
 
 
@@ -13,8 +13,9 @@ class Query:
     async def projects(self) -> GraphQLResponse[GraphQLProject]:
         return GraphQLResponse(GraphQLProject)
 
-    @strawberry.field(permission_classes=[IsAuthenticated],
-                      description="Returns all contributions of a user's organization")
+    @strawberry.field(
+        permission_classes=[IsAuthenticated], description="Returns all contributions of a user's organization"
+    )
     async def contributions(self) -> GraphQLResponse[GraphQLContribution]:
         return GraphQLResponse(GraphQLContribution)
 
