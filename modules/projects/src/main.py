@@ -31,11 +31,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(
-    title=settings.SERVER_NAME,
-    openapi_url=f"{settings.API_STR}/openapi.json",
-    lifespan=lifespan
-)
+app = FastAPI(title=settings.SERVER_NAME, openapi_url=f"{settings.API_STR}/openapi.json", lifespan=lifespan)
 
 supertokens_init()
 

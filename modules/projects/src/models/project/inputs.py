@@ -8,13 +8,11 @@ from lcax import BuildingInfo as LCAxBuildingInfo
 from lcax import BuildingModelScope as LCAxBuildingModelScope
 from lcax import Classification as LCAxClassification
 from lcax import Conversion as LCAxConversion
-from lcax import EPD as LCAxEPD
 from lcax import Location as LCAxLocation
 from lcax import Product as LCAxProduct
 from lcax import Project as LCAxProject
 from lcax import SoftwareInfo as LCAxSoftwareInfo
 from lcax import Source as LCAxSource
-from lcax import TechFlow as LCAxTechFlow
 from lcax import ValueUnit as LCAxValueUnit
 from strawberry.scalars import JSON
 
@@ -83,6 +81,7 @@ class GraphQLInputSource:
 # class GraphQLInputImpactData:
 #     epd: GraphQLInputEPD | None = strawberry.field(name="EPD", default=strawberry.UNSET)
 #     tech_flow: GraphQLInputTechFlow | None = strawberry.UNSET
+
 
 @strawberry.input(name="InputImpactData")
 class GraphQLInputImpactData:
