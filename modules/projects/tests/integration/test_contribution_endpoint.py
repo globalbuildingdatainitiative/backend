@@ -53,7 +53,7 @@ async def test_add_contributions_mutation(client: AsyncClient, datafix_dir):
     )
     assemblies = []
     for assembly in input_project.get("assemblies").values():
-        del assembly["category"]
+        # del assembly["category"]
         assembly.update({"products": list(assembly.get("products").values())})
         assemblies.append(assembly)
 

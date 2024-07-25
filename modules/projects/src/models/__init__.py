@@ -9,7 +9,6 @@ from .project import (
     DBProduct,
     DBEPD,
     DBTechFlow,
-    DBImpactData,
     GraphQLProject,
     GraphQLInputProject,
 )
@@ -23,7 +22,6 @@ __all__ = [
     DBProduct,
     DBEPD,
     DBTechFlow,
-    DBImpactData,
     GraphQLProject,
     GraphQLInputProject,
     DBContribution,

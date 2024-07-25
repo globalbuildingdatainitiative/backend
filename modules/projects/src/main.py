@@ -1,4 +1,5 @@
 import logging.config
+from contextlib import asynccontextmanager
 
 from beanie import init_beanie
 from fastapi import FastAPI, Request
@@ -10,7 +11,7 @@ from supertokens_python.recipe.session.exceptions import UnauthorisedError
 from core.auth import supertokens_init
 from core.config import settings
 from core.connection import get_database
-from models import DBAssembly, DBProduct, DBEPD, DBTechFlow, DBImpactData
+from models import DBAssembly, DBProduct, DBEPD, DBTechFlow
 from routes import graphql_app
 
 if "test" not in settings.SERVER_NAME.lower():
@@ -18,9 +19,22 @@ if "test" not in settings.SERVER_NAME.lower():
 
 logger = logging.getLogger(__name__)
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    from models import DBProject, DBContribution
+
+    db = get_database()
+    await init_beanie(
+        database=db, document_models=[DBProject, DBAssembly, DBProduct, DBEPD, DBTechFlow, DBContribution]
+    )
+    yield
+
+
 app = FastAPI(
     title=settings.SERVER_NAME,
     openapi_url=f"{settings.API_STR}/openapi.json",
+    lifespan=lifespan
 )
 
 supertokens_init()
@@ -36,16 +50,6 @@ if settings.BACKEND_CORS_ORIGINS:
     )
 
 app.include_router(graphql_app, prefix=settings.API_STR)
-
-
-@app.on_event("startup")
-async def app_init():
-    from models import DBProject, DBContribution
-
-    db = get_database()
-    await init_beanie(
-        database=db, document_models=[DBProject, DBAssembly, DBProduct, DBEPD, DBTechFlow, DBImpactData, DBContribution]
-    )
 
 
 @app.exception_handler(UnauthorisedError)

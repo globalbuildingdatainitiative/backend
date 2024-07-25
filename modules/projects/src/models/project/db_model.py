@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 from uuid import UUID
 
 from beanie import Document, Link
@@ -18,14 +18,14 @@ class DBTechFlow(LCAxTechFlow, Document):
     id: UUID
 
 
-class DBImpactData(Document):
-    epd: Optional[Link[DBEPD]] = Field(default=None, alias="EPD")
-    tech_flow: Optional[Link[DBTechFlow]] = Field(default=None, alias="techFlow")
+# class DBImpactData(Document):
+#     epd: Optional[Link[DBEPD]] = Field(default=None, alias="EPD")
+#     tech_flow: Optional[Link[DBTechFlow]] = Field(default=None, alias="techFlow")
 
 
 class DBProduct(LCAxProduct, Document):
     id: UUID
-    impact_data: DBImpactData = Field(..., alias="impactData")
+    impact_data: Union[Optional[Link[DBEPD]] | Optional[Link[DBTechFlow]]] = Field(..., alias="impactData")
 
 
 class DBAssembly(LCAxAssembly, Document):
