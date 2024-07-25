@@ -1,3 +1,4 @@
+from datetime import date
 from uuid import UUID
 
 import strawberry
@@ -7,13 +8,11 @@ from lcax import BuildingInfo as LCAxBuildingInfo
 from lcax import BuildingModelScope as LCAxBuildingModelScope
 from lcax import Classification as LCAxClassification
 from lcax import Conversion as LCAxConversion
-from lcax import EPD as LCAxEPD
 from lcax import Location as LCAxLocation
 from lcax import Product as LCAxProduct
 from lcax import Project as LCAxProject
 from lcax import SoftwareInfo as LCAxSoftwareInfo
 from lcax import Source as LCAxSource
-from lcax import TechFlow as LCAxTechFlow
 from lcax import ValueUnit as LCAxValueUnit
 from strawberry.scalars import JSON
 
@@ -44,48 +43,70 @@ class GraphQLInputSource:
     pass
 
 
-@strawberry.experimental.pydantic.input(model=LCAxEPD, name="InputEPD")
-class GraphQLInputEPD:
-    comment: strawberry.auto
-    conversions: list[GraphQLInputConversion] | None = None
-    declared_unit: GraphQLUnit
-    format_version: strawberry.auto
-    id: UUID | None = None
-    impacts: JSON
-    location: GraphQLCountry
-    meta_data: JSON | None = None
-    name: strawberry.auto
-    published_date: strawberry.auto
-    reference_service_life: strawberry.auto
-    source: GraphQLInputSource | None = None
-    standard: GraphQLStandard
-    subtype: GraphQLSubType
-    valid_until: strawberry.auto
-    version: strawberry.auto
+# @strawberry.experimental.pydantic.input(model=LCAxEPD, name="InputEPD")
+# class GraphQLInputEPD:
+#     comment: strawberry.auto
+#     conversions: list[GraphQLInputConversion] | None = None
+#     declared_unit: GraphQLUnit
+#     format_version: strawberry.auto
+#     id: UUID | None = None
+#     impacts: JSON
+#     location: GraphQLCountry
+#     meta_data: JSON | None = None
+#     name: strawberry.auto
+#     published_date: strawberry.auto
+#     reference_service_life: strawberry.auto
+#     source: GraphQLInputSource | None = None
+#     standard: GraphQLStandard
+#     subtype: GraphQLSubType
+#     valid_until: strawberry.auto
+#     version: strawberry.auto
+#
+#
+# @strawberry.experimental.pydantic.input(model=LCAxTechFlow, name="InputTechFlow")
+# class GraphQLInputTechFlow:
+#     comment: strawberry.auto
+#     conversions: list[GraphQLInputConversion] | None = None
+#     declared_unit: GraphQLUnit
+#     format_version: strawberry.auto
+#     id: UUID | None = None
+#     impacts: JSON
+#     location: GraphQLCountry
+#     meta_data: JSON | None = None
+#     name: strawberry.auto
+#     source: GraphQLInputSource | None = None
+#
+#
+# @strawberry.input(one_of=True)
+# class GraphQLInputImpactData:
+#     epd: GraphQLInputEPD | None = strawberry.field(name="EPD", default=strawberry.UNSET)
+#     tech_flow: GraphQLInputTechFlow | None = strawberry.UNSET
 
 
-@strawberry.experimental.pydantic.input(model=LCAxTechFlow, name="InputTechFlow")
-class GraphQLInputTechFlow:
-    comment: strawberry.auto
-    conversions: list[GraphQLInputConversion] | None = None
-    declared_unit: GraphQLUnit
-    format_version: strawberry.auto
-    id: UUID | None = None
-    impacts: JSON
-    location: GraphQLCountry
-    meta_data: JSON | None = None
-    name: strawberry.auto
-    source: GraphQLInputSource | None = None
-
-
-@strawberry.input()
+@strawberry.input(name="InputImpactData")
 class GraphQLInputImpactData:
-    epd: GraphQLInputEPD | None = strawberry.field(name="EPD", default=None)
-    tech_flow: GraphQLInputTechFlow | None = None
+    type: str
+    comment: str | None = None
+    conversions: list[GraphQLInputConversion] | None = None
+    declared_unit: GraphQLUnit
+    format_version: str
+    id: UUID | None = None
+    impacts: JSON
+    location: GraphQLCountry
+    meta_data: JSON | None = None
+    name: str
+    published_date: date | None = None
+    reference_service_life: int | None = None
+    source: GraphQLInputSource | None = None
+    standard: GraphQLStandard | None = None
+    subtype: GraphQLSubType | None = None
+    valid_until: date | None = None
+    version: str | None = None
 
 
 @strawberry.experimental.pydantic.input(model=LCAxProduct, name="InputProduct")
 class GraphQLInputProduct:
+    type: str
     description: strawberry.auto
     id: UUID | None = None
     impact_data: GraphQLInputImpactData
@@ -105,6 +126,7 @@ class GraphQLInputClassification:
 
 @strawberry.experimental.pydantic.input(model=LCAxAssembly, name="InputAssembly")
 class GraphQLInputAssembly:
+    type: str
     classification: list[GraphQLInputClassification] | None = None
     category: str | None = None
     comment: strawberry.auto
@@ -145,6 +167,7 @@ class GraphQLInputBuildingModelScope:
 
 @strawberry.experimental.pydantic.input(model=LCAxBuildingInfo, name="InputProjectInfo")
 class GraphQLInputBuildingInfo:
+    type: str
     building_completion_year: strawberry.auto
     building_footprint: GraphQLInputValueUnit | None = None
     building_height: GraphQLInputValueUnit | None = None
@@ -195,7 +218,7 @@ class GraphQLInputProject:
     meta_data: JSON | None = None
     name: strawberry.auto
     owner: strawberry.auto
-    project_info: GraphQLInputProjectInfo | None = None
+    project_info: GraphQLInputBuildingInfo | None = None
     project_phase: GraphQLProjectPhase
     reference_study_period: strawberry.auto
     results: JSON | None = None

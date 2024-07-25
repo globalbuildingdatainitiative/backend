@@ -394,15 +394,6 @@ enum GeneralEnergyClass {
   unknown
 }
 
-input GraphQLInputImpactData {
-  EPD: InputEPD = null
-  techFlow: InputTechFlow = null
-}
-
-input GraphQLInputProjectInfo {
-  buildingInfo: InputProjectInfo = null
-}
-
 enum ImpactCategoryKey {
   gwp
   gwp_fos
@@ -466,6 +457,7 @@ input InputAssembly {
   products: [InputProduct!]!
   quantity: Float!
   results: JSON = null
+  type: String!
   unit: Unit!
 }
 
@@ -497,23 +489,24 @@ input InputConversion {
   value: Float!
 }
 
-input InputEPD {
+input InputImpactData {
+  type: String!
   comment: String = null
   conversions: [InputConversion!] = null
   declaredUnit: Unit!
   formatVersion: String!
-  id: UUID
+  id: UUID = null
   impacts: JSON!
   location: Country!
   metaData: JSON = null
   name: String!
-  publishedDate: Date!
+  publishedDate: Date = null
   referenceServiceLife: Int = null
   source: InputSource = null
-  standard: Standard!
-  subtype: SubType!
-  validUntil: Date!
-  version: String!
+  standard: Standard = null
+  subtype: SubType = null
+  validUntil: Date = null
+  version: String = null
 }
 
 input InputLocation {
@@ -525,13 +518,14 @@ input InputLocation {
 input InputProduct {
   description: String = null
   id: UUID
-  impactData: GraphQLInputImpactData!
+  impactData: InputImpactData!
   metaData: JSON = null
   name: String!
   quantity: Float!
   referenceServiceLife: Int!
   results: JSON = null
   transport: JSON = null
+  type: String!
   unit: Unit!
 }
 
@@ -549,7 +543,7 @@ input InputProject {
   metaData: JSON = null
   name: String!
   owner: String = null
-  projectInfo: GraphQLInputProjectInfo = null
+  projectInfo: InputProjectInfo = null
   projectPhase: ProjectPhase!
   referenceStudyPeriod: Int = null
   results: JSON = null
@@ -580,6 +574,7 @@ input InputProjectInfo {
   heatedFloorArea: InputAreaType!
   localEnergyClass: String = null
   roofType: RoofType
+  type: String!
 }
 
 input InputSoftwareInfo {
@@ -591,19 +586,6 @@ input InputSoftwareInfo {
 input InputSource {
   name: String!
   url: String = null
-}
-
-input InputTechFlow {
-  comment: String = null
-  conversions: [InputConversion!] = null
-  declaredUnit: Unit!
-  formatVersion: String!
-  id: UUID
-  impacts: JSON!
-  location: Country!
-  metaData: JSON = null
-  name: String!
-  source: InputSource = null
 }
 
 input InputValueUnit {
@@ -800,10 +782,12 @@ enum Unit {
   kg
   tones
   pcs
+  kwh
   l
   m2r1
   km
   tones_km
+  kgm3
   unknown
 }
 
