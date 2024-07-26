@@ -5,7 +5,6 @@ import strawberry
 from lcax import AreaType as LCAxAreaType
 from lcax import Assembly as LCAxAssembly
 from lcax import BuildingInfo as LCAxBuildingInfo
-from lcax import BuildingModelScope as LCAxBuildingModelScope
 from lcax import Classification as LCAxClassification
 from lcax import Conversion as LCAxConversion
 from lcax import Location as LCAxLocation
@@ -27,7 +26,8 @@ from models.project.enums import (
     GraphQLLifeCycleStage,
     GraphQLProjectPhase,
     GraphQLBuildingType,
-    GraphQLBuildingTypology, GraphQLBuildingModelScope,
+    GraphQLBuildingTypology,
+    GraphQLBuildingModelScope,
 )
 
 
@@ -158,7 +158,6 @@ class GraphQLInputAreaType:
     unit: GraphQLUnit
     value: strawberry.auto
     definition: strawberry.auto
-
 
 
 @strawberry.experimental.pydantic.input(model=LCAxBuildingInfo, name="InputProjectInfo")

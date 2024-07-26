@@ -6,7 +6,6 @@ from iso3166 import countries
 from lcax import AreaType as LCAxAreaType
 from lcax import Assembly as LCAxAssembly
 from lcax import BuildingInfo as LCAxProjectInfo
-from lcax import BuildingModelScope as LCAxBuildingModelScope
 from lcax import Classification as LCAxClassification
 from lcax import Conversion as LCAxConversion
 from lcax import EPD as LCAxEPD
@@ -30,7 +29,8 @@ from models.project.enums import (
     GraphQLRoofType,
     GraphQLImpactCategoryKey,
     GraphQLLifeCycleStage,
-    GraphQLProjectPhase, GraphQLBuildingModelScope,
+    GraphQLProjectPhase,
+    GraphQLBuildingModelScope,
 )
 
 
@@ -148,7 +148,6 @@ class GraphQLAreaType:
     unit: GraphQLUnit
     value: strawberry.auto
     definition: strawberry.auto
-
 
 
 @strawberry.experimental.pydantic.type(model=LCAxProjectInfo, name="ProjectInfo")
