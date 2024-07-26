@@ -27,7 +27,7 @@ from models.project.enums import (
     GraphQLLifeCycleStage,
     GraphQLProjectPhase,
     GraphQLBuildingType,
-    GraphQLBuildingTypology,
+    GraphQLBuildingTypology, GraphQLBuildingModelScope,
 )
 
 
@@ -160,10 +160,6 @@ class GraphQLInputAreaType:
     definition: strawberry.auto
 
 
-@strawberry.experimental.pydantic.input(model=LCAxBuildingModelScope, name="InputBuildingModelScope", all_fields=True)
-class GraphQLInputBuildingModelScope:
-    pass
-
 
 @strawberry.experimental.pydantic.input(model=LCAxBuildingInfo, name="InputProjectInfo")
 class GraphQLInputBuildingInfo:
@@ -172,10 +168,10 @@ class GraphQLInputBuildingInfo:
     building_footprint: GraphQLInputValueUnit | None = None
     building_height: GraphQLInputValueUnit | None = None
     building_mass: GraphQLInputValueUnit | None = None
-    building_model_scope: GraphQLInputBuildingModelScope | None = None
+    building_model_scope: list[GraphQLBuildingModelScope] | None = None
     building_permit_year: strawberry.auto
     building_type: GraphQLBuildingType | None = None
-    building_typology: GraphQLBuildingTypology | None = None
+    building_typology: list[GraphQLBuildingTypology] | None = None
     building_users: strawberry.auto
     certifications: strawberry.auto
     energy_demand_electricity: strawberry.auto

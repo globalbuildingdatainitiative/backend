@@ -36,21 +36,28 @@ type Assembly {
   unit: Unit!
 }
 
-type BuildingModelScope {
-  buildingServices: Boolean!
-  externalWorks: Boolean!
-  facilitatingWorks: Boolean!
-  ffE: Boolean!
-  finishes: Boolean!
-  substructure: Boolean!
-  superstructureEnvelope: Boolean!
-  superstructureFrame: Boolean!
-  superstructureInternalElements: Boolean!
+enum BuildingModelScope {
+  facilitating_works
+  substructure
+  superstructure_frame
+  superstructure_envelope
+  superstructure_internal_elements
+  finishes
+  building_services
+  external_works
+  ff_e
 }
 
 enum BuildingType {
-  renovation
-  new
+  new_construction_works
+  demolition
+  deconstruction_and_new_construction_works
+  retrofit_works
+  extension_works
+  retrofit_and_extension_works
+  fit_out_works
+  operations
+  other
 }
 
 enum BuildingTypology {
@@ -61,7 +68,6 @@ enum BuildingTypology {
   industrial
   infrastructure
   agricultural
-  mixeduse
   other
 }
 
@@ -461,18 +467,6 @@ input InputAssembly {
   unit: Unit!
 }
 
-input InputBuildingModelScope {
-  buildingServices: Boolean!
-  externalWorks: Boolean!
-  facilitatingWorks: Boolean!
-  ffE: Boolean!
-  finishes: Boolean!
-  substructure: Boolean!
-  superstructureEnvelope: Boolean!
-  superstructureFrame: Boolean!
-  superstructureInternalElements: Boolean!
-}
-
 input InputClassification {
   code: String!
   name: String!
@@ -555,10 +549,10 @@ input InputProjectInfo {
   buildingFootprint: InputValueUnit = null
   buildingHeight: InputValueUnit = null
   buildingMass: InputValueUnit = null
-  buildingModelScope: InputBuildingModelScope = null
+  buildingModelScope: [BuildingModelScope!] = null
   buildingPermitYear: Int = null
   buildingType: BuildingType
-  buildingTypology: BuildingTypology
+  buildingTypology: [BuildingTypology!]
   buildingUsers: Int = null
   certifications: [String!] = null
   energyDemandElectricity: Float = null
@@ -599,6 +593,7 @@ The `JSON` scalar type represents JSON values as specified by [ECMA-404](https:/
 scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
 
 enum LifeCycleStage {
+  a0
   a1a3
   a4
   a5
@@ -609,6 +604,7 @@ enum LifeCycleStage {
   b5
   b6
   b7
+  b8
   c1
   c2
   c3
@@ -685,10 +681,10 @@ type ProjectInfo {
   buildingFootprint: ValueUnit
   buildingHeight: ValueUnit
   buildingMass: ValueUnit
-  buildingModelScope: BuildingModelScope
+  buildingModelScope: [BuildingModelScope!]
   buildingPermitYear: Int
   buildingType: BuildingType!
-  buildingTypology: BuildingTypology!
+  buildingTypology: [BuildingTypology!]!
   buildingUsers: Int
   certifications: [String!]
   energyDemandElectricity: Float
@@ -707,9 +703,12 @@ type ProjectInfo {
 }
 
 enum ProjectPhase {
-  design
-  ongoing
-  built
+  strategic_design
+  concept_design
+  technical_design
+  construction
+  post_completion
+  in_use
   other
 }
 

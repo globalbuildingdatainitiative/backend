@@ -13,6 +13,7 @@ from lcax import RoofType as LCAxRoofType
 from lcax import Standard as LCAxStandard
 from lcax import SubType as LCAxSubType
 from lcax import Unit as LCAxUnit
+from lcax import BuildingModelScope as LCAxBuildingModelScope
 
 GraphQLUnit = strawberry.enum(Enum("Unit", [_enum.value for _enum in LCAxUnit]))
 GraphQLCountry: Type[Enum] = strawberry.enum(Enum("Country", [_enum.value for _enum in LCAxCountry]))
@@ -27,3 +28,4 @@ GraphQLGeneralEnergyClass = strawberry.enum(
 GraphQLImpactCategoryKey = strawberry.enum(Enum("ImpactCategoryKey", [_enum.value for _enum in LCAxImpactCategoryKey]))
 GraphQLProjectPhase = strawberry.enum(Enum("ProjectPhase", [_enum.value for _enum in LCAxProjectPhase]))
 GraphQLLifeCycleStage = strawberry.enum(Enum("LifeCycleStage", [_enum.value for _enum in LCAxLifeCycleStage]))
+GraphQLBuildingModelScope = strawberry.enum(Enum("BuildingModelScope", [_enum.value for _enum in LCAxBuildingModelScope]))
