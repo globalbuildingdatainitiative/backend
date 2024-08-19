@@ -1,4 +1,4 @@
-FROM python:3.12-bookworm as builder
+FROM python:3.12-bookworm AS builder
 
 ARG BUILD_STAGE
 RUN python -m pip install --upgrade pip
