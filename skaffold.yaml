@@ -109,6 +109,7 @@ manifests:
           imageKey.registry: gbdi
           imageKey.repository: router
           imageKey.tag: latest
+          router.loglevel: 'info'
         createNamespace: true
 
       - name: auth

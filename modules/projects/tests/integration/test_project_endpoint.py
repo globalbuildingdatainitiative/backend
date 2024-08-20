@@ -5,7 +5,7 @@ from core.config import settings
 
 
 @pytest.mark.asyncio
-async def test_projects_query(client: AsyncClient, projects):
+async def test_projects_query(client: AsyncClient, contributions, projects):
     query = """
         query {
             projects {
@@ -34,12 +34,14 @@ async def test_projects_query(client: AsyncClient, projects):
 
     assert not data.get("errors")
     assert data.get("data", {}).get("projects", {}).get("items")
+    assert len(data.get("data", {}).get("projects", {}).get("items")) == len(projects)
     assert data.get("data", {}).get("projects", {}).get("count") == len(projects)
     assert data.get("data", {}).get("projects", {}).get("items", [])[0].get("assemblies")
 
 
 @pytest.mark.asyncio
-async def test_projects_query_filter(client: AsyncClient, projects):
+async def test_projects_query_filter(client: AsyncClient, contributions, projects):
+    # TODO - FIX THIS TEST!
     query = """
         query($id: UUID!) {
             projects {
@@ -65,7 +67,7 @@ async def test_projects_query_filter(client: AsyncClient, projects):
 
 
 @pytest.mark.asyncio
-async def test_projects_query_sort(client: AsyncClient, projects):
+async def test_projects_query_sort(client: AsyncClient, contributions, projects):
     query = """
         query {
             projects {
@@ -95,7 +97,7 @@ async def test_projects_query_sort(client: AsyncClient, projects):
 
 
 @pytest.mark.asyncio
-async def test_projects_query_offset(client: AsyncClient, projects):
+async def test_projects_query_offset(client: AsyncClient, contributions, projects):
     query = """
         query {
             projects {
@@ -124,7 +126,7 @@ async def test_projects_query_offset(client: AsyncClient, projects):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("group_by", ["name", "location.country"])
-async def test_projects_query_groups(client: AsyncClient, projects, group_by):
+async def test_projects_query_groups(client: AsyncClient, contributions, projects, group_by):
     query = """
         query($groupBy: String!) {
             projects {
@@ -157,7 +159,7 @@ async def test_projects_query_groups(client: AsyncClient, projects, group_by):
 
 
 @pytest.mark.asyncio
-async def test_projects_query_aggregate(client: AsyncClient, projects):
+async def test_projects_query_aggregate(client: AsyncClient, contributions, projects):
     query = """
         query {
             projects {
@@ -190,7 +192,7 @@ async def test_projects_query_aggregate(client: AsyncClient, projects):
 
 
 @pytest.mark.asyncio
-async def test_projects_query_group_aggregate(client: AsyncClient, projects):
+async def test_projects_query_group_aggregate(client: AsyncClient, contributions, projects):
     query = """
         query($groupBy: String!) {
             projects {
