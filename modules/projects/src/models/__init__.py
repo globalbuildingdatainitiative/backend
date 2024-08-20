@@ -2,6 +2,7 @@ from .contribution import (
     DBContribution,
     GraphQLContribution,
     InputContribution,
+    ContributionHeaderData,
 )
 from .project import (
     DBProject,
@@ -17,6 +18,7 @@ from .user import User
 from .sort_filter import sort_model_query, filter_model_query, FilterBy, SortBy
 
 __all__ = [
+    ContributionHeaderData,
     DBProject,
     DBAssembly,
     DBProduct,

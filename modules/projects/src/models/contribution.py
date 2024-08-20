@@ -27,3 +27,9 @@ class GraphQLContribution:
 @strawberry.input
 class InputContribution:
     project: GraphQLInputProject
+
+
+@strawberry.type
+class ContributionHeaderData:
+    total_contributions: int
+    days_since_last_contribution: int

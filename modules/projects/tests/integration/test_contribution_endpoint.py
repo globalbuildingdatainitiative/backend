@@ -1,8 +1,8 @@
 import lcax
 import pytest
 from httpx import AsyncClient
-
 from core.config import settings
+import datetime
 
 
 @pytest.mark.asyncio
@@ -53,7 +53,6 @@ async def test_add_contributions_mutation(client: AsyncClient, datafix_dir):
     )
     assemblies = []
     for assembly in input_project.get("assemblies").values():
-        # del assembly["category"]
         assembly.update({"products": list(assembly.get("products").values())})
         assemblies.append(assembly)
 
@@ -130,3 +129,36 @@ async def test_contributions_query_sort(client: AsyncClient, contributions):
         contribution.model_dump(include={"id"}, mode="json")
         for contribution in sorted(contributions, key=lambda p: p.uploaded_at)
     ]
+
+
+@pytest.mark.asyncio
+async def test_contributions_for_header_query(client: AsyncClient, contributions):
+    query = """
+        query {
+            getContributionsForHeader {
+                totalContributions
+                daysSinceLastContribution
+            }
+        }
+    """
+
+    response = await client.post(
+        f"{settings.API_STR}/graphql",
+        json={
+            "query": query,
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert not data.get("errors")
+    assert data.get("data", {}).get("getContributionsForHeader")
+
+    # Check the values returned
+    header_data = data.get("data", {}).get("getContributionsForHeader")
+    assert header_data["totalContributions"] == len(contributions)
+
+    last_contribution_date = contributions[-1].uploaded_at
+    expected_days_since = (datetime.datetime.now() - last_contribution_date).days
+    assert header_data["daysSinceLastContribution"] == expected_days_since

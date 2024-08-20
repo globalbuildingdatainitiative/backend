@@ -102,6 +102,11 @@ type ContributionGraphQLResponse {
   aggregation(apply: [InputAggregation!]!): [AggregationResult!]!
 }
 
+type ContributionHeaderData {
+  totalContributions: Int!
+  daysSinceLastContribution: Int!
+}
+
 type Conversion {
   metaData: String!
   to: Unit!
@@ -720,6 +725,9 @@ type Query {
 
   """Returns all contributions of a user's organization"""
   contributions: ContributionGraphQLResponse!
+
+  """Fetch contribution header data"""
+  getContributionsForHeader: ContributionHeaderData!
 }
 
 enum RoofType {
