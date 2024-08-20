@@ -22,7 +22,7 @@ async def projects(app, datafix_dir) -> list[DBProject]:
 
         project = DBProject(**input_project)
         project.id = uuid.uuid4()
-        #await project.insert(link_rule=WriteRules.WRITE)
+        # await project.insert(link_rule=WriteRules.WRITE)
         projects.append(project)
 
     yield projects

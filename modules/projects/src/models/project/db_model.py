@@ -12,6 +12,7 @@ from pydantic import Field
 if TYPE_CHECKING:
     from models import DBContribution
 
+
 class DBEPD(LCAxEPD, Document):
     id: UUID
 

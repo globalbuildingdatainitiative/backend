@@ -19,9 +19,11 @@ async def get_context(request: Request):
 
     user_id = session.get_user_id()
     metadata = await get_user_metadata(user_id)
-    organization_id = UUID(metadata.metadata.get("organization_id", None))
+    organization_id = metadata.metadata.get("organization_id", None)
+    if organization_id:
+        organization_id = UUID(organization_id)
 
-    return {"user": User(id=user_id, organization_id=organization_id)}
+    return {"user": User(id=UUID(user_id), organization_id=organization_id)}
 
 
 def get_user(info: Info) -> "User":

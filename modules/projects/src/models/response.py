@@ -67,7 +67,6 @@ class GraphQLResponse[T]:
         offset: int = 0,
         limit: int = 50,
     ) -> list[T] | None:
-
         user = get_user(info)
         organization_id = user.organization_id
         if self._type == "Project":
