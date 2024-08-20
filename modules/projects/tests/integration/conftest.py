@@ -22,7 +22,7 @@ async def projects(app, datafix_dir) -> list[DBProject]:
 
         project = DBProject(**input_project)
         project.id = uuid.uuid4()
-        await project.insert(link_rule=WriteRules.WRITE)
+        #await project.insert(link_rule=WriteRules.WRITE)
         projects.append(project)
 
     yield projects
@@ -34,7 +34,7 @@ async def contributions(projects, user) -> list[DBContribution]:
 
     for i in range(3):
         contribution = DBContribution(user_id=user.id, organization_id=user.organization_id, project=projects[i])
-        await contribution.insert()
+        await contribution.insert(link_rule=WriteRules.WRITE)
         _contributions.append(contribution)
 
     yield _contributions

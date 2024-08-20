@@ -1,3 +1,5 @@
+from uuid import UUID
+
 import httpx
 from async_lru import alru_cache
 from pydantic import BaseModel
@@ -20,7 +22,7 @@ class ProjectGroup(BaseModel):
     count: int
 
 
-async def group_projects(group_by: str, limit: int, items_args: dict, aggregation_args: dict):
+async def group_projects(organization_id: UUID, group_by: str, limit: int, items_args: dict, aggregation_args: dict):
     from models import DBProject
 
     items = {"$push": "$$ROOT"}
@@ -57,7 +59,7 @@ async def group_projects(group_by: str, limit: int, items_args: dict, aggregatio
         projection["$project"]["aggregation"] = aggregation_projection
 
     groups = (
-        await DBProject.find_all()
+        await DBProject.find(DBProject.contribution.organization_id == organization_id, fetch_links=True)
         .aggregate(
             [
                 {"$group": {"_id": f"${group_by}", "items": items, "count": {"$sum": 1}, **aggregation}},
@@ -71,11 +73,11 @@ async def group_projects(group_by: str, limit: int, items_args: dict, aggregatio
     return groups
 
 
-async def aggregate_projects(apply: list[InputAggregation]):
+async def aggregate_projects(organization_id: UUID, apply: list[InputAggregation]):
     groups = []
     for _input in apply:
         agg = (
-            await DBProject.find_all()
+            await DBProject.find(DBProject.contribution.organization_id == organization_id, fetch_links=True)
             .aggregate(
                 [{"$group": {"_id": None, "value": {f"${_input.method.value}": f"${_input.field}"}}}],
             )

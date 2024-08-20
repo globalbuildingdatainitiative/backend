@@ -3,6 +3,7 @@ from enum import Enum
 import strawberry
 from strawberry import Info
 
+from core.context import get_user
 from models.sort_filter import FilterBy, SortBy
 
 
@@ -66,19 +67,18 @@ class GraphQLResponse[T]:
         offset: int = 0,
         limit: int = 50,
     ) -> list[T] | None:
-        from core.context import get_user
 
         user = get_user(info)
-
+        organization_id = user.organization_id
         if self._type == "Project":
             from logic import get_projects
 
-            return await get_projects(filter_by, sort_by, limit, offset)
+            return await get_projects(organization_id, filter_by, sort_by, limit, offset)
         elif self._type == "Contribution":
             from logic import get_contributions, check_fetch_projects
 
             return await get_contributions(
-                user.organization_id, filter_by, sort_by, limit, offset, check_fetch_projects(info)
+                organization_id, filter_by, sort_by, limit, offset, check_fetch_projects(info)
             )
         return None
 
@@ -89,10 +89,14 @@ class GraphQLResponse[T]:
 
     @strawberry.field()
     async def groups(self, info: Info, group_by: str, limit: int = 50) -> list[GraphQLGroupResponse[T]]:
+        user = get_user(info)
+        organization_id = user.organization_id
+
         if self._type == "Project":
             from models.project.methods import group_projects
 
             return await group_projects(
+                organization_id,
                 group_by,
                 limit,
                 get_subselection_arguments(info, "items"),
@@ -101,11 +105,14 @@ class GraphQLResponse[T]:
         return []
 
     @strawberry.field()
-    async def aggregation(self, apply: list[InputAggregation]) -> list[AggregationResult]:
+    async def aggregation(self, info: Info, apply: list[InputAggregation]) -> list[AggregationResult]:
+        user = get_user(info)
+        organization_id = user.organization_id
+
         if self._type == "Project":
             from models.project.methods import aggregate_projects
 
-            return await aggregate_projects(apply)
+            return await aggregate_projects(organization_id, apply)
         return []
 
 

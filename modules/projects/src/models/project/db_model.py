@@ -1,7 +1,7 @@
-from typing import Optional, Union
+from typing import Optional, Union, TYPE_CHECKING
 from uuid import UUID
 
-from beanie import Document, Link
+from beanie import Document, Link, BackLink
 from lcax import Assembly as LCAxAssembly
 from lcax import EPD as LCAxEPD
 from lcax import Product as LCAxProduct
@@ -9,6 +9,8 @@ from lcax import Project as LCAxProject
 from lcax import TechFlow as LCAxTechFlow
 from pydantic import Field
 
+if TYPE_CHECKING:
+    from models import DBContribution
 
 class DBEPD(LCAxEPD, Document):
     id: UUID
@@ -36,3 +38,4 @@ class DBAssembly(LCAxAssembly, Document):
 class DBProject(LCAxProject, Document):
     id: UUID
     assemblies: list[Link[DBAssembly]]
+    contribution: BackLink["DBContribution"] = Field(original_field="project")
