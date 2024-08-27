@@ -7,7 +7,13 @@ env = [
     "SERVER_NAME=Projects Test",
     "SERVER_HOST=http://test.gbdi.io",
     "CONNECTION_URI=http://test.gbdi.io",
-    "API_KEY=DHALFKJDHALFJHDAJF"
+    "API_KEY=DHALFKJDHALFJHDAJF",
+    "SMTP_HOST=email-smtp.eu-central-2.amazonaws.com",
+    "SMTP_PORT=5897",
+    "SMTP_EMAIL=noreply@noreply.io",
+    "SMTP_NAME=Test",
+    "SMTP_PASSWORD=BEPr8mQV7A/jtUv/MGIGherhrye789hyr9ehabrgPMJF",
+    "SMTP_USERNAME=AKIAW3MEGUGUE7NP",
 ]
 
 [tool.ruff]

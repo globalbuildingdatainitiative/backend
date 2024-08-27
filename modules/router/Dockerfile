@@ -25,6 +25,11 @@ COPY --chown=rover:rover ./schemas/organization/schema.graphql /app/schemas/orga
 # Add Rover to PATH
 ENV PATH=/app/.rover/bin:$PATH
 
-RUN rover install --elv2-license accept --plugin 'supergraph@2'
+#RUN rover install --elv2-license accept --plugin 'supergraph@=2.8.0'
+# WORKAROUND because rover install is not working!
+
+RUN curl -sSL https://rover.apollo.dev/tar/supergraph/aarch64-unknown-linux-gnu/v2.8.0 -o supergraph.tgz
+RUN tar -xzvf supergraph.tgz
+RUN mv dist/supergraph /app/.rover/bin/supergraph-v2.8.0
 
 CMD ["bash", "/app/build_graph.sh"]

@@ -12,6 +12,13 @@ class Settings(BaseSettings):
         "http://localhost:8000",
     ]
 
+    SMTP_HOST: str
+    SMTP_PORT: int
+    SMTP_EMAIL: str
+    SMTP_NAME: str
+    SMTP_PASSWORD: str
+    SMTP_USERNAME: str
+
     @field_validator("BACKEND_CORS_ORIGINS")
     @classmethod
     def assemble_cors_origins(cls, v: str | list[str]) -> list[str] | str:
