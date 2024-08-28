@@ -1,7 +1,8 @@
 from enum import Enum
-from typing import Type
+from typing import Type, Iterable
 
 import strawberry
+from lcax import BuildingModelScope as LCAxBuildingModelScope
 from lcax import BuildingType as LCAxBuildingType
 from lcax import BuildingTypology as LCAxBuildingTypology
 from lcax import Country as LCAxCountry
@@ -13,21 +14,27 @@ from lcax import RoofType as LCAxRoofType
 from lcax import Standard as LCAxStandard
 from lcax import SubType as LCAxSubType
 from lcax import Unit as LCAxUnit
-from lcax import BuildingModelScope as LCAxBuildingModelScope
 
-GraphQLUnit = strawberry.enum(Enum("Unit", [_enum.value for _enum in LCAxUnit]))
-GraphQLCountry: Type[Enum] = strawberry.enum(Enum("Country", [_enum.value for _enum in LCAxCountry]))
-GraphQLStandard = strawberry.enum(Enum("Standard", [_enum.value for _enum in LCAxStandard]))
-GraphQLSubType = strawberry.enum(Enum("SubType", [_enum.value for _enum in LCAxSubType]))
-GraphQLBuildingType = strawberry.enum(Enum("BuildingType", [_enum.value for _enum in LCAxBuildingType]))
-GraphQLBuildingTypology = strawberry.enum(Enum("BuildingTypology", [_enum.value for _enum in LCAxBuildingTypology]))
-GraphQLRoofType = strawberry.enum(Enum("RoofType", [_enum.value for _enum in LCAxRoofType]))
-GraphQLGeneralEnergyClass = strawberry.enum(
-    Enum("GeneralEnergyClass", [_enum.value for _enum in LCAxGeneralEnergyClass])
-)
-GraphQLImpactCategoryKey = strawberry.enum(Enum("ImpactCategoryKey", [_enum.value for _enum in LCAxImpactCategoryKey]))
-GraphQLProjectPhase = strawberry.enum(Enum("ProjectPhase", [_enum.value for _enum in LCAxProjectPhase]))
-GraphQLLifeCycleStage = strawberry.enum(Enum("LifeCycleStage", [_enum.value for _enum in LCAxLifeCycleStage]))
-GraphQLBuildingModelScope = strawberry.enum(
-    Enum("BuildingModelScope", [_enum.value for _enum in LCAxBuildingModelScope])
-)
+
+def create_enum(name: str, klass: Iterable) -> Type[strawberry.enum]:
+    return strawberry.enum(Enum(name, [(_enum.name, _enum.value) for _enum in klass]))
+
+
+# GraphQLUnit = create_enum("Unit", LCAxUnit
+# @strawberry.enum
+# class GraphQLUnit(LCAxUnit):
+#     pass
+
+GraphQLUnit = strawberry.enum(LCAxUnit)
+
+GraphQLCountry = strawberry.enum(LCAxCountry)
+GraphQLStandard = strawberry.enum(LCAxStandard)
+GraphQLSubType = strawberry.enum(LCAxSubType)
+GraphQLBuildingType = strawberry.enum(LCAxBuildingType)
+GraphQLBuildingTypology = strawberry.enum(LCAxBuildingTypology)
+GraphQLRoofType = strawberry.enum(LCAxRoofType)
+GraphQLGeneralEnergyClass = strawberry.enum(LCAxGeneralEnergyClass)
+GraphQLImpactCategoryKey = strawberry.enum(LCAxImpactCategoryKey)
+GraphQLProjectPhase = strawberry.enum(LCAxProjectPhase)
+GraphQLLifeCycleStage = strawberry.enum(LCAxLifeCycleStage)
+GraphQLBuildingModelScope = strawberry.enum(LCAxBuildingModelScope)

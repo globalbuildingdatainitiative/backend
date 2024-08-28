@@ -72,6 +72,8 @@ class GraphQLResponse[T]:
         if self._type == "Project":
             from logic import get_projects
 
+            # import pydevd_pycharm
+            # pydevd_pycharm.settrace('host.minikube.internal', port=6789, stdoutToServer=True, stderrToServer=True)
             return await get_projects(organization_id, filter_by, sort_by, limit, offset)
         elif self._type == "Contribution":
             from logic import get_contributions, check_fetch_projects

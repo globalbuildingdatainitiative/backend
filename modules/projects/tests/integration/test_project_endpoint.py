@@ -15,6 +15,7 @@ async def test_projects_query(client: AsyncClient, contributions, projects):
                     assemblies {
                         id
                         name
+                        unit
                     }
                 }
                 count
@@ -41,7 +42,6 @@ async def test_projects_query(client: AsyncClient, contributions, projects):
 
 @pytest.mark.asyncio
 async def test_projects_query_filter(client: AsyncClient, contributions, projects):
-    # TODO - FIX THIS TEST!
     query = """
         query($id: UUID!) {
             projects {
