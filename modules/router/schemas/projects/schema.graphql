@@ -1,5 +1,10 @@
 directive @oneOf on INPUT_OBJECT
 
+schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key"]) {
+  query: Query
+  mutation: Mutation
+}
+
 enum AggregationMethod {
   AVG
   SUM
@@ -37,38 +42,38 @@ type Assembly {
 }
 
 enum BuildingModelScope {
-  facilitating_works
-  substructure
-  superstructure_frame
-  superstructure_envelope
-  superstructure_internal_elements
-  finishes
-  building_services
-  external_works
-  ff_e
+  FACILITATING_WORKS
+  SUBSTRUCTURE
+  SUPERSTRUCTURE_FRAME
+  SUPERSTRUCTURE_ENVELOPE
+  SUPERSTRUCTURE_INTERNAL_ELEMENTS
+  FINISHES
+  BUILDING_SERVICES
+  EXTERNAL_WORKS
+  FF_E
 }
 
 enum BuildingType {
-  new_construction_works
-  demolition
-  deconstruction_and_new_construction_works
-  retrofit_works
-  extension_works
-  retrofit_and_extension_works
-  fit_out_works
-  operations
-  other
+  NEW_CONSTRUCTION_WORKS
+  DEMOLITION
+  DECONSTRUCTION_AND_NEW_CONSTRUCTION_WORKS
+  RETROFIT_WORKS
+  EXTENSION_WORKS
+  RETROFIT_AND_EXTENSION_WORKS
+  FIT_OUT_WORKS
+  OPERATIONS
+  OTHER
 }
 
 enum BuildingTypology {
-  office
-  residential
-  public
-  commercial
-  industrial
-  infrastructure
-  agricultural
-  other
+  OFFICE
+  RESIDENTIAL
+  PUBLIC
+  COMMERCIAL
+  INDUSTRIAL
+  INFRASTRUCTURE
+  AGRICULTURAL
+  OTHER
 }
 
 type Classification {
@@ -79,6 +84,7 @@ type Classification {
 
 type Contribution {
   project: Project!
+  user: User!
   id: UUID!
   uploadedAt: DateTime!
   userId: UUID!
@@ -109,256 +115,256 @@ type Conversion {
 }
 
 enum Country {
-  unknown
-  afg
-  ala
-  alb
-  dza
-  asm
-  and_
-  ago
-  aia
-  ata
-  atg
-  arg
-  arm
-  abw
-  aus
-  aut
-  aze
-  bhs
-  bhr
-  bgd
-  brb
-  blr
-  bel
-  blz
-  ben
-  bmu
-  btn
-  bol
-  bes
-  bih
-  bwa
-  bvt
-  bra
-  iot
-  brn
-  bgr
-  bfa
-  bdi
-  cpv
-  khm
-  cmr
-  can
-  cym
-  caf
-  tcd
-  chl
-  chn
-  cxr
-  cck
-  col
-  com
-  cog
-  cod
-  cok
-  cri
-  civ
-  hrv
-  cub
-  cuw
-  cyp
-  cze
-  dnk
-  dji
-  dma
-  dom
-  ecu
-  egy
-  slv
-  gnq
-  eri
-  est
-  swz
-  eth
-  flk
-  fro
-  fji
-  fin
-  fra
-  guf
-  pyf
-  atf
-  gab
-  gmb
-  geo
-  deu
-  gha
-  gib
-  grc
-  grl
-  grd
-  glp
-  gum
-  gtm
-  ggy
-  gin
-  gnb
-  guy
-  hti
-  hmd
-  vat
-  hnd
-  hkg
-  hun
-  isl
-  ind
-  idn
-  irn
-  irq
-  irl
-  imn
-  isr
-  ita
-  jam
-  jpn
-  jey
-  jor
-  kaz
-  ken
-  kir
-  prk
-  kor
-  kwt
-  kgz
-  lao
-  lva
-  lbn
-  lso
-  lbr
-  lby
-  lie
-  ltu
-  lux
-  mac
-  mdg
-  mwi
-  mys
-  mdv
-  mli
-  mlt
-  mhl
-  mtq
-  mrt
-  mus
-  myt
-  mex
-  fsm
-  mda
-  mco
-  mng
-  mne
-  msr
-  mar
-  moz
-  mmr
-  nam
-  nru
-  npl
-  nld
-  ncl
-  nzl
-  nic
-  ner
-  nga
-  niu
-  nfk
-  mkd
-  mnp
-  nor
-  omn
-  pak
-  plw
-  pse
-  pan
-  png
-  pry
-  per
-  phl
-  pcn
-  pol
-  prt
-  pri
-  qat
-  reu
-  rou
-  rus
-  rwa
-  blm
-  shn
-  kna
-  lca
-  maf
-  spm
-  vct
-  wsm
-  smr
-  stp
-  sau
-  sen
-  srb
-  syc
-  sle
-  sgp
-  sxm
-  svk
-  svn
-  slb
-  som
-  zaf
-  sgs
-  ssd
-  esp
-  lka
-  sdn
-  sur
-  sjm
-  swe
-  che
-  syr
-  twn
-  tjk
-  tza
-  tha
-  tls
-  tgo
-  tkl
-  ton
-  tto
-  tun
-  tur
-  tkm
-  tca
-  tuv
-  uga
-  ukr
-  are
-  gbr
-  usa
-  umi
-  ury
-  uzb
-  vut
-  ven
-  vnm
-  vgb
-  vir
-  wlf
-  esh
-  yem
-  zmb
-  zwe
+  UNKNOWN
+  AFG
+  ALA
+  ALB
+  DZA
+  ASM
+  AND_
+  AGO
+  AIA
+  ATA
+  ATG
+  ARG
+  ARM
+  ABW
+  AUS
+  AUT
+  AZE
+  BHS
+  BHR
+  BGD
+  BRB
+  BLR
+  BEL
+  BLZ
+  BEN
+  BMU
+  BTN
+  BOL
+  BES
+  BIH
+  BWA
+  BVT
+  BRA
+  IOT
+  BRN
+  BGR
+  BFA
+  BDI
+  CPV
+  KHM
+  CMR
+  CAN
+  CYM
+  CAF
+  TCD
+  CHL
+  CHN
+  CXR
+  CCK
+  COL
+  COM
+  COG
+  COD
+  COK
+  CRI
+  CIV
+  HRV
+  CUB
+  CUW
+  CYP
+  CZE
+  DNK
+  DJI
+  DMA
+  DOM
+  ECU
+  EGY
+  SLV
+  GNQ
+  ERI
+  EST
+  SWZ
+  ETH
+  FLK
+  FRO
+  FJI
+  FIN
+  FRA
+  GUF
+  PYF
+  ATF
+  GAB
+  GMB
+  GEO
+  DEU
+  GHA
+  GIB
+  GRC
+  GRL
+  GRD
+  GLP
+  GUM
+  GTM
+  GGY
+  GIN
+  GNB
+  GUY
+  HTI
+  HMD
+  VAT
+  HND
+  HKG
+  HUN
+  ISL
+  IND
+  IDN
+  IRN
+  IRQ
+  IRL
+  IMN
+  ISR
+  ITA
+  JAM
+  JPN
+  JEY
+  JOR
+  KAZ
+  KEN
+  KIR
+  PRK
+  KOR
+  KWT
+  KGZ
+  LAO
+  LVA
+  LBN
+  LSO
+  LBR
+  LBY
+  LIE
+  LTU
+  LUX
+  MAC
+  MDG
+  MWI
+  MYS
+  MDV
+  MLI
+  MLT
+  MHL
+  MTQ
+  MRT
+  MUS
+  MYT
+  MEX
+  FSM
+  MDA
+  MCO
+  MNG
+  MNE
+  MSR
+  MAR
+  MOZ
+  MMR
+  NAM
+  NRU
+  NPL
+  NLD
+  NCL
+  NZL
+  NIC
+  NER
+  NGA
+  NIU
+  NFK
+  MKD
+  MNP
+  NOR
+  OMN
+  PAK
+  PLW
+  PSE
+  PAN
+  PNG
+  PRY
+  PER
+  PHL
+  PCN
+  POL
+  PRT
+  PRI
+  QAT
+  REU
+  ROU
+  RUS
+  RWA
+  BLM
+  SHN
+  KNA
+  LCA
+  MAF
+  SPM
+  VCT
+  WSM
+  SMR
+  STP
+  SAU
+  SEN
+  SRB
+  SYC
+  SLE
+  SGP
+  SXM
+  SVK
+  SVN
+  SLB
+  SOM
+  ZAF
+  SGS
+  SSD
+  ESP
+  LKA
+  SDN
+  SUR
+  SJM
+  SWE
+  CHE
+  SYR
+  TWN
+  TJK
+  TZA
+  THA
+  TLS
+  TGO
+  TKL
+  TON
+  TTO
+  TUN
+  TUR
+  TKM
+  TCA
+  TUV
+  UGA
+  UKR
+  ARE
+  GBR
+  USA
+  UMI
+  URY
+  UZB
+  VUT
+  VEN
+  VNM
+  VGB
+  VIR
+  WLF
+  ESH
+  YEM
+  ZMB
+  ZWE
 }
 
 """Date (isoformat)"""
@@ -394,51 +400,51 @@ input FilterBy {
 }
 
 enum GeneralEnergyClass {
-  existing
-  standard
-  advanced
-  unknown
+  EXISTING
+  STANDARD
+  ADVANCED
+  UNKNOWN
 }
 
 enum ImpactCategoryKey {
-  gwp
-  gwp_fos
-  gwp_bio
-  gwp_lul
-  odp
-  ap
-  ep
-  ep_fw
-  ep_mar
-  ep_ter
-  pocp
-  adpe
-  adpf
-  penre
-  pere
-  perm
-  pert
-  penrt
-  penrm
-  sm
-  pm
-  wdp
-  irp
-  etp_fw
-  htp_c
-  htp_nc
-  sqp
-  rsf
-  nrsf
-  fw
-  hwd
-  nhwd
-  rwd
-  cru
-  mrf
-  mer
-  eee
-  eet
+  GWP
+  GWP_FOS
+  GWP_BIO
+  GWP_LUL
+  ODP
+  AP
+  EP
+  EP_FW
+  EP_MAR
+  EP_TER
+  POCP
+  ADPE
+  ADPF
+  PENRE
+  PERE
+  PERM
+  PERT
+  PENRT
+  PENRM
+  SM
+  PM
+  WDP
+  IRP
+  ETP_FW
+  HTP_C
+  HTP_NC
+  SQP
+  RSF
+  NRSF
+  FW
+  HWD
+  NHWD
+  RWD
+  CRU
+  MRF
+  MER
+  EEE
+  EET
 }
 
 input InputAggregation {
@@ -593,23 +599,23 @@ The `JSON` scalar type represents JSON values as specified by [ECMA-404](https:/
 scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
 
 enum LifeCycleStage {
-  a0
-  a1a3
-  a4
-  a5
-  b1
-  b2
-  b3
-  b4
-  b5
-  b6
-  b7
-  b8
-  c1
-  c2
-  c3
-  c4
-  d
+  A0
+  A1A3
+  A4
+  A5
+  B1
+  B2
+  B3
+  B4
+  B5
+  B6
+  B7
+  B8
+  C1
+  C2
+  C3
+  C4
+  D
 }
 
 type Location {
@@ -703,16 +709,17 @@ type ProjectInfo {
 }
 
 enum ProjectPhase {
-  strategic_design
-  concept_design
-  technical_design
-  construction
-  post_completion
-  in_use
-  other
+  STRATEGIC_DESIGN
+  CONCEPT_DESIGN
+  TECHNICAL_DESIGN
+  CONSTRUCTION
+  POST_COMPLETION
+  IN_USE
+  OTHER
 }
 
 type Query {
+  _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
 
   """Returns all projects of a user's organization"""
@@ -723,11 +730,11 @@ type Query {
 }
 
 enum RoofType {
-  flat
-  pitched
-  saddle
-  pyramid
-  other
+  FLAT
+  PITCHED
+  SADDLE
+  PYRAMID
+  OTHER
 }
 
 type SoftwareInfo {
@@ -747,16 +754,16 @@ type Source {
 }
 
 enum Standard {
-  en15804a1
-  en15804a2
-  unknown
+  EN15804A1
+  EN15804A2
+  UNKNOWN
 }
 
 enum SubType {
-  generic
-  specific
-  industry
-  representative
+  GENERIC
+  SPECIFIC
+  INDUSTRY
+  REPRESENTATIVE
 }
 
 type TechFlow {
@@ -775,19 +782,23 @@ type TechFlow {
 scalar UUID
 
 enum Unit {
-  m
-  m2
-  m3
-  kg
-  tones
-  pcs
-  kwh
-  l
-  m2r1
-  km
-  tones_km
-  kgm3
-  unknown
+  M
+  M2
+  M3
+  KG
+  TONES
+  PCS
+  KWH
+  L
+  M2R1
+  KM
+  TONES_KM
+  KGM3
+  UNKNOWN
+}
+
+type User @key(fields: "id") {
+  id: UUID!
 }
 
 type ValueUnit {
@@ -796,6 +807,8 @@ type ValueUnit {
 }
 
 scalar _Any
+
+union _Entity = User
 
 type _Service {
   sdl: String!

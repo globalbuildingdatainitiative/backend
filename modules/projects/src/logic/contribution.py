@@ -5,7 +5,7 @@ from uuid import UUID
 from beanie import WriteRules
 from strawberry import Info
 
-from models import DBContribution, InputContribution, User, DBProject
+from models import DBContribution, InputContribution, DBProject, SuperTokensUser
 from models.sort_filter import sort_model_query, filter_model_query, FilterBy, SortBy
 
 
@@ -30,7 +30,7 @@ async def get_contributions(
     return contributions
 
 
-async def create_contributions(contributions: list[InputContribution], user: User) -> list[DBContribution]:
+async def create_contributions(contributions: list[InputContribution], user: SuperTokensUser) -> list[DBContribution]:
     _contributions = []
     for _contribution in contributions:
         contribution = DBContribution(

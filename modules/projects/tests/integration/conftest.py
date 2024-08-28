@@ -4,7 +4,7 @@ import lcax
 import pytest
 from beanie import WriteRules
 
-from models import DBProject, DBContribution
+from models import DBProject, DBContribution, SuperTokensUser
 
 
 @pytest.fixture()
@@ -22,10 +22,15 @@ async def projects(app, datafix_dir) -> list[DBProject]:
 
         project = DBProject(**input_project)
         project.id = uuid.uuid4()
-        # await project.insert(link_rule=WriteRules.WRITE)
         projects.append(project)
 
     yield projects
+
+
+@pytest.fixture(scope="session")
+def user() -> SuperTokensUser:
+    """Fixture to provide a mock SuperTokensUser."""
+    return SuperTokensUser(id=uuid.uuid4(), organization_id=uuid.uuid4())
 
 
 @pytest.fixture()

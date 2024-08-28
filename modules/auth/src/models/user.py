@@ -5,7 +5,6 @@ from uuid import UUID
 import strawberry
 from pydantic import BaseModel
 from strawberry.federation.schema_directives import Shareable
-
 from .sort_filter import BaseFilter, FilterOptions, SortOptions
 
 
@@ -33,6 +32,12 @@ class GraphQLUser:
             last_name=supertokens_user.get("lastName"),
             organization_id=supertokens_user.get("organization_id"),
         )
+
+    @classmethod
+    async def resolve_reference(cls, id: UUID) -> "GraphQLUser":
+        from logic import get_users
+
+        return (await get_users(filters=UserFilters(id=FilterOptions(equal=id))))[0]
 
 
 @strawberry.input

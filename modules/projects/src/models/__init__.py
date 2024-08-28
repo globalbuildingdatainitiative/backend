@@ -1,8 +1,4 @@
-from .contribution import (
-    DBContribution,
-    GraphQLContribution,
-    InputContribution,
-)
+from .contribution import DBContribution, GraphQLContribution, InputContribution, GraphQLUser
 from .project import (
     DBProject,
     DBAssembly,
@@ -13,7 +9,7 @@ from .project import (
     GraphQLInputProject,
 )
 from .response import GraphQLResponse
-from .user import User
+from .supertokens import SuperTokensUser
 from .sort_filter import sort_model_query, filter_model_query, FilterBy, SortBy
 
 __all__ = [
@@ -27,7 +23,8 @@ __all__ = [
     DBContribution,
     GraphQLContribution,
     InputContribution,
-    User,
+    SuperTokensUser,
+    GraphQLUser,
     GraphQLResponse,
     sort_model_query,
     filter_model_query,
