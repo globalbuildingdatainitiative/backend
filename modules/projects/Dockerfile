@@ -6,8 +6,6 @@ RUN pip install pipenv
 
 # Install Rust and Cargo before other installations
 RUN apt update && apt upgrade -y && apt install -y curl build-essential gcc make
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
 
 RUN mkdir /tmp/pip
 WORKDIR /tmp/pip

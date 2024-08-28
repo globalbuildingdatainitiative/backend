@@ -77,6 +77,26 @@ spec:
 
             - name: CONNECTION_URI
               value: {{ .Values.backend.connectionUri }}
+
+            # Add SMTP environment variables
+            - name: SMTP_HOST
+              value: {{ .Values.smtp.host }}
+
+            - name: SMTP_PORT
+              value: "{{ .Values.smtp.port }}"  # Ensure port is a string
+
+            - name: SMTP_EMAIL
+              value: {{ .Values.smtp.email }}
+
+            - name: SMTP_NAME
+              value: {{ .Values.smtp.name }}
+
+            - name: SMTP_PASSWORD
+              value: {{ .Values.smtp.password }}
+
+            - name: SMTP_USERNAME
+              value: {{ .Values.smtp.username }}
+
 ---
 apiVersion: apps/v1
 kind: Deployment

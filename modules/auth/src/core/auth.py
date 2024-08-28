@@ -4,6 +4,7 @@ from supertokens_python.recipe import session, userroles, usermetadata, emailpas
 from supertokens_python.recipe.emailpassword import InputFormField
 from supertokens_python.recipe.emailpassword.interfaces import APIInterface, APIOptions, SignUpPostOkResult
 from supertokens_python.recipe.emailpassword.types import FormField
+from supertokens_python.ingredients.emaildelivery.types import EmailDeliveryConfig, SMTPSettings, SMTPSettingsFrom
 from typing import List, Dict, Any
 from core.config import settings
 
@@ -25,6 +26,17 @@ def get_origin(request: BaseRequest | None, user_context) -> str:
     # in case the origin is unknown or not set, we return a default
     # value which will be used for this request.
     return "https://app.gbdi.io"
+
+
+# SMTP Configuration
+smtp_settings = SMTPSettings(
+    host=settings.SMTP_HOST,
+    port=settings.SMTP_PORT,
+    from_=SMTPSettingsFrom(name=settings.SMTP_NAME, email=settings.SMTP_EMAIL),
+    password=settings.SMTP_PASSWORD,
+    secure=False,
+    username=settings.SMTP_USERNAME,
+)
 
 
 def override_email_password_apis(original_implementation: APIInterface):
@@ -58,6 +70,7 @@ def supertokens_init():
         app_info=InputAppInfo(
             app_name=settings.SERVER_NAME,
             api_domain=str(settings.SERVER_HOST),
+            website_domain=get_origin(None, None),  # Use get_origin function
             api_base_path=f"{settings.API_STR}/auth",
             website_base_path="/auth",
             origin=get_origin,
@@ -74,6 +87,7 @@ def supertokens_init():
                     ]
                 ),
                 override=emailpassword.InputOverrideConfig(apis=override_email_password_apis),
+                email_delivery=EmailDeliveryConfig(service=emailpassword.SMTPService(smtp_settings=smtp_settings)),
             ),
             dashboard.init(),
             userroles.init(),

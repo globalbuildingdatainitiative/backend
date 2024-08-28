@@ -42,4 +42,10 @@ backend:
   apiKey: ""
   connectionUri: ""
 
-
+smtp:
+  host: ""
+  port: ""
+  email: ""
+  name: ""
+  password: ""
+  username: ""

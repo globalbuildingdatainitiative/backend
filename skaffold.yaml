@@ -128,6 +128,12 @@ manifests:
           backend.serverHost: "http://localhost:7001"
           appDomain: "localhost:8000"
           appProtocol: "http"
+        setValueTemplates:
+          smtp.host: "{{ .SMTP_HOST }}"
+          smtp.port: "{{ .SMTP_PORT }}"
+          smtp.email: "{{ .SMTP_EMAIL }}"
+          smtp.password: "{{ .SMTP_PASSWORD }}"
+          smtp.username: "{{ .SMTP_USERNAME }}"
         createNamespace: true
 
       - name: organization
