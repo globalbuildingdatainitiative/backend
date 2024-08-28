@@ -192,6 +192,38 @@ async def test_projects_query_aggregate(client: AsyncClient, contributions, proj
 
 
 @pytest.mark.asyncio
+async def test_projects_query_nested_aggregate(client: AsyncClient, contributions, projects):
+    query = """
+        query {
+            projects {
+                aggregation2(apply: [{method: DIV, field: "results.a1a3", field2: "projectInfo.grossFloorArea.value" }]) {
+                    method
+                    field
+                    value
+                }
+            }
+        }
+    """
+
+    response = await client.post(
+        f"{settings.API_STR}/graphql",
+        json={
+            "query": query,
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert not data.get("errors")
+    assert data.get("data", {}).get("projects", {}).get("aggregation")
+    assert data.get("data", {}).get("projects", {}).get("aggregation", [])[0] == {
+        "method": "AVG",
+        "field": "referenceStudyPeriod",
+        "value": 50,
+    }
+
+@pytest.mark.asyncio
 async def test_projects_query_group_aggregate(client: AsyncClient, contributions, projects):
     query = """
         query($groupBy: String!) {

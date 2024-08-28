@@ -1,3 +1,4 @@
+import json
 import uuid
 
 import lcax
@@ -12,17 +13,9 @@ async def projects(app, datafix_dir) -> list[DBProject]:
     projects = []
 
     for i in range(3):
-        input_project = lcax.convert_lcabyg((datafix_dir / "project.json").read_text())
-        assemblies = []
-        for assembly in input_project.get("assemblies").values():
-            assembly.update({"products": list(assembly.get("products").values())})
-            assemblies.append(assembly)
-
-        input_project.update({"assemblies": assemblies})
-
+        input_project = json.loads((datafix_dir / "project.json").read_text())
         project = DBProject(**input_project)
         project.id = uuid.uuid4()
-        # await project.insert(link_rule=WriteRules.WRITE)
         projects.append(project)
 
     yield projects

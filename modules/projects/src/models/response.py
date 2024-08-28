@@ -17,12 +17,14 @@ class AggregationMethod(Enum):
     PCT25 = "pct25"
     PCT75 = "pct75"
     STD = "std"
+    DIV = "div"
 
 
 @strawberry.input
 class InputAggregation:
     method: AggregationMethod
     field: str
+    field2: str | None = None
 
 
 @strawberry.type
@@ -30,6 +32,10 @@ class AggregationResult:
     method: AggregationMethod
     field: str
     value: float | None
+
+    @strawberry.field()
+    async def aggregation(self, apply: list[InputAggregation]) -> list["AggregationResult"]:
+        return self.aggregation
 
 
 @strawberry.type
@@ -71,9 +77,6 @@ class GraphQLResponse[T]:
         organization_id = user.organization_id
         if self._type == "Project":
             from logic import get_projects
-
-            # import pydevd_pycharm
-            # pydevd_pycharm.settrace('host.minikube.internal', port=6789, stdoutToServer=True, stderrToServer=True)
             return await get_projects(organization_id, filter_by, sort_by, limit, offset)
         elif self._type == "Contribution":
             from logic import get_contributions, check_fetch_projects
