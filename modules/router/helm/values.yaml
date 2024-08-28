@@ -14,7 +14,7 @@ imageKey:
   tag: 1
 
 router:
-  imageTag: v1.43.2
+  imageTag: v1.53.0
   logLevel: info
 
 clientOrigin: 'http://localhost:8000'
