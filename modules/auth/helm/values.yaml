@@ -42,13 +42,10 @@ backend:
   apiKey: ""
   connectionUri: ""
 
-
-# New SMTP Configuration Section
 smtp:
-  host: email-smtp.eu-central-1.amazonaws.com
-  port: 587
-  email: noreply@noreply.gbdi.io
-  name: GBDI
-  password: BEPr8mQV7A/jtUv/MGIGhxbPLkj5xqYPsUKeabrgPMJF
-  username: AKIAW3MEBXCCFP5JF4NP
-
+  host: ""
+  port: ""
+  email: ""
+  name: ""
+  password: ""
+  username: ""

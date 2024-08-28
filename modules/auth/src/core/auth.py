@@ -68,7 +68,7 @@ def override_email_password_apis(original_implementation: APIInterface):
 def supertokens_init():
     init(
         app_info=InputAppInfo(
-            app_name="GBDI",
+            app_name=settings.SERVER_NAME,
             api_domain=str(settings.SERVER_HOST),
             website_domain=get_origin(None, None),  # Use get_origin function
             api_base_path=f"{settings.API_STR}/auth",
