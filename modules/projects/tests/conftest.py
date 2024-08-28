@@ -13,7 +13,7 @@ import core.auth
 import core.context
 from core.config import settings
 from core.connection import health_check_mongo, create_mongo_client
-from models import User
+from models import SuperTokensUser as User
 
 
 @pytest.fixture(scope="session")
