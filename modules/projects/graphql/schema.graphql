@@ -1,5 +1,10 @@
 directive @oneOf on INPUT_OBJECT
 
+schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key"]) {
+  query: Query
+  mutation: Mutation
+}
+
 enum AggregationMethod {
   AVG
   SUM
@@ -79,6 +84,7 @@ type Classification {
 
 type Contribution {
   project: Project!
+  user: User!
   id: UUID!
   uploadedAt: DateTime!
   userId: UUID!
@@ -713,6 +719,7 @@ enum ProjectPhase {
 }
 
 type Query {
+  _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
 
   """Returns all projects of a user's organization"""
@@ -790,12 +797,18 @@ enum Unit {
   unknown
 }
 
+type User @key(fields: "id") {
+  id: UUID!
+}
+
 type ValueUnit {
   unit: Unit!
   value: Float!
 }
 
 scalar _Any
+
+union _Entity = User
 
 type _Service {
   sdl: String!

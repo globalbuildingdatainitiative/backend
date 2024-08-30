@@ -6,12 +6,12 @@ from strawberry.types import Info
 from supertokens_python.recipe.usermetadata.asyncio import get_user_metadata
 
 if TYPE_CHECKING:
-    from models import User
+    from models import SuperTokensUser
 
 
 async def get_context(request: Request):
     from supertokens_python.recipe.session.asyncio import get_session
-    from models import User
+    from models import SuperTokensUser as User
 
     session = await get_session(request, session_required=False)
     if not session:
@@ -26,5 +26,5 @@ async def get_context(request: Request):
     return {"user": User(id=UUID(user_id), organization_id=organization_id)}
 
 
-def get_user(info: Info) -> "User":
+def get_user(info: Info) -> "SuperTokensUser":
     return info.context.get("user")

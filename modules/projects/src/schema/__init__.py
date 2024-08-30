@@ -2,7 +2,7 @@ from inspect import getdoc
 
 import strawberry
 
-from models import GraphQLContribution, GraphQLResponse, GraphQLProject
+from models import GraphQLContribution, GraphQLResponse, GraphQLProject, GraphQLUser
 from schema.contribution import add_contributions_mutation
 from schema.permisions import IsAuthenticated
 
@@ -29,4 +29,4 @@ class Mutation:
     )
 
 
-schema = strawberry.federation.Schema(query=Query, mutation=Mutation, enable_federation_2=True)
+schema = strawberry.federation.Schema(query=Query, mutation=Mutation, types=[GraphQLUser], enable_federation_2=True)
