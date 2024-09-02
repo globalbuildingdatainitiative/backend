@@ -100,7 +100,7 @@ type ContributionGraphQLGroupResponse {
 
 type ContributionGraphQLResponse {
   """The list of items in this pagination window."""
-  items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int! = 50): [Contribution!]
+  items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int = null): [Contribution!]
 
   """Total number of items in the filtered dataset."""
   count: Int!
@@ -674,7 +674,7 @@ type ProjectGraphQLGroupResponse {
 
 type ProjectGraphQLResponse {
   """The list of items in this pagination window."""
-  items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int! = 50): [Project!]
+  items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int = null): [Project!]
 
   """Total number of items in the filtered dataset."""
   count: Int!

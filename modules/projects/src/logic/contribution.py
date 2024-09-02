@@ -13,7 +13,7 @@ async def get_contributions(
     organization_id: UUID,
     filter_by: FilterBy | None,
     sort_by: SortBy | None,
-    limit: int,
+    limit: int | None,
     offset: int,
     fetch_links: bool = False,
 ) -> list[DBContribution]:
@@ -21,7 +21,8 @@ async def get_contributions(
 
     query = filter_model_query(DBContribution, filter_by, query)
     query = sort_model_query(DBContribution, sort_by, query)
-    query = query.limit(limit)
+    if limit is not None:
+        query = query.limit(limit)
 
     if offset:
         query = query.skip(offset)

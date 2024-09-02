@@ -65,7 +65,7 @@ class GraphQLResponse[T]:
         filter_by: FilterBy | None = None,
         sort_by: SortBy | None = None,
         offset: int = 0,
-        limit: int = 50,
+        limit: int | None = None,
     ) -> list[T] | None:
         user = get_user(info)
         organization_id = user.organization_id
