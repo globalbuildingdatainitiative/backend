@@ -72,6 +72,7 @@ class GraphQLResponse[T]:
         if self._type == "Project":
             from logic import get_projects
 
+            limit = limit or 50  # Set default limit to 50 if it's not provided or set to None
             # import pydevd_pycharm
             # pydevd_pycharm.settrace('host.minikube.internal', port=6789, stdoutToServer=True, stderrToServer=True)
             return await get_projects(organization_id, filter_by, sort_by, limit, offset)

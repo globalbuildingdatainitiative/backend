@@ -21,6 +21,7 @@ async def get_contributions(
 
     query = filter_model_query(DBContribution, filter_by, query)
     query = sort_model_query(DBContribution, sort_by, query)
+
     if limit is not None:
         query = query.limit(limit)
 
