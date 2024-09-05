@@ -2,6 +2,7 @@ from enum import Enum
 
 import strawberry
 from strawberry import Info
+from strawberry.scalars import JSON
 
 from core.context import get_user
 from models.sort_filter import FilterBy, SortBy
@@ -46,8 +47,11 @@ class GraphQLGroupResponse[T]:
     def items(self, limit: int | None = None) -> list[T]:
         return self.items
 
+    # @strawberry.field()
+    # async def aggregation(self, apply: list[InputAggregation]) -> list[AggregationResult]:
+    #     return self.aggregation
     @strawberry.field()
-    async def aggregation(self, apply: list[InputAggregation]) -> list[AggregationResult]:
+    async def aggregation(self, apply: JSON) -> JSON:
         return self.aggregation
 
     count: int
@@ -66,12 +70,12 @@ class GraphQLResponse[T]:
         description="The list of items in this pagination window.",
     )
     async def items(
-        self,
-        info: Info,
-        filter_by: FilterBy | None = None,
-        sort_by: SortBy | None = None,
-        offset: int = 0,
-        limit: int = 50,
+            self,
+            info: Info,
+            filter_by: FilterBy | None = None,
+            sort_by: SortBy | None = None,
+            offset: int = 0,
+            limit: int = 50,
     ) -> list[T] | None:
         user = get_user(info)
         organization_id = user.organization_id
@@ -97,14 +101,14 @@ class GraphQLResponse[T]:
         organization_id = user.organization_id
 
         if self._type == "Project":
-            from models.project.methods import group_projects
+            from models.project.methods import group_projects2
 
-            return await group_projects(
+            return await group_projects2(
                 organization_id,
                 group_by,
                 limit,
                 get_subselection_arguments(info, "items"),
-                get_subselection_arguments(info, "aggregation"),
+                get_subselection_arguments(info, "aggregation").get("apply", {}),
             )
         return []
 
@@ -117,6 +121,18 @@ class GraphQLResponse[T]:
             from models.project.methods import aggregate_projects
 
             return await aggregate_projects(organization_id, apply)
+        return []
+
+    @strawberry.field(
+        description="Apply aggregation to the items. The aggregation should be specified in the 'apply' argument, which should be provided in MongoDB aggregation syntax.")
+    async def aggregation2(self, info: Info, apply: JSON) -> JSON:
+        user = get_user(info)
+        organization_id = user.organization_id
+
+        if self._type == "Project":
+            from models.project.methods import aggregate_projects2
+
+            return await aggregate_projects2(organization_id, apply)
         return []
 
 

@@ -73,6 +73,37 @@ async def group_projects(organization_id: UUID, group_by: str, limit: int, items
     return groups
 
 
+
+async def group_projects2(organization_id: UUID, group_by: str, limit: int, items_args: dict, aggregation: dict):
+    from models import DBProject
+
+    items = {"$push": "$$ROOT"}
+    if items_args.get("limit"):
+        items = {"$topN": {"n": int(items_args.get("limit")), "output": "$$ROOT", "sortBy": {"_id": -1}}}
+
+    projection = {
+        "$project": {
+            "_id": None,
+            "group": group_by,
+            "items": "$items",
+            "count": "$count",
+        }
+    }
+
+    groups = (
+        await DBProject.find(DBProject.contribution.organization_id == organization_id, fetch_links=True)
+        .aggregate(
+            [
+                {"$group": {"_id": f"${group_by}", "items": items, "count": {"$sum": 1}, **aggregation}},
+                projection,
+                {"$limit": limit},
+            ],
+        )
+        .to_list()
+    )
+    return groups
+
+
 async def aggregate_projects(organization_id: UUID, apply: list[InputAggregation]):
     groups = []
     for _input in apply:
@@ -84,6 +115,10 @@ async def aggregate_projects(organization_id: UUID, apply: list[InputAggregation
             .to_list()
         )
         groups.append(ProjectAggregation(method=_input.method, value=agg[0].get("value"), field=_input.field))
+    return groups
+
+async def aggregate_projects2(organization_id: UUID, apply: list[dict]):
+    groups = await DBProject.find(DBProject.contribution.organization_id == organization_id, fetch_links=True).aggregate(apply).to_list()
     return groups
 
 
