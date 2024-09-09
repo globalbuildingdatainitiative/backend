@@ -25,6 +25,6 @@ COPY --chown=rover:rover ./schemas/organization/schema.graphql /app/schemas/orga
 # Add Rover to PATH
 ENV PATH=/app/.rover/bin:$PATH
 
-RUN rover install --elv2-license accept --plugin 'supergraph@=2.8.0'
+RUN rover install --elv2-license accept --plugin 'supergraph@=2.9.0'
 
 CMD ["bash", "/app/build_graph.sh"]

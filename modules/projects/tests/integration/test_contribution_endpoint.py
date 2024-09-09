@@ -1,4 +1,5 @@
-import lcax
+import json
+
 import pytest
 from httpx import AsyncClient
 
@@ -53,18 +54,7 @@ async def test_add_contributions_mutation(client: AsyncClient, datafix_dir):
             }
         }
     """
-
-    input_project = lcax.convert_lcabyg((datafix_dir / "project.json").read_text(), as_type=lcax.Project).model_dump(
-        mode="json", by_alias=True
-    )
-    assemblies = []
-    for assembly in input_project.get("assemblies").values():
-        # del assembly["category"]
-        assembly.update({"products": list(assembly.get("products").values())})
-        assemblies.append(assembly)
-
-    input_project.update({"assemblies": assemblies})
-    print("Input project after conversion:", input_project)
+    input_project = json.loads((datafix_dir / "project.json").read_text())
 
     response = await client.post(
         f"{settings.API_STR}/graphql",

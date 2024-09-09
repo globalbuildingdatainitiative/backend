@@ -161,22 +161,18 @@ async def test_projects_query_groups(client: AsyncClient, contributions, project
 @pytest.mark.asyncio
 async def test_projects_query_aggregate(client: AsyncClient, contributions, projects):
     query = """
-        query {
+        query($aggregation: JSON!) {
             projects {
-                aggregation(apply: [{method: AVG, field: "referenceStudyPeriod"}]) {
-                    method
-                    field
-                    value
-                }
+                aggregation(apply: $aggregation)
             }
         }
     """
 
+    aggregation = [{"$group": {"_id": None, "value": {"$avg": "$referenceStudyPeriod"}}}]
+
     response = await client.post(
         f"{settings.API_STR}/graphql",
-        json={
-            "query": query,
-        },
+        json={"query": query, "variables": {"aggregation": aggregation}},
     )
 
     assert response.status_code == 200
@@ -184,11 +180,7 @@ async def test_projects_query_aggregate(client: AsyncClient, contributions, proj
 
     assert not data.get("errors")
     assert data.get("data", {}).get("projects", {}).get("aggregation")
-    assert data.get("data", {}).get("projects", {}).get("aggregation", [])[0] == {
-        "method": "AVG",
-        "field": "referenceStudyPeriod",
-        "value": 50,
-    }
+    assert data.get("data", {}).get("projects", {}).get("aggregation", [])[0].get("value") == 50
 
 
 @pytest.mark.asyncio
@@ -229,3 +221,48 @@ async def test_projects_query_group_aggregate(client: AsyncClient, contributions
         data.get("data", {}).get("projects", {}).get("groups")[0].get("aggregation", [])[0].get("field")
         == "referenceStudyPeriod"
     )
+
+
+@pytest.mark.asyncio
+async def test_projects_query_aggregation_advanced(client: AsyncClient, contributions, projects):
+    query = """
+        query($aggregation: JSON!) {
+            projects {
+                aggregation(apply: $aggregation)
+            }
+        }
+    """
+
+    aggregation = [
+        {
+            "$group": {
+                "_id": "$name",
+                "items": {"$push": "$$ROOT"},
+                "count": {"$sum": 1},
+                "average": {"$avg": "$referenceStudyPeriod"},
+            }
+        },
+        {
+            "$project": {
+                "_id": None,
+                "group": "name",
+                "items": "$items",
+                "count": "$count",
+                "average": "$average",
+            }
+        },
+    ]
+    response = await client.post(
+        f"{settings.API_STR}/graphql",
+        json={
+            "query": query,
+            "variables": {"aggregation": aggregation},
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert not data.get("errors")
+    assert data.get("data", {}).get("projects", {}).get("aggregation")
+    assert data.get("data", {}).get("projects", {}).get("aggregation", [])[0].get("average") == 50

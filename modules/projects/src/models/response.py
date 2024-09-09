@@ -2,6 +2,7 @@ from enum import Enum
 
 import strawberry
 from strawberry import Info
+from strawberry.scalars import JSON
 
 from core.context import get_user
 from models.sort_filter import FilterBy, SortBy
@@ -17,12 +18,14 @@ class AggregationMethod(Enum):
     PCT25 = "pct25"
     PCT75 = "pct75"
     STD = "std"
+    DIV = "div"
 
 
 @strawberry.input
 class InputAggregation:
     method: AggregationMethod
     field: str
+    field2: str | None = None
 
 
 @strawberry.type
@@ -30,6 +33,10 @@ class AggregationResult:
     method: AggregationMethod
     field: str
     value: float | None
+
+    @strawberry.field()
+    async def aggregation(self, apply: list[InputAggregation]) -> list["AggregationResult"]:
+        return self.aggregation
 
 
 @strawberry.type
@@ -73,8 +80,6 @@ class GraphQLResponse[T]:
             from logic import get_projects
 
             limit = limit or 50  # Set default limit to 50 if it's not provided or set to None
-            # import pydevd_pycharm
-            # pydevd_pycharm.settrace('host.minikube.internal', port=6789, stdoutToServer=True, stderrToServer=True)
             return await get_projects(organization_id, filter_by, sort_by, limit, offset)
         elif self._type == "Contribution":
             from logic import get_contributions, check_fetch_projects
@@ -106,8 +111,10 @@ class GraphQLResponse[T]:
             )
         return []
 
-    @strawberry.field()
-    async def aggregation(self, info: Info, apply: list[InputAggregation]) -> list[AggregationResult]:
+    @strawberry.field(
+        description="Apply aggregation to the items. The aggregation should be specified in the 'apply' argument, which should be provided in MongoDB aggregation syntax."
+    )
+    async def aggregation(self, info: Info, apply: JSON) -> JSON:
         user = get_user(info)
         organization_id = user.organization_id
 
