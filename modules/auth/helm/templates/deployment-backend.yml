@@ -92,10 +92,16 @@ spec:
               value: {{ .Values.smtp.name }}
 
             - name: SMTP_PASSWORD
-              value: {{ .Values.smtp.password }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.smtp.secret.name }}
+                  key: password
 
             - name: SMTP_USERNAME
-              value: {{ .Values.smtp.username }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.smtp.secret.name }}
+                  key: username
 
 ---
 apiVersion: apps/v1

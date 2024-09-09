@@ -44,8 +44,13 @@ backend:
 
 smtp:
   host: ""
-  port: ""
+  port: 587
   email: ""
   name: ""
-  password: ""
-  username: ""
+  secret:
+    appName: auth-smtp
+    name: smtp-secret
+    provider: ''
+    providerNamespace: ''
+    passwordValue: ''
+    usernameValue: ''
