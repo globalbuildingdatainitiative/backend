@@ -132,8 +132,8 @@ manifests:
           smtp.host: "{{ .SMTP_HOST }}"
           smtp.port: "{{ .SMTP_PORT }}"
           smtp.email: "{{ .SMTP_EMAIL }}"
-          smtp.password: "{{ .SMTP_PASSWORD }}"
-          smtp.username: "{{ .SMTP_USERNAME }}"
+          smtp.secret.passwordValue: "{{ .SMTP_PASSWORD }}"
+          smtp.secret.usernameValue: "{{ .SMTP_USERNAME }}"
         createNamespace: true
 
       - name: organization
