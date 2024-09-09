@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-fastapi = {extras = ["all"], version = ">=0.94.1"}
+fastapi = {extras = ["standard", "orjson"], version = ">=0.94.1"}
 uvicorn = {extras = ["standard"], version = "*"}
 strawberry-graphql = {extras = ["fastapi", "cli"], version = "==0.235.2"}
 tenacity = "*"
