@@ -14,12 +14,14 @@ enum AggregationMethod {
   PCT25
   PCT75
   STD
+  DIV
 }
 
 type AggregationResult {
   method: AggregationMethod!
   field: String!
   value: Float
+  aggregation(apply: [InputAggregation!]!): [AggregationResult!]!
 }
 
 type AreaType {
@@ -105,7 +107,11 @@ type ContributionGraphQLResponse {
   """Total number of items in the filtered dataset."""
   count: Int!
   groups(groupBy: String!, limit: Int! = 50): [ContributionGraphQLGroupResponse!]!
-  aggregation(apply: [InputAggregation!]!): [AggregationResult!]!
+
+  """
+  Apply aggregation to the items. The aggregation should be specified in the 'apply' argument, which should be provided in MongoDB aggregation syntax.
+  """
+  aggregation(apply: JSON!): JSON!
 }
 
 type Conversion {
@@ -450,6 +456,7 @@ enum ImpactCategoryKey {
 input InputAggregation {
   method: AggregationMethod!
   field: String!
+  field2: String = null
 }
 
 input InputAreaType {
@@ -679,7 +686,11 @@ type ProjectGraphQLResponse {
   """Total number of items in the filtered dataset."""
   count: Int!
   groups(groupBy: String!, limit: Int! = 50): [ProjectGraphQLGroupResponse!]!
-  aggregation(apply: [InputAggregation!]!): [AggregationResult!]!
+
+  """
+  Apply aggregation to the items. The aggregation should be specified in the 'apply' argument, which should be provided in MongoDB aggregation syntax.
+  """
+  aggregation(apply: JSON!): JSON!
 }
 
 type ProjectInfo {

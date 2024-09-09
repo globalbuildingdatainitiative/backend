@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from core.exceptions import MicroServiceConnectionError
 from models import DBProject
-from models.response import AggregationMethod, InputAggregation
+from models.response import AggregationMethod
 
 
 class ProjectAggregation(BaseModel):
@@ -33,7 +33,7 @@ async def group_projects(organization_id: UUID, group_by: str, limit: int, items
     projection = {
         "$project": {
             "_id": None,
-            "group": group_by,
+            "group": "$_id",
             "items": "$items",
             "count": "$count",
         }
@@ -73,52 +73,12 @@ async def group_projects(organization_id: UUID, group_by: str, limit: int, items
     return groups
 
 
-
-async def group_projects2(organization_id: UUID, group_by: str, limit: int, items_args: dict, aggregation: dict):
-    from models import DBProject
-
-    items = {"$push": "$$ROOT"}
-    if items_args.get("limit"):
-        items = {"$topN": {"n": int(items_args.get("limit")), "output": "$$ROOT", "sortBy": {"_id": -1}}}
-
-    projection = {
-        "$project": {
-            "_id": None,
-            "group": group_by,
-            "items": "$items",
-            "count": "$count",
-        }
-    }
-
+async def aggregate_projects(organization_id: UUID, apply: list[dict]):
     groups = (
         await DBProject.find(DBProject.contribution.organization_id == organization_id, fetch_links=True)
-        .aggregate(
-            [
-                {"$group": {"_id": f"${group_by}", "items": items, "count": {"$sum": 1}, **aggregation}},
-                projection,
-                {"$limit": limit},
-            ],
-        )
+        .aggregate(apply)
         .to_list()
     )
-    return groups
-
-
-async def aggregate_projects(organization_id: UUID, apply: list[InputAggregation]):
-    groups = []
-    for _input in apply:
-        agg = (
-            await DBProject.find(DBProject.contribution.organization_id == organization_id, fetch_links=True)
-            .aggregate(
-                [{"$group": {"_id": None, "value": {f"${_input.method.value}": f"${_input.field}"}}}],
-            )
-            .to_list()
-        )
-        groups.append(ProjectAggregation(method=_input.method, value=agg[0].get("value"), field=_input.field))
-    return groups
-
-async def aggregate_projects2(organization_id: UUID, apply: list[dict]):
-    groups = await DBProject.find(DBProject.contribution.organization_id == organization_id, fetch_links=True).aggregate(apply).to_list()
     return groups
 
 

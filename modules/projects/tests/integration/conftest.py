@@ -1,7 +1,6 @@
 import json
 import uuid
 
-import lcax
 import pytest
 from beanie import WriteRules
 
