@@ -78,7 +78,7 @@ class GraphQLResponse[T]:
         organization_id = user.organization_id
         if self._type == "Project":
             from logic import get_projects
-            
+
             limit = limit or 50  # Set default limit to 50 if it's not provided or set to None
             return await get_projects(organization_id, filter_by, sort_by, limit, offset)
         elif self._type == "Contribution":
