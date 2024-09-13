@@ -6,6 +6,7 @@ asyncio_mode = "auto"
 env = [
     "SERVER_NAME=Projects Test",
     "SERVER_HOST=http://test.gbdi.io",
+    "ROUTER_URL=http://test.gbdi.io",
     "CONNECTION_URI=http://test.gbdi.io",
     "API_KEY=DHALFKJDHALFJHDAJF",
     "SMTP_HOST=email-smtp.eu-central-2.amazonaws.com",

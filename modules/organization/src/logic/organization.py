@@ -8,7 +8,12 @@ async def get_organizations(filters: OrganizationFilter | None = None) -> list[D
     if filters:
         if filters.id:
             if filters.id.equal:
-                query = query.find(DBOrganization.id == filters.id.equal)
+                #query = query.find(DBOrganization.id == filters.id.equal)
+                # Check if `filters.id.equal` is already a UUID or not
+                if isinstance(filters.id.equal, UUID):
+                    query = query.find(DBOrganization.id == filters.id.equal)
+                else:
+                    query = query.find(DBOrganization.id == UUID(filters.id.equal))
         if filters.name:
             if filters.name.equal:
                 query = query.find(DBOrganization.name == filters.name.equal)

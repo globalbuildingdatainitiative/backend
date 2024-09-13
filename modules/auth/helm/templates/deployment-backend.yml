@@ -78,6 +78,9 @@ spec:
             - name: CONNECTION_URI
               value: {{ .Values.backend.connectionUri }}
 
+            - name: ROUTER_URL
+              value: {{ .Values.backend.routerUrl }}
+
             # Add SMTP environment variables
             - name: SMTP_HOST
               value: {{ .Values.smtp.host }}

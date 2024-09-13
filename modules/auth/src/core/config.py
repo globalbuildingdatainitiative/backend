@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     API_STR: str = "/api"
     SERVER_NAME: str
     SERVER_HOST: AnyHttpUrl
+    ROUTER_URL: AnyHttpUrl
     CONNECTION_URI: AnyHttpUrl
     API_KEY: str
     BACKEND_CORS_ORIGINS: list[str] = [

@@ -126,6 +126,7 @@ manifests:
           backend.connectionUri: http://supertokens-service.auth:3567
           backend.serverName: "Auth"
           backend.serverHost: "http://localhost:7001"
+          backend.routerUrl: "http://router-service.router:7000"
           appDomain: "localhost:8000"
           appProtocol: "http"
         setValueTemplates:
