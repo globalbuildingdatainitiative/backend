@@ -2,7 +2,7 @@ from inspect import getdoc
 
 import strawberry
 
-from models import GraphQLUser, InviteUsersResponse
+from models import GraphQLUser, InviteResult
 from schema.permisions import IsAuthenticated
 from schema.user import (
     users_query,
@@ -25,7 +25,7 @@ class Mutation:
     update_user: GraphQLUser = strawberry.field(
         resolver=update_user_mutation, description=getdoc(update_user_mutation), permission_classes=[IsAuthenticated]
     )
-    invite_users: InviteUsersResponse = strawberry.field(
+    invite_users: list[InviteResult] = strawberry.field(
         resolver=invite_users_mutation, description=getdoc(invite_users_mutation), permission_classes=[IsAuthenticated]
     )
     accept_invitation: bool = strawberry.field(

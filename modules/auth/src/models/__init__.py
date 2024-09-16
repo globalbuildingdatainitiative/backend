@@ -5,7 +5,6 @@ from .user import (
     UserSort,
     UpdateUserInput,
     InviteUsersInput,
-    InviteUsersResponse,
     InviteResult,
     InviteStatus,
 )
@@ -17,7 +16,6 @@ __all__ = [
     UserSort,
     UpdateUserInput,
     InviteUsersInput,
-    InviteUsersResponse,
     InviteResult,
     InviteStatus,
 ]

@@ -1,10 +1,7 @@
-import logging
-
 from uuid import UUID
 from models import DBOrganization, OrganizationFilter, InputOrganization, SuperTokensUser
 from exceptions.exceptions import EntityNotFound
 
-logger = logging.getLogger("main")
 
 
 async def get_organizations(filters: OrganizationFilter | None = None) -> list[DBOrganization]:
@@ -20,7 +17,6 @@ async def get_organizations(filters: OrganizationFilter | None = None) -> list[D
             if filters.name.equal:
                 query = query.find(DBOrganization.name == filters.name.equal)
     organizations = await query.to_list()
-    logger.debug(f"Organizations: {organizations}")
     return organizations
 
 
@@ -39,10 +35,6 @@ async def create_organizations_mutation(
         )
         await new_organization.insert()
         new_organizations.append(new_organization)
-        logger.info(f"Creating organization - {new_organization}")
-
-    logger.debug(f"Updating user ({str(current_user.id)}) with organization_id - {str(new_organizations[0].id)}")
-
     await update_user_metadata(str(current_user.id), {"organization_id": str(new_organizations[0].id)})
 
     return new_organizations

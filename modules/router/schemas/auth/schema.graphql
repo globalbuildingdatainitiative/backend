@@ -28,16 +28,12 @@ input InviteUsersInput {
   emails: [String!]!
 }
 
-type InviteUsersResponse {
-  results: [InviteResult!]!
-}
-
 type Mutation {
   """Update user details"""
   updateUser(userInput: UpdateUserInput!): User!
 
   """Invite users to the organization"""
-  inviteUsers(input: InviteUsersInput!): InviteUsersResponse!
+  inviteUsers(input: InviteUsersInput!): [InviteResult!]!
 
   """Accept an invitation"""
   acceptInvitation(userId: String!): Boolean!

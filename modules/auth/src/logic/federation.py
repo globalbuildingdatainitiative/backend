@@ -32,10 +32,8 @@ async def get_organization_name(organization_id: UUID) -> str:
         }
     }
     """
-
     try:
         jwt_token = await create_jwt()
-        logger.debug(f"Fetching organization with id: {organization_id}")
 
         async with httpx.AsyncClient() as client:
             headers = {
@@ -66,7 +64,7 @@ async def get_organization_name(organization_id: UUID) -> str:
                 return organizations[0]["name"]
 
     except Exception as e:
-        logging.error(f"Error in get_organization_name: {str(e)}")
+        logger.error(f"Error in get_organization_name: {str(e)}")
         raise
 
     return "Unknown Organization"
