@@ -247,6 +247,9 @@ def filter_users(users: list[GraphQLUser], filters: UserFilters) -> list[GraphQL
 
     return filtered_users
 '''
+'''''
+
+## LAST WORKING CODE 
 
 import logging
 from datetime import datetime
@@ -258,6 +261,190 @@ from models.sort_filter import FilterOptions
 
 async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None = None) -> list[GraphQLUser]:
     """Returns all Users"""
+    #logging.info("Entered get_users function")
+
+    from supertokens_python.asyncio import get_users_newest_first
+    from supertokens_python.recipe.usermetadata.asyncio import get_user_metadata
+
+    users = await get_users_newest_first("public")
+    #logging.info(f"Get_users function on user: {users}")
+    gql_users = []
+
+    for user in users.users:
+        user_data = user.to_json().get("user")
+        user_id = user_data["id"]
+
+        # Fetch metadata for each user
+        metadata_response = await get_user_metadata(user_id)
+        first_name = metadata_response.metadata.get("first_name")
+        last_name = metadata_response.metadata.get("last_name")
+        organization_id = metadata_response.metadata.get("organization_id")
+        pending_org_id = metadata_response.metadata.get("pending_org_id")
+        invited = metadata_response.metadata.get("invited", False)
+        invite_status = metadata_response.metadata.get("invite_status", InviteStatus.NONE.value)
+        inviter_name = metadata_response.metadata.get("inviter_name", "")
+        #logging.info("Get_users function: ")
+        #logging.info(f"UserId: {user_id}, Username: {first_name}, organization_id={organization_id}, pending_org_id={pending_org_id},"
+          #           f" invited={invited}, inviteStatus={invite_status}")
+
+        # Use pending_org_id as organization_id for invited users
+        effective_org_id = organization_id if not invited else pending_org_id
+        #logging.info(f"Get_users function: Effective Organization Id: {effective_org_id}")
+
+        user = GraphQLUser(
+            id=user_id,
+            email=user_data["email"],
+            time_joined=datetime.fromtimestamp(round(user_data["timeJoined"] / 1000)),
+            first_name=first_name,
+            last_name=last_name,
+            organization_id=effective_org_id,
+            invited=invited,
+            invite_status=InviteStatus(invite_status.lower()),
+            inviter_name=inviter_name,
+        )
+
+        #logging.info(f"Get_users function: Appending the user in gpl: {user}")
+        gql_users.append(user)
+
+
+        if filters:
+            gql_users = filter_users(gql_users, filters)
+
+    #logging.info(f"Get_users function: About to return users array: {gql_users}")
+    return gql_users
+
+
+async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
+    """Update user details"""
+    from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
+    from supertokens_python.recipe.emailpassword.asyncio import update_email_or_password, sign_in
+    #logging.info(f"Entered update_users function for user {user_input}")
+
+    metadata_update = {}
+    if user_input.first_name is not None:
+        metadata_update["first_name"] = user_input.first_name
+    if user_input.last_name is not None:
+        metadata_update["last_name"] = user_input.last_name
+    if user_input.email is not None:
+        metadata_update["email"] = user_input.email
+    if user_input.invited is not None:
+        metadata_update["invited"] = user_input.invited
+    if user_input.invite_status is not None:
+        metadata_update["invite_status"] = user_input.invite_status.value
+    if user_input.inviter_name is not None:
+        metadata_update["inviter_name"] = user_input.inviter_name
+
+    if metadata_update:
+        #logging.info("Update users function: metadata being updated")
+        await update_user_metadata(str(user_input.id), metadata_update)
+
+    """Update password if current password and new password are provided"""
+    if user_input.current_password and user_input.new_password:
+        user_email = (await get_users(UserFilters(id=FilterOptions(equal=str(user_input.id)))))[0].email
+        await sign_in("public", str(user_email), str(user_input.current_password))
+        await update_email_or_password(
+            user_id=str(user_input.id),
+            email=user_email,
+            password=user_input.new_password,
+        )
+
+    # Fetch the updated user data to return
+    user_data = await get_users(UserFilters(id=FilterOptions(equal=str(user_input.id))))
+    #logging.info(f"Update users function: Updated user data is {user_data}")
+
+    if not user_data:
+        raise EntityNotFound("No user found with the provided ID", "Auth")
+
+    return user_data[0]
+
+
+async def accept_invitation(user_id: str) -> bool:
+    from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
+    try:
+        # First, get the current user metadata
+        current_metadata = await get_user_metadata(user_id)
+
+        # Prepare the update, keeping most fields intact
+        update_data = {
+            "invite_status": InviteStatus.ACCEPTED.value,
+            "invited": True,  # Keep this true to show in the invitees list
+        }
+
+        # Keep the pending_org_id if it exists
+        if "pending_org_id" in current_metadata.metadata:
+            update_data["pending_org_id"] = current_metadata.metadata["pending_org_id"]
+
+        # Keep the inviter_name if it exists
+        if "inviter_name" in current_metadata.metadata:
+            update_data["inviter_name"] = current_metadata.metadata["inviter_name"]
+
+        # Update the user metadata
+        await update_user_metadata(user_id, update_data)
+
+        logging.info(f"Invitation accepted for user {user_id}. Updated metadata: {update_data}")
+        return True
+    except Exception as e:
+        logging.error(f"Error accepting invitation for user {user_id}: {str(e)}")
+        return False
+
+
+async def reject_invitation(user_id: str) -> bool:
+    from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
+    try:
+        # First, get the current user metadata
+        current_metadata = await get_user_metadata(user_id)
+
+        # Prepare the update, keeping most fields intact
+        update_data = {
+            "invite_status": InviteStatus.REJECTED.value,
+            "invited": True,  # Keep this true to show in the invitees list
+        }
+
+        # Keep the pending_org_id if it exists
+        if "pending_org_id" in current_metadata.metadata:
+            update_data["pending_org_id"] = current_metadata.metadata["pending_org_id"]
+
+        # Keep the inviter_name if it exists
+        if "inviter_name" in current_metadata.metadata:
+            update_data["inviter_name"] = current_metadata.metadata["inviter_name"]
+
+        # Update the user metadata
+        await update_user_metadata(user_id, update_data)
+
+        logging.info(f"Invitation rejected for user {user_id}. Updated metadata: {update_data}")
+        return True
+    except Exception as e:
+        logging.error(f"Error rejecting invitation for user {user_id}: {str(e)}")
+        return False
+
+
+def filter_users(users: list[GraphQLUser], filters: UserFilters) -> list[GraphQLUser]:
+    filtered_users = users
+    for filter_key, filter_value in filters.__dict__.items():
+        if filter_value and filter_value.equal is not None:
+            if filter_key == 'organizationId':
+                filtered_users = [user for user in filtered_users if
+                                  str(user.organization_id) == str(filter_value.equal)]
+            elif hasattr(GraphQLUser, filter_key):
+                filtered_users = [user for user in filtered_users if getattr(user, filter_key) == filter_value.equal]
+
+    return filtered_users
+
+'''
+
+#LATEST VERSION
+
+import logging
+from datetime import datetime
+
+from core.exceptions import EntityNotFound
+from models import GraphQLUser, UserFilters, UserSort, UpdateUserInput, InviteStatus
+from models.sort_filter import FilterOptions
+
+
+async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None = None) -> list[GraphQLUser]:
+    """Returns all Users & their metadata"""
+
     from supertokens_python.asyncio import get_users_newest_first
     from supertokens_python.recipe.usermetadata.asyncio import get_user_metadata
 
@@ -278,13 +465,6 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
         invite_status = metadata_response.metadata.get("invite_status", InviteStatus.NONE.value)
         inviter_name = metadata_response.metadata.get("inviter_name", "")
 
-        logging.info(f"User {user_id}: invited={invited}, inviteStatus={invite_status}, organization_id={organization_id}, pending_org_id={pending_org_id}")
-
-        logging.info(f"User ID: {user_id}")
-        logging.info(f"User metadata: {metadata_response.metadata}")
-        logging.info(f"Inviter name: {inviter_name}")
-
-        # Use pending_org_id as organization_id for invited users
         effective_org_id = organization_id if not invited else pending_org_id
 
         user = GraphQLUser(
@@ -301,13 +481,16 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
 
         gql_users.append(user)
 
+
         if filters:
             gql_users = filter_users(gql_users, filters)
+
     return gql_users
 
 
 async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
-    """Update user details"""
+    """Update user details & metadata"""
+
     from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
     from supertokens_python.recipe.emailpassword.asyncio import update_email_or_password, sign_in
 
@@ -324,13 +507,12 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
         metadata_update["invite_status"] = user_input.invite_status.value
     if user_input.inviter_name is not None:
         metadata_update["inviter_name"] = user_input.inviter_name
-    if user_input.organization_id is not None:
-        metadata_update["organization_id"] = str(user_input.organization_id)
 
     if metadata_update:
         await update_user_metadata(str(user_input.id), metadata_update)
 
-    """Update password if current password and new password are provided"""
+    # Update password if current password and new password are provided 
+
     if user_input.current_password and user_input.new_password:
         user_email = (await get_users(UserFilters(id=FilterOptions(equal=str(user_input.id)))))[0].email
         await sign_in("public", str(user_email), str(user_input.current_password))
@@ -340,7 +522,6 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
             password=user_input.new_password,
         )
 
-    # Fetch the updated user data to return
     user_data = await get_users(UserFilters(id=FilterOptions(equal=str(user_input.id))))
 
     if not user_data:
@@ -349,7 +530,40 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     return user_data[0]
 
 
+async def accept_invitation(user_id: str) -> bool:
+    """Updates user metadata when invitation is accepted"""
+
+    from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
+    try:
+        # First, get the current user metadata
+        current_metadata = await get_user_metadata(user_id)
+
+        update_data = {
+            "invite_status": InviteStatus.ACCEPTED.value,
+            "invited": True,
+        }
+
+        # Keep the pending_org_id if it exists
+        if "pending_org_id" in current_metadata.metadata:
+            update_data["organization_id"] = current_metadata.metadata["pending_org_id"]
+
+        # Keep the inviter_name if it exists
+        if "inviter_name" in current_metadata.metadata:
+            update_data["inviter_name"] = current_metadata.metadata["inviter_name"]
+
+        # Update the user metadata
+        await update_user_metadata(user_id, update_data)
+
+        logging.info(f"Invitation accepted for user {user_id}. Updated metadata: {update_data}")
+        return True
+    except Exception as e:
+        logging.error(f"Error accepting invitation for user {user_id}: {str(e)}")
+        return False
+
+
 async def reject_invitation(user_id: str) -> bool:
+    """Updates user metadata when invitation is rejected"""
+
     from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
     try:
         # First, get the current user metadata

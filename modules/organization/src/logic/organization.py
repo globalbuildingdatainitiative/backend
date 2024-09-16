@@ -1,9 +1,12 @@
+import logging
+
 from uuid import UUID
 from models import DBOrganization, OrganizationFilter, InputOrganization, SuperTokensUser
 from exceptions.exceptions import EntityNotFound
 
 
 async def get_organizations(filters: OrganizationFilter | None = None) -> list[DBOrganization]:
+    logging.info("Get_organization function: Entering get organization function")
     query = DBOrganization.find()
     if filters:
         if filters.id:
@@ -24,7 +27,7 @@ async def create_organizations_mutation(
     organizations: list[InputOrganization], current_user: SuperTokensUser
 ) -> list[DBOrganization]:
     from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
-
+    logging.info("Create_organization function: Entering create organization function")
     new_organizations = []
     for organization_data in organizations:
         new_organization = DBOrganization(
@@ -35,7 +38,9 @@ async def create_organizations_mutation(
         )
         await new_organization.insert()
         new_organizations.append(new_organization)
+        logging.info(f"Create_organization function: New organization is : {new_organizations}")
 
+    logging.info(f"Create_organization function: User metadata being updated: Current UserId: {str(current_user.id)}, Current user org: {current_user.organization_id}, New org id: {str(new_organizations[0].id)}")
     await update_user_metadata(str(current_user.id), {"organization_id": str(new_organizations[0].id)})
 
     return new_organizations
