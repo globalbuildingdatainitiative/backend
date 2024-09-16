@@ -3,7 +3,6 @@ from models import DBOrganization, OrganizationFilter, InputOrganization, SuperT
 from exceptions.exceptions import EntityNotFound
 
 
-
 async def get_organizations(filters: OrganizationFilter | None = None) -> list[DBOrganization]:
     query = DBOrganization.find()
     if filters:
