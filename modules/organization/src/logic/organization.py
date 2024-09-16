@@ -40,7 +40,7 @@ async def create_organizations_mutation(
         new_organizations.append(new_organization)
         logging.info(f"Create_organization function: New organization is : {new_organizations}")
 
-    logging.info(f"Create_organization function: User metadata being updated: Current UserId: {str(current_user.id)}, Current user org: {current_user.organization_id}, New org id: {str(new_organizations[0].id)}")
+    logging.info(f"Create_organization function: User metadata being updated: Current UserId: {str(current_user.id)}, New org id: {str(new_organizations[0].id)}")
     await update_user_metadata(str(current_user.id), {"organization_id": str(new_organizations[0].id)})
 
     return new_organizations
