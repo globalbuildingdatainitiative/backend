@@ -1,4 +1,4 @@
-'''''
+"""''
 from datetime import datetime
 from typing import Self, Optional, List
 from uuid import UUID
@@ -103,9 +103,9 @@ class InviteResult:
 @strawberry.type
 class InviteUsersResponse:
     results: List[InviteResult]
-'''
+"""
 
-'''''
+"""''
 from datetime import datetime
 from typing import Self, Optional, List
 from uuid import UUID
@@ -216,7 +216,7 @@ class InviteResult:
 @strawberry.type
 class InviteUsersResponse:
     results: List[InviteResult]
-'''
+"""
 
 from datetime import datetime
 from typing import Self, Optional, List
@@ -285,7 +285,6 @@ class UserFilters(BaseFilter):
     invited: FilterOptions | None = None
     invite_status: FilterOptions | None = None
     inviter_name: FilterOptions | None = None
-
 
 
 @strawberry.input
@@ -324,8 +323,3 @@ class InviteResult:
     email: str
     status: str
     message: str = ""
-
-
-@strawberry.type
-class InviteUsersResponse:
-    results: List[InviteResult]

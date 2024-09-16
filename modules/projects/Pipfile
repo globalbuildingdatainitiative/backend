@@ -12,10 +12,11 @@ supertokens-python = "*"
 lcax = "==2.5.1"
 async_lru = "*"
 iso3166 = "*"
+pyyaml = "*"
 
 [dev-packages]
 asgi-lifespan="*"
-pydevd-pycharm = ">=222.4459.20"
+pydevd-pycharm = ">=242.21829.153"
 pre-commit = "*"
 docker = "*"
 pytest = "*"

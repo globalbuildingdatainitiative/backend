@@ -4,15 +4,14 @@ from uuid import UUID
 from models import DBOrganization, OrganizationFilter, InputOrganization, SuperTokensUser
 from exceptions.exceptions import EntityNotFound
 
+logger = logging.getLogger("main")
+
 
 async def get_organizations(filters: OrganizationFilter | None = None) -> list[DBOrganization]:
-    logging.info("Get_organization function: Entering get organization function")
     query = DBOrganization.find()
     if filters:
         if filters.id:
             if filters.id.equal:
-                #query = query.find(DBOrganization.id == filters.id.equal)
-                # Check if `filters.id.equal` is already a UUID or not
                 if isinstance(filters.id.equal, UUID):
                     query = query.find(DBOrganization.id == filters.id.equal)
                 else:
@@ -20,14 +19,16 @@ async def get_organizations(filters: OrganizationFilter | None = None) -> list[D
         if filters.name:
             if filters.name.equal:
                 query = query.find(DBOrganization.name == filters.name.equal)
-    return await query.to_list()
+    organizations = await query.to_list()
+    logger.debug(f"Organizations: {organizations}")
+    return organizations
 
 
 async def create_organizations_mutation(
     organizations: list[InputOrganization], current_user: SuperTokensUser
 ) -> list[DBOrganization]:
     from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
-    logging.info("Create_organization function: Entering create organization function")
+
     new_organizations = []
     for organization_data in organizations:
         new_organization = DBOrganization(
@@ -38,9 +39,10 @@ async def create_organizations_mutation(
         )
         await new_organization.insert()
         new_organizations.append(new_organization)
-        logging.info(f"Create_organization function: New organization is : {new_organizations}")
+        logger.info(f"Creating organization - {new_organization}")
 
-    logging.info(f"Create_organization function: User metadata being updated: Current UserId: {str(current_user.id)}, New org id: {str(new_organizations[0].id)}")
+    logger.debug(f"Updating user ({str(current_user.id)}) with organization_id - {str(new_organizations[0].id)}")
+
     await update_user_metadata(str(current_user.id), {"organization_id": str(new_organizations[0].id)})
 
     return new_organizations
@@ -65,7 +67,7 @@ async def update_organizations_mutation(organizations: list[InputOrganization]) 
             await organization.update(update_doc)
             updated_organizations.append(organization)
         else:
-            raise EntityNotFound("ERROR: Organization Not Found", organization_data.name)
+            raise EntityNotFound("Organization Not Found", organization_data.name)
 
     return updated_organizations
 
@@ -80,6 +82,6 @@ async def delete_organizations_mutation(ids: list[UUID]) -> list[UUID]:
             await organization.delete()
             deleted_ids.append(organization_id)
         else:
-            raise EntityNotFound("ERROR: Organization Not Found", str(organization_id))
+            raise EntityNotFound("Organization Not Found", str(organization_id))
 
     return deleted_ids

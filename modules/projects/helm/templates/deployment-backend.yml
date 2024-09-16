@@ -77,3 +77,6 @@ spec:
 
             - name: SUPERTOKENS_CONNECTION_URI
               value: {{ .Values.backend.authConnectionUri }}
+
+            - name: LOG_LEVEL
+              value: {{ .Values.backend.logLevel }}

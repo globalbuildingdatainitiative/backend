@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: list[str] = [
         "http://localhost:8000",
     ]
+    LOG_LEVEL: str = "INFO"
 
     SMTP_HOST: str
     SMTP_PORT: int

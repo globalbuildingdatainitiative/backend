@@ -127,6 +127,7 @@ manifests:
           backend.serverName: "Auth"
           backend.serverHost: "http://localhost:7001"
           backend.routerUrl: "http://router-service.router:7000"
+          backend.logLevel: "DEBUG"
           appDomain: "localhost:8000"
           appProtocol: "http"
         setValueTemplates:
@@ -152,6 +153,7 @@ manifests:
           backend.serverName: "Organization"
           backend.serverHost: "http://localhost:7002"
           backend.routerUrl: "http://router-service.router:7000"
+          backend.logLevel: "DEBUG"
           appDomain: "localhost:8000"
           appProtocol: "http"
         createNamespace: true
@@ -169,6 +171,7 @@ manifests:
           backend.serverName: "Projects"
           backend.authApiKey: fakeKey
           backend.authConnectionUri: http://supertokens-service.auth:3567
+          backend.logLevel: "DEBUG"
           appDomain: "localhost:8000"
           appProtocol: "http"
         createNamespace: true

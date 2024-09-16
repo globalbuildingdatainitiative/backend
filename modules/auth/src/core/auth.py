@@ -1,4 +1,4 @@
-'''''
+''' ''
 
 ## LAST WORKING CODE
 
@@ -351,10 +351,23 @@ from supertokens_python import init, InputAppInfo, SupertokensConfig
 from supertokens_python.framework.request import BaseRequest
 from supertokens_python.recipe import session, userroles, usermetadata, emailpassword, dashboard, jwt, emailverification
 from supertokens_python.recipe.emailpassword import InputFormField
-from supertokens_python.recipe.emailpassword.interfaces import APIInterface, APIOptions, SignUpPostOkResult, RecipeInterface, SignInOkResult, SignInWrongCredentialsError, ResetPasswordUsingTokenOkResult, ResetPasswordUsingTokenInvalidTokenError
+from supertokens_python.recipe.emailpassword.interfaces import (
+    APIInterface,
+    APIOptions,
+    SignUpPostOkResult,
+    RecipeInterface,
+    SignInOkResult,
+    SignInWrongCredentialsError,
+    ResetPasswordUsingTokenOkResult,
+    ResetPasswordUsingTokenInvalidTokenError,
+)
 from supertokens_python.recipe.emailpassword.types import FormField, PasswordResetEmailTemplateVars, SMTPOverrideInput
-from supertokens_python.ingredients.emaildelivery.types import EmailDeliveryConfig, SMTPSettings, SMTPSettingsFrom, EmailContent
-from supertokens_python.recipe.emailverification.types import SMTPOverrideInput as EVSMTPOverrideInput, EmailTemplateVars as EVEmailTemplateVars
+from supertokens_python.ingredients.emaildelivery.types import (
+    EmailDeliveryConfig,
+    SMTPSettings,
+    SMTPSettingsFrom,
+    EmailContent,
+)
 from typing import List, Dict, Any, Union
 from core.config import settings
 from uuid import UUID
@@ -363,6 +376,7 @@ from supertokens_python.recipe.emailpassword.asyncio import get_user_by_id
 from supertokens_python.recipe.usermetadata.asyncio import get_user_metadata, update_user_metadata
 
 FAKE_PASSWORD = "asokdA87fnf30efjoiOI**cwjkn"
+
 
 def get_origin(request: BaseRequest | None, user_context) -> str:
     if request is not None:
@@ -375,6 +389,7 @@ def get_origin(request: BaseRequest | None, user_context) -> str:
             elif origin.startswith("http://localhost"):
                 return origin
     return "https://app.gbdi.io"
+
 
 # SMTP Configuration
 smtp_settings = SMTPSettings(
@@ -531,12 +546,7 @@ def custom_smtp_content_override(original_implementation: SMTPOverrideInput) -> 
                         </html>
                         """
 
-        return EmailContent(
-            subject=subject,
-            body=body,
-            is_html=is_html,
-            to_email=template_vars.user.email
-        )
+        return EmailContent(subject=subject, body=body, is_html=is_html, to_email=template_vars.user.email)
 
     original_implementation.get_content = get_content
     return original_implementation
@@ -561,6 +571,7 @@ def override_email_password_apis(original_implementation: APIInterface):
     """Extends the sign-up process to include first name and last name'"""
 
     from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
+
     original_sign_up_post = original_implementation.sign_up_post
 
     async def sign_up_post(
@@ -572,9 +583,7 @@ def override_email_password_apis(original_implementation: APIInterface):
             first_name = next(f.value for f in form_fields if f.id == "firstName")
             last_name = next(f.value for f in form_fields if f.id == "lastName")
 
-            await update_user_metadata(
-                response.user.user_id, {"first_name": first_name, "last_name": last_name}
-            )
+            await update_user_metadata(response.user.user_id, {"first_name": first_name, "last_name": last_name})
 
         return response
 
@@ -589,32 +598,31 @@ def functions_override(original_impl: RecipeInterface):
 
     # Prevents using the fake password (Initially assigned to invited users)
     async def update_email_or_password(
-            user_id: str,
-            email: Union[str, None],
-            password: Union[str, None],
-            apply_password_policy: Union[bool, None],
-            tenant_id_for_password_policy: str,
-            user_context: Dict[str, Any],
+        user_id: str,
+        email: Union[str, None],
+        password: Union[str, None],
+        apply_password_policy: Union[bool, None],
+        tenant_id_for_password_policy: str,
+        user_context: Dict[str, Any],
     ):
-        if (password == FAKE_PASSWORD):
+        if password == FAKE_PASSWORD:
             raise Exception("Please use a different password")
 
-        return await og_update_email_or_password(user_id, email, password, apply_password_policy,
-                                                 tenant_id_for_password_policy, user_context)
+        return await og_update_email_or_password(
+            user_id, email, password, apply_password_policy, tenant_id_for_password_policy, user_context
+        )
 
     # Handles password reset and assigns users to organizations
     async def reset_password_using_token(
-            token: str, new_password: str, tenant_id: str, user_context: Dict[str, Any]
-    ) -> Union[
-        ResetPasswordUsingTokenOkResult, ResetPasswordUsingTokenInvalidTokenError
-    ]:
+        token: str, new_password: str, tenant_id: str, user_context: Dict[str, Any]
+    ) -> Union[ResetPasswordUsingTokenOkResult, ResetPasswordUsingTokenInvalidTokenError]:
         if new_password == FAKE_PASSWORD:
             return ResetPasswordUsingTokenInvalidTokenError()
 
         result = await og_reset_password_using_token(token, new_password, tenant_id, user_context)
 
         if isinstance(result, ResetPasswordUsingTokenOkResult):
-            #logging.info("Password reset successful. Attempting to assign organization.")
+            # logging.info("Password reset successful. Attempting to assign organization.")
 
             try:
                 user_id = user_context.get("user_id")
@@ -629,15 +637,18 @@ def functions_override(original_impl: RecipeInterface):
                     pending_org_id = user_metadata.metadata.get("pending_org_id")
 
                     if pending_org_id:
-                        await update_user_metadata(user_id, {
-                            "organization_id": pending_org_id,
-                            #"pending_org_id": None
-                        })
-                        #logging.info(f"User {user_id} assigned to organization {pending_org_id}")
+                        await update_user_metadata(
+                            user_id,
+                            {
+                                "organization_id": pending_org_id,
+                                # "pending_org_id": None
+                            },
+                        )
+                        # logging.info(f"User {user_id} assigned to organization {pending_org_id}")
                     else:
                         logging.info(f"No pending organization found for user {user_id}")
                 else:
-                    logging.warning(f"User ID not found in token or context")
+                    logging.warning("User ID not found in token or context")
             except Exception as e:
                 logging.error(f"Error assigning organization after password reset: {str(e)}")
 
@@ -645,9 +656,9 @@ def functions_override(original_impl: RecipeInterface):
 
     # Prevents signing in with Fake password (User must change the password before signing in)
     async def emailpassword_sign_in(
-            email: str, password: str, tenant_id: str, user_context: Dict[str, Any]
+        email: str, password: str, tenant_id: str, user_context: Dict[str, Any]
     ) -> Union[SignInOkResult, SignInWrongCredentialsError]:
-        if (password == FAKE_PASSWORD):
+        if password == FAKE_PASSWORD:
             return SignInWrongCredentialsError()
         return await og_emailpassword_sign_in(email, password, tenant_id, user_context)
 
@@ -655,7 +666,6 @@ def functions_override(original_impl: RecipeInterface):
     original_impl.reset_password_using_token = reset_password_using_token
     original_impl.sign_in = emailpassword_sign_in
     return original_impl
-
 
 
 def supertokens_init():
@@ -679,13 +689,11 @@ def supertokens_init():
                     ]
                 ),
                 override=emailpassword.InputOverrideConfig(
-                    apis=override_email_password_apis,
-                    functions=functions_override
+                    apis=override_email_password_apis, functions=functions_override
                 ),
                 email_delivery=EmailDeliveryConfig(
                     service=emailpassword.SMTPService(
-                        smtp_settings=smtp_settings,
-                        override=custom_smtp_content_override
+                        smtp_settings=smtp_settings, override=custom_smtp_content_override
                     )
                 ),
             ),
@@ -694,9 +702,9 @@ def supertokens_init():
                 email_delivery=EmailDeliveryConfig(
                     service=emailverification.SMTPService(
                         smtp_settings=smtp_settings,
-                        #override=custom_smtp_email_verification_content_override
+                        # override=custom_smtp_email_verification_content_override
                     )
-                )
+                ),
             ),
             dashboard.init(),
             userroles.init(),

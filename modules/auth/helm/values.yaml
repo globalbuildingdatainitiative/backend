@@ -42,6 +42,7 @@ backend:
   apiKey: ""
   connectionUri: ""
   routerUrl: "http://localhost:7000/graphql"
+  logLevel: "INFO"
 
 smtp:
   host: ""

@@ -13,7 +13,8 @@ env = [
     "MONGO_DB=organization",
     "MONGO_PORT=27017",
     "SUPERTOKENS_CONNECTION_URI=http://test.gbdi.io",
-    "SUPERTOKENS_API_KEY=DHALFKJDHALFJHDAJF"
+    "SUPERTOKENS_API_KEY=DHALFKJDHALFJHDAJF",
+    "LOG_LEVEL=ERROR"
 ]
 
 [tool.ruff]

@@ -8,6 +8,8 @@ from supertokens_python.recipe.jwt.interfaces import CreateJwtOkResult
 from core.config import settings
 from exceptions.exceptions import MicroServiceConnectionError, MicroServiceResponseError
 
+logger = logging.getLogger("main")
+
 
 async def create_jwt() -> str:
     jwt_response = await asyncio.create_jwt(
@@ -33,14 +35,13 @@ async def get_organization_name(organization_id: UUID) -> str:
 
     try:
         jwt_token = await create_jwt()
-        logging.info(f"Created JWT token: {jwt_token[:10]}...")  # Log first 10 characters of token
+        logger.debug(f"Fetching organization with id: {organization_id}")
 
         async with httpx.AsyncClient() as client:
             headers = {
                 "Authorization": f"Bearer {jwt_token}",
                 "Content-Type": "application/json",
             }
-            logging.info(f"Sending request to {settings.ROUTER_URL}graphql with headers: {headers}")
 
             response = await client.post(
                 f"{settings.ROUTER_URL}graphql",
@@ -51,11 +52,10 @@ async def get_organization_name(organization_id: UUID) -> str:
                 headers=headers,
             )
 
-            logging.info(f"Received response with status code: {response.status_code}")
-            logging.info(f"Response content: {response.text}")
-
             if response.is_error:
-                raise MicroServiceConnectionError(f"Could not receive data from {settings.ROUTER_URL}. Got {response.text}")
+                raise MicroServiceConnectionError(
+                    f"Could not receive data from {settings.ROUTER_URL}. Got {response.text}"
+                )
 
             data = response.json()
             if "errors" in data:

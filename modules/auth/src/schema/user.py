@@ -1,8 +1,13 @@
-from logic import get_users, update_user, invite_users, accept_invitation, reject_invitation
-from models import GraphQLUser, UserFilters, UserSort, UpdateUserInput, InviteUsersInput, InviteUsersResponse, InviteResult
+import logging
+
 from strawberry.types import Info
-from supertokens_python.recipe.session.asyncio import get_session
 from supertokens_python.recipe.session.exceptions import UnauthorisedError
+
+from core.context import get_user
+from logic import get_users, update_user, invite_users, accept_invitation, reject_invitation
+from models import GraphQLUser, UserFilters, UserSort, UpdateUserInput, InviteUsersInput, InviteResult
+
+logger = logging.getLogger("main")
 
 
 async def users_query(filters: UserFilters | None = None, sort_by: UserSort | None = None) -> list[GraphQLUser]:
@@ -16,21 +21,19 @@ async def update_user_mutation(user_input: UpdateUserInput) -> GraphQLUser:
     return await update_user(user_input)
 
 
-async def invite_users_mutation(info: Info, input: InviteUsersInput) -> InviteUsersResponse:
+async def invite_users_mutation(info: Info, input: InviteUsersInput) -> list[InviteResult]:
     """Invite users to the organization"""
     try:
-        session = await get_session(info.context["request"])
-        if session is None:
-            raise Exception("User not authenticated")
+        user = get_user(info.context)
 
-        user_id = session.get_user_id()
-        results = await invite_users(input.emails, user_id)
-        return InviteUsersResponse(results=[InviteResult(**r) for r in results])
+        results = await invite_users(input.emails, user.id)
+        logger.debug(f"Invited users: {results}")
+        return results
     except UnauthorisedError:
         raise Exception("User not authenticated")
 
 
-async def accept_invitation_mutation(info: Info, user_id: str) -> bool:
+async def accept_invitation_mutation(user_id: str) -> bool:
     """Accept an invitation"""
     try:
         result = await accept_invitation(user_id)
@@ -39,7 +42,7 @@ async def accept_invitation_mutation(info: Info, user_id: str) -> bool:
         raise Exception(f"Error accepting invitation: {str(e)}")
 
 
-async def reject_invitation_mutation(info: Info, user_id: str) -> bool:
+async def reject_invitation_mutation(user_id: str) -> bool:
     """Reject an invitation"""
     try:
         result = await reject_invitation(user_id)

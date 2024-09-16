@@ -1,4 +1,4 @@
-'''''
+"""''
 from typing import List, Dict
 
 from supertokens_python.recipe.emailpassword.asyncio import send_reset_password_email, sign_up, get_user_by_email
@@ -46,9 +46,11 @@ async def invite_users(emails: List[str], inviter_id: str) -> List[Dict[str, str
             results.append({"email": email, "status": "error", "message": str(e)})
 
     return results
-'''
+"""
 
-'''''
+from uuid import UUID
+
+"""''
 from typing import List, Dict
 
 from supertokens_python.recipe.emailpassword.asyncio import send_reset_password_email, sign_up, get_user_by_email
@@ -107,9 +109,9 @@ async def invite_users(emails: List[str], inviter_id: str) -> List[Dict[str, str
             results.append({"email": email, "status": "error", "message": str(e)})
 
     return results
-'''
+"""
 
-'''''
+"""''
 
 
 ## LAST WORKING CODE
@@ -170,7 +172,7 @@ async def invite_users(emails: List[str], inviter_id: str) -> List[Dict[str, str
 
     return results
 
-'''
+"""
 
 from typing import List, Dict
 
@@ -184,14 +186,15 @@ from models import InviteStatus
 FAKE_PASSWORD = "asokdA87fnf30efjoiOI**cwjkn"
 
 
-async def invite_users(emails: List[str], inviter_id: str) -> List[Dict[str, str]]:
-    inviter_metadata = await get_user_metadata(inviter_id)
+async def invite_users(emails: List[str], inviter_id: UUID) -> List[Dict[str, str]]:
+    inviter_metadata = await get_user_metadata(str(inviter_id))
     inviter_org_id = inviter_metadata.metadata.get("organization_id")
     inviter_first_name = inviter_metadata.metadata.get("first_name", "")
     inviter_last_name = inviter_metadata.metadata.get("last_name", "")
     inviter_name = f"{inviter_first_name} {inviter_last_name}".strip()
 
     if not inviter_org_id:
+        # TODO - Error not handled
         raise ValueError("Inviter does not belong to an organization")
 
     results = []
@@ -203,7 +206,6 @@ async def invite_users(emails: List[str], inviter_id: str) -> List[Dict[str, str
             if existing_user:
                 user_id = existing_user.user_id
 
-
             else:
                 # Creating a user with fake password
                 sign_up_result = await sign_up("public", email, FAKE_PASSWORD)
@@ -214,13 +216,16 @@ async def invite_users(emails: List[str], inviter_id: str) -> List[Dict[str, str
                 user_id = sign_up_result.user.user_id
 
                 # Updating the user-metadata with invitation details
-                await update_user_metadata(user_id, {
-                    "invited": True,
-                    "invite_status": InviteStatus.PENDING.value,
-                    "inviter_id": inviter_id,
-                    "inviter_name": inviter_name,
-                    "pending_org_id": str(inviter_org_id)
-                })
+                await update_user_metadata(
+                    user_id,
+                    {
+                        "invited": True,
+                        "invite_status": InviteStatus.PENDING.value,
+                        "inviter_id": inviter_id,
+                        "inviter_name": inviter_name,
+                        "pending_org_id": str(inviter_org_id),
+                    },
+                )
 
             # Sends invitation (Password reset email)
             await send_reset_password_email("public", user_id, user_context={"user_id": user_id})

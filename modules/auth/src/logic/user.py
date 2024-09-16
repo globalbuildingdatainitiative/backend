@@ -1,4 +1,4 @@
-'''''
+''' ''
 from datetime import datetime
 
 from core.exceptions import EntityNotFound
@@ -432,7 +432,7 @@ def filter_users(users: list[GraphQLUser], filters: UserFilters) -> list[GraphQL
 
 '''
 
-#LATEST VERSION
+# LATEST VERSION
 
 import logging
 from datetime import datetime
@@ -440,6 +440,8 @@ from datetime import datetime
 from core.exceptions import EntityNotFound
 from models import GraphQLUser, UserFilters, UserSort, UpdateUserInput, InviteStatus
 from models.sort_filter import FilterOptions
+
+logger = logging.getLogger("main")
 
 
 async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None = None) -> list[GraphQLUser]:
@@ -481,9 +483,8 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
 
         gql_users.append(user)
 
-
-        if filters:
-            gql_users = filter_users(gql_users, filters)
+    if filters:
+        gql_users = filter_users(gql_users, filters)
 
     return gql_users
 
@@ -511,7 +512,7 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     if metadata_update:
         await update_user_metadata(str(user_input.id), metadata_update)
 
-    # Update password if current password and new password are provided 
+    # Update password if current password and new password are provided
 
     if user_input.current_password and user_input.new_password:
         user_email = (await get_users(UserFilters(id=FilterOptions(equal=str(user_input.id)))))[0].email
@@ -534,6 +535,7 @@ async def accept_invitation(user_id: str) -> bool:
     """Updates user metadata when invitation is accepted"""
 
     from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
+
     try:
         # First, get the current user metadata
         current_metadata = await get_user_metadata(user_id)
@@ -554,10 +556,10 @@ async def accept_invitation(user_id: str) -> bool:
         # Update the user metadata
         await update_user_metadata(user_id, update_data)
 
-        logging.info(f"Invitation accepted for user {user_id}. Updated metadata: {update_data}")
+        logger.info(f"Invitation accepted for user {user_id}. Updated metadata: {update_data}")
         return True
     except Exception as e:
-        logging.error(f"Error accepting invitation for user {user_id}: {str(e)}")
+        logger.error(f"Error accepting invitation for user {user_id}: {str(e)}")
         return False
 
 
@@ -565,6 +567,7 @@ async def reject_invitation(user_id: str) -> bool:
     """Updates user metadata when invitation is rejected"""
 
     from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
+
     try:
         # First, get the current user metadata
         current_metadata = await get_user_metadata(user_id)
@@ -586,21 +589,25 @@ async def reject_invitation(user_id: str) -> bool:
         # Update the user metadata
         await update_user_metadata(user_id, update_data)
 
-        logging.info(f"Invitation rejected for user {user_id}. Updated metadata: {update_data}")
+        logger.info(f"Invitation rejected for user {user_id}. Updated metadata: {update_data}")
         return True
     except Exception as e:
-        logging.error(f"Error rejecting invitation for user {user_id}: {str(e)}")
+        logger.error(f"Error rejecting invitation for user {user_id}: {str(e)}")
         return False
 
 
 def filter_users(users: list[GraphQLUser], filters: UserFilters) -> list[GraphQLUser]:
-    filtered_users = users
+    filtered_users = []
+
+    logger.debug(f"Filtering users ({users}) with filters: {filters}")
+
     for filter_key, filter_value in filters.__dict__.items():
         if filter_value and filter_value.equal is not None:
-            if filter_key == 'organizationId':
-                filtered_users = [user for user in filtered_users if
-                                  str(user.organization_id) == str(filter_value.equal)]
-            elif hasattr(GraphQLUser, filter_key):
-                filtered_users = [user for user in filtered_users if getattr(user, filter_key) == filter_value.equal]
+            if filter_key == "organizationId":
+                filtered_users = [
+                    user for user in filtered_users if str(user.organization_id) == str(filter_value.equal)
+                ]
+            elif hasattr(users[0], filter_key):
+                filtered_users = [user for user in users if getattr(user, filter_key) == filter_value.equal]
 
     return filtered_users

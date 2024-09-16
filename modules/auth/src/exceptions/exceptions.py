@@ -1,3 +1,8 @@
+import logging
+
+logger = logging.getLogger("main")
+
+
 class GBDIApiError(Exception):
     """Base class for GBDI API exceptions"""
 
@@ -5,6 +10,7 @@ class GBDIApiError(Exception):
         self.message = message
         self.name = name
         super().__init__(self.message, self.name)
+        logger.error(message)
 
 
 class EntityNotFound(GBDIApiError):

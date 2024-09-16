@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     SUPERTOKENS_CONNECTION_URI: AnyHttpUrl
     SUPERTOKENS_API_KEY: str
 
+    LOG_LEVEL: str = "INFO"
+
     MONGO_USER: str
     MONGO_PASSWORD: str
     MONGO_HOST: str

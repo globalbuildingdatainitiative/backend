@@ -39,5 +39,6 @@ backend:
   authApiKey: ""
   authConnectionUri: ""
   routerUrl: "http://localhost:7000/graphql"
+  logLevel: "INFO"
 
 
