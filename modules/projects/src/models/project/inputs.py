@@ -183,7 +183,7 @@ class GraphQLInputBuildingInfo:
     frame_type: strawberry.auto
     general_energy_class: GraphQLGeneralEnergyClass | None = None
     gross_floor_area: GraphQLInputAreaType
-    heated_floor_area: GraphQLInputAreaType
+    heated_floor_area: GraphQLInputAreaType | None = None
     local_energy_class: strawberry.auto
     roof_type: GraphQLRoofType | None = None
 

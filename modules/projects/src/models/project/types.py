@@ -126,14 +126,14 @@ class GraphQLLocation:
     async def longitude(self) -> float:
         from models.project.methods import get_coordinates
 
-        location = await get_coordinates(countries.get(self.country.value).name)
+        location = await get_coordinates(self.country.value)
         return location.get("longitude", 0.0)
 
     @strawberry.field
     async def latitude(self) -> float:
         from models.project.methods import get_coordinates
 
-        location = await get_coordinates(countries.get(self.country.value).name)
+        location = await get_coordinates(self.country.value)
         return location.get("latitude", 0.0)
 
 

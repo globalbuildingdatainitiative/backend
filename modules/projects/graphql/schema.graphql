@@ -402,6 +402,10 @@ union EPDTechFlow = EPD | TechFlow
 
 input FilterBy {
   equal: JSON = null
+  gt: JSON = null
+  gte: JSON = null
+  lt: JSON = null
+  lte: JSON = null
   isTrue: Boolean = null
 }
 
@@ -578,7 +582,7 @@ input InputProjectInfo {
   frameType: String = null
   generalEnergyClass: GeneralEnergyClass
   grossFloorArea: InputAreaType!
-  heatedFloorArea: InputAreaType!
+  heatedFloorArea: InputAreaType = null
   localEnergyClass: String = null
   roofType: RoofType
   type: String!

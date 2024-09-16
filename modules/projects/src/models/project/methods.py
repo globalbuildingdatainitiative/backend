@@ -1,13 +1,18 @@
+import json
+from pathlib import Path
 from uuid import UUID
 
 import httpx
 from async_lru import alru_cache
 from pydantic import BaseModel
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-from core.exceptions import MicroServiceConnectionError
+from core.exceptions import MicroServiceConnectionError, ThrottleError
 from models import DBProject
 from models.response import AggregationMethod
+import logging
 
+logger = logging.getLogger(__name__)
 
 class ProjectAggregation(BaseModel):
     method: AggregationMethod
@@ -83,18 +88,41 @@ async def aggregate_projects(organization_id: UUID, apply: list[dict]):
 
 
 @alru_cache
-async def get_coordinates(country_name: str) -> dict:
+async def get_coordinates(country_name: str, city_name: str | None = None) -> dict:
     country_name = country_name.lower()
+    city_name = city_name.lower() if city_name else None
 
+    if city_name:
+        return await get_city_location(city_name)
+    else:
+        country_cache = json.loads((Path(__file__).parent / "country_cache.json").read_text())
+        if country_cache.get(country_name):
+            return country_cache.get(country_name)
+
+    return {"latitude": 0.0, "longitude": 0.0}
+
+
+@retry(
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=1, min=1, max=10),
+    retry=retry_if_exception_type(ThrottleError)
+)
+async def get_city_location(city_name: str) -> dict:
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.get(f"https://nominatim.openstreetmap.org/search?q={country_name}&format=json")
+            response = await client.get(f"https://nominatim.openstreetmap.org/search?q={city_name}&format=json")
         except httpx.RequestError as e:
             raise MicroServiceConnectionError(f"Could not connect to nominatim.openstreetmap.org. Got {e}")
         if response.is_error:
-            raise MicroServiceConnectionError(
-                f"Could not receive data from nominatim.openstreetmap.org. Got {response.text}"
-            )
-        data = response.json()[0]
-        return {"latitude": float(data["lat"]), "longitude": float(data["lon"])}
-    return {"latitude": None, "longitude": None}
+            if "Bandwidth Limit exceeded" in response.text:
+                logger.info(f"Bandwidth Limit Exceeded - {city_name}")
+                raise ThrottleError("Bandwidth Limit Exceeded")
+            else:
+                raise MicroServiceConnectionError(
+                    f"Could not receive data from nominatim.openstreetmap.org. Got {response.text}"
+                )
+        _json = response.json()
+        if _json:
+            data = _json[0]
+            return {"latitude": float(data["lat"]), "longitude": float(data["lon"])}
+        return {"latitude": 0.0, "longitude": 0.0}
