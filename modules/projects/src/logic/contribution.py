@@ -1,4 +1,5 @@
 import dataclasses
+import logging
 from enum import Enum
 from uuid import UUID
 
@@ -7,6 +8,8 @@ from strawberry import Info
 
 from models import DBContribution, InputContribution, DBProject, SuperTokensUser
 from models.sort_filter import sort_model_query, filter_model_query, FilterBy, SortBy
+
+logger = logging.getLogger("main")
 
 
 async def get_contributions(
@@ -29,6 +32,7 @@ async def get_contributions(
         query = query.skip(offset)
 
     contributions = await query.to_list()
+    logger.debug(f"Found {len(contributions)} projects for organization {organization_id}")
     return contributions
 
 

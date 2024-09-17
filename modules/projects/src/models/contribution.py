@@ -10,9 +10,9 @@ from .sort_filter import BaseFilter, FilterBy
 
 class ContributionBase(BaseModel):
     id: UUID = Field(default_factory=uuid4)
-    uploaded_at: datetime.datetime = Field(default_factory=datetime.datetime.now)
-    user_id: UUID
-    organization_id: UUID
+    uploaded_at: datetime.datetime = Field(default_factory=datetime.datetime.now, alias="uploadedAt")
+    user_id: UUID = Field(alias="userId")
+    organization_id: UUID = Field(alias="organizationId")
 
 
 class DBContribution(ContributionBase, Document):

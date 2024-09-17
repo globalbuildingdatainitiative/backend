@@ -68,8 +68,9 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
         content={"data": "Invalid request data"},
     )
 
+
 @app.exception_handler(MicroServiceConnectionError)
-async def validation_exception_handler(request: Request, exc: MicroServiceConnectionError):
+async def microservice_exception_handler(request: Request, exc: MicroServiceConnectionError):
     logger.error(exc)
 
     return JSONResponse(

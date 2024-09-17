@@ -14,6 +14,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class ProjectAggregation(BaseModel):
     method: AggregationMethod
     field: str
@@ -64,7 +65,7 @@ async def group_projects(organization_id: UUID, group_by: str, limit: int, items
         projection["$project"]["aggregation"] = aggregation_projection
 
     groups = (
-        await DBProject.find(DBProject.contribution.organization_id == organization_id, fetch_links=True)
+        await DBProject.find(DBProject.contribution.organizationId == organization_id, fetch_links=True)
         .aggregate(
             [
                 {"$group": {"_id": f"${group_by}", "items": items, "count": {"$sum": 1}, **aggregation}},
@@ -80,7 +81,7 @@ async def group_projects(organization_id: UUID, group_by: str, limit: int, items
 
 async def aggregate_projects(organization_id: UUID, apply: list[dict]):
     groups = (
-        await DBProject.find(DBProject.contribution.organization_id == organization_id, fetch_links=True)
+        await DBProject.find(DBProject.contribution.organizationId == organization_id, fetch_links=True)
         .aggregate(apply)
         .to_list()
     )
@@ -105,7 +106,7 @@ async def get_coordinates(country_name: str, city_name: str | None = None) -> di
 @retry(
     stop=stop_after_attempt(5),
     wait=wait_exponential(multiplier=1, min=1, max=10),
-    retry=retry_if_exception_type(ThrottleError)
+    retry=retry_if_exception_type(ThrottleError),
 )
 async def get_city_location(city_name: str) -> dict:
     async with httpx.AsyncClient() as client:

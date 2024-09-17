@@ -29,6 +29,8 @@ def filter_model_query(
             for _field, value in fields.items():
                 if not _field:
                     continue
+                if _field == "id":
+                    _field = "_id"
 
                 if _filter == "equal":
                     query = query.find({_field: value})
@@ -40,6 +42,8 @@ def filter_model_query(
                     query = query.find({_field: {"$lt": value}})
                 elif _filter == "lte":
                     query = query.find({_field: {"$lte": value}})
+                elif _filter == "not_equal":
+                    query = query.find({_field: {"$ne": value}})
                 elif _filter == "is_true" and value is not None:
                     _field = to_snake(_field)
                     field = getattr(model, _field)
@@ -87,6 +91,7 @@ class FilterBy(BaseFilter):
     gte: JSON | None = None
     lt: JSON | None = None
     lte: JSON | None = None
+    not_equal: JSON | None = None
     # contains: str | None = None
     # starts_with: str | None = None
     # ends_with: str | None = None

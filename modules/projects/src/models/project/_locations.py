@@ -5,6 +5,7 @@ import httpx
 from lcax import Country
 from iso3166 import countries
 
+
 def write_country_cache():
     location_data = {}
     out_path = Path(__file__).parent / "country_cache.json"
@@ -25,9 +26,6 @@ def write_country_cache():
         location_data[name] = {"latitude": float(data["lat"]), "longitude": float(data["lon"])}
         out_path.write_text(json.dumps(location_data, indent=2))
         time.sleep(0.02)
-
-
-
 
 
 if __name__ == "__main__":

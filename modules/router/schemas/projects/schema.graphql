@@ -102,10 +102,10 @@ type ContributionGraphQLGroupResponse {
 
 type ContributionGraphQLResponse {
   """The list of items in this pagination window."""
-  items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int = null): [Contribution!]
+  items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int): [Contribution!]
 
   """Total number of items in the filtered dataset."""
-  count: Int!
+  count(filterBy: FilterBy = null): Int!
   groups(groupBy: String!, limit: Int! = 50): [ContributionGraphQLGroupResponse!]!
 
   """
@@ -406,6 +406,7 @@ input FilterBy {
   gte: JSON = null
   lt: JSON = null
   lte: JSON = null
+  notEqual: JSON = null
   isTrue: Boolean = null
 }
 
@@ -685,10 +686,10 @@ type ProjectGraphQLGroupResponse {
 
 type ProjectGraphQLResponse {
   """The list of items in this pagination window."""
-  items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int = null): [Project!]
+  items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int): [Project!]
 
   """Total number of items in the filtered dataset."""
-  count: Int!
+  count(filterBy: FilterBy = null): Int!
   groups(groupBy: String!, limit: Int! = 50): [ProjectGraphQLGroupResponse!]!
 
   """

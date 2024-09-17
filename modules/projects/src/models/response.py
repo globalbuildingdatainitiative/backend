@@ -76,7 +76,9 @@ class GraphQLResponse[T]:
     ) -> list[T] | None:
         user = get_user(info)
         organization_id = user.organization_id
-        limit = 50 if limit == strawberry.UNSET else limit  # Set default limit to 50 if it's not provided or set to None
+        limit = (
+            50 if limit == strawberry.UNSET else limit
+        )  # Set default limit to 50 if it's not provided or set to None
 
         if self._type == "Project":
             from logic import get_projects
@@ -91,8 +93,8 @@ class GraphQLResponse[T]:
         return None
 
     @strawberry.field(description="Total number of items in the filtered dataset.")
-    async def count(self, info: Info) -> int:
-        items = await self.items(info, limit=None)
+    async def count(self, info: Info, filter_by: FilterBy | None = None) -> int:
+        items = await self.items(info, filter_by=filter_by, limit=None)
         return len(items)
 
     @strawberry.field()
