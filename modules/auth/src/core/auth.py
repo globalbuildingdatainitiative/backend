@@ -29,8 +29,13 @@ FAKE_PASSWORD = "asokdA87fnf30efjoiOI**cwjkn"
 
 
 def get_origin(request: BaseRequest | None, user_context) -> str:
+    request = request or user_context.get("request")
     if request is not None:
-        origin = request.get_header("origin")
+        if isinstance(request, BaseRequest):
+            origin = request.get_header("origin")
+        else:
+            origin = request.headers.get("origin")
+
         if origin is None:
             pass
         else:
@@ -38,6 +43,7 @@ def get_origin(request: BaseRequest | None, user_context) -> str:
                 return origin
             elif origin.startswith("http://localhost"):
                 return origin
+
     return "https://app.gbdi.io"
 
 

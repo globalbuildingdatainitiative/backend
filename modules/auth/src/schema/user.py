@@ -22,7 +22,7 @@ async def update_user_mutation(user_input: UpdateUserInput) -> GraphQLUser:
 async def invite_users_mutation(info: Info, input: InviteUsersInput) -> list[InviteResult]:
     """Invite users to the organization"""
     user = get_user(info)
-    results = await invite_users(input.emails, user.id)
+    results = await invite_users(input.emails, user.id, info.context.get("request"))
     return results
 
 

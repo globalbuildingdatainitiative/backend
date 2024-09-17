@@ -1,5 +1,7 @@
 from typing import List, Dict
 from uuid import UUID
+
+from starlette.requests import Request
 from supertokens_python.recipe.emailpassword.asyncio import send_reset_password_email, sign_up, get_user_by_email
 from supertokens_python.recipe.emailpassword.interfaces import SignUpOkResult
 from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
@@ -11,7 +13,7 @@ from models import InviteStatus, InviteResult
 FAKE_PASSWORD = "asokdA87fnf30efjoiOI**cwjkn"
 
 
-async def invite_users(emails: List[str], inviter_id: UUID) -> List[Dict[str, str]]:
+async def invite_users(emails: List[str], inviter_id: UUID, request: Request) -> list[InviteResult]:
     inviter_metadata = await get_user_metadata(str(inviter_id))
     inviter_org_id = inviter_metadata.metadata.get("organization_id")
     inviter_first_name = inviter_metadata.metadata.get("first_name", "")
@@ -47,7 +49,7 @@ async def invite_users(emails: List[str], inviter_id: UUID) -> List[Dict[str, st
                     "pending_org_id": str(inviter_org_id),
                 },
             )
-            await send_reset_password_email("public", user_id, user_context={"user_id": user_id})
+            await send_reset_password_email("public", user_id, user_context={"user_id": user_id, "request": request})
             results.append(InviteResult(email=email, status="invited", message=""))
 
         except Exception as e:
