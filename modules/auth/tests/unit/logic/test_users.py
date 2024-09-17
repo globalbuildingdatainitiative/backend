@@ -1,16 +1,12 @@
 import pytest
-
 from logic import get_users, update_user
-from models import UpdateUserInput
+from models import UpdateUserInput, InviteStatus
 
 
 @pytest.mark.asyncio
 async def test_get_users(mock_get_users_newest_first, mock_get_user_metadata):
     users = await get_users()
     assert isinstance(users, list)
-
-
-# New code
 
 
 @pytest.mark.asyncio
@@ -31,10 +27,16 @@ async def test_update_user(
         "email": "updated@example.com",
         "current_password": "currentPassword123",
         "new_password": "newPassword123",
+        "invited": True,
+        "invite_status": InviteStatus.ACCEPTED,  # Use the correct enum
+        "inviter_name": "John Doe",
     }
+
     user = await update_user(UpdateUserInput(**user_input))
     print("\nuser:", user)
+
     assert user.first_name == "UpdatedFirstName"
     assert user.last_name == "UpdatedLastName"
     assert user.email == "updated@example.com"
+    assert user.invite_status == InviteStatus.ACCEPTED
     print("\nAssertion Completed")

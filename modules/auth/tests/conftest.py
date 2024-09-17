@@ -1,10 +1,8 @@
-from datetime import datetime
-
 import dataclasses
 import json
+from datetime import datetime
 from typing import Iterator
 from uuid import uuid4
-
 import docker
 import pytest
 import supertokens_python.asyncio
@@ -14,12 +12,11 @@ from httpx import AsyncClient
 import supertokens_python.recipe.session.asyncio
 import supertokens_python.recipe.usermetadata.asyncio
 from fastapi.requests import Request
-
 import core.auth
 import core.context
 import logic as logic
 from core.config import settings
-from models import SuperTokensUser, GraphQLUser, UserFilters, UserSort
+from models import SuperTokensUser, GraphQLUser, UserFilters, UserSort, InviteStatus
 
 
 @pytest.fixture(scope="session")
@@ -96,6 +93,9 @@ def mock_get_users_newest_first(users, session_mocker):
             firstName: str
             lastName: str
             organizationId: str
+            invited: bool
+            invite_status: str
+            inviter_name: str
 
             def to_json(self):
                 return {
@@ -107,6 +107,9 @@ def mock_get_users_newest_first(users, session_mocker):
                         "firstName": self.firstName,
                         "lastName": self.lastName,
                         "organizationId": self.organizationId,
+                        "invited": self.invited,
+                        "invite_status": self.invite_status,
+                        "inviter_name": self.inviter_name,
                     }
                 }
 
@@ -136,6 +139,9 @@ def mock_get_user_metadata(session_mocker, users):
                     "first_name": user["firstName"],
                     "last_name": user["lastName"],
                     "organization_id": f"org-{user_id}",
+                    "invited": False,
+                    "invite_status": InviteStatus.ACCEPTED.value,
+                    "inviter_name": "",
                 }
                 return FakeMetadata(metadata=metadata)
 
@@ -157,6 +163,12 @@ def mock_update_user_metadata(session_mocker, users):
                     user["lastName"] = metadata.get("last_name")
                 if "email" in metadata:
                     user["email"] = metadata.get("email")
+                if "invited" in metadata:
+                    user["invited"] = metadata.get("invited")
+                if "invite_status" in metadata:
+                    user["invite_status"] = metadata.get("invite_status")
+                if "inviter_name" in metadata:
+                    user["inviter_name"] = metadata.get("inviter_name")
 
     session_mocker.patch.object(
         supertokens_python.recipe.usermetadata.asyncio,
@@ -211,6 +223,9 @@ def mock_get_users(session_mocker, users):
                 first_name=user["firstName"],
                 last_name=user["lastName"],
                 organization_id=user["organizationId"],
+                invited=user.get("invited", False),
+                invite_status=InviteStatus(user.get("invite_status", InviteStatus.NONE.value)),
+                inviter_name=user.get("inviter_name", ""),
             )
             for user in users
             if not filters or (filters.id and filters.id.equal == user["id"])

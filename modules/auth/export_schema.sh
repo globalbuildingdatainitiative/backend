@@ -4,6 +4,7 @@ set -e
 export SERVER_NAME=Projects Test
 export SERVER_HOST=http://test.gbdi.io
 export CONNECTION_URI=http://test.gbdi.io
+export ROUTER_URL=http://test.gbdi.io
 export API_KEY=DHALFKJDHALFJHDAJF
 export SMTP_HOST=email-smtp.eu-central-2.amazonaws.com
 export SMTP_PORT=5897

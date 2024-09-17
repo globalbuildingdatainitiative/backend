@@ -1,10 +1,11 @@
 from uuid import UUID, uuid4
+
 import strawberry
 from beanie import Document
 from pydantic import BaseModel, Field
 
-from .sort_filter import BaseFilter, FilterOptions
 from .country_codes import CountryCodes
+from .sort_filter import BaseFilter, FilterOptions
 
 
 class OrganizationBase(BaseModel):
@@ -19,9 +20,19 @@ class DBOrganization(OrganizationBase, Document):
     pass
 
 
-@strawberry.experimental.pydantic.type(model=OrganizationBase, all_fields=True, name="Organization")
+@strawberry.federation.type(name="Organization", keys=["id"])
 class GraphQLOrganization:
-    pass
+    id: UUID = Field(default_factory=uuid4)
+    name: str
+    address: str
+    city: str
+    country: CountryCodes
+
+    @classmethod
+    async def resolve_reference(cls, id: UUID) -> "GraphQLOrganization":
+        from logic import get_organizations
+
+        return (await get_organizations(filters=OrganizationFilter(id=FilterOptions(equal=id))))[0]
 
 
 @strawberry.input

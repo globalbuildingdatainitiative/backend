@@ -11,10 +11,11 @@ tenacity = "*"
 beanie = "*"
 supertokens-python = "*"
 httpx = "*"
+pyyaml = "*"
 
 [dev-packages]
 asgi-lifespan="*"
-pydevd-pycharm = ">=222.4459.20"
+pydevd-pycharm = ">=242.21829.153"
 pre-commit = "*"
 docker = "*"
 pytest = "*"

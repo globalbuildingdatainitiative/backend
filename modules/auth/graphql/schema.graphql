@@ -11,9 +11,35 @@ input FilterOptions {
   isTrue: Boolean = null
 }
 
+type InviteResult {
+  email: String!
+  status: String!
+  message: String!
+}
+
+enum InviteStatus {
+  ACCEPTED
+  PENDING
+  REJECTED
+  NONE
+}
+
+input InviteUsersInput {
+  emails: [String!]!
+}
+
 type Mutation {
   """Update user details"""
   updateUser(userInput: UpdateUserInput!): User!
+
+  """Invite users to the organization"""
+  inviteUsers(input: InviteUsersInput!): [InviteResult!]!
+
+  """Accept an invitation"""
+  acceptInvitation(userId: String!): Boolean!
+
+  """Reject an invitation"""
+  rejectInvitation(userId: String!): Boolean!
 }
 
 type Query {
@@ -38,6 +64,10 @@ input UpdateUserInput {
   email: String = null
   currentPassword: String = null
   newPassword: String = null
+  invited: Boolean = null
+  inviteStatus: InviteStatus = null
+  inviterName: String = null
+  organizationId: UUID = null
 }
 
 type User @key(fields: "id") {
@@ -47,6 +77,9 @@ type User @key(fields: "id") {
   email: String!
   timeJoined: DateTime!
   organizationId: UUID @shareable
+  invited: Boolean!
+  inviteStatus: InviteStatus!
+  inviterName: String
 }
 
 input UserFilters {
@@ -55,6 +88,9 @@ input UserFilters {
   lastName: FilterOptions = null
   email: FilterOptions = null
   organizationId: FilterOptions = null
+  invited: FilterOptions = null
+  inviteStatus: FilterOptions = null
+  inviterName: FilterOptions = null
 }
 
 input UserSort {
@@ -63,6 +99,9 @@ input UserSort {
   lastName: SortOptions = null
   name: SortOptions = null
   organizationId: SortOptions = null
+  invited: SortOptions = null
+  inviteStatus: SortOptions = null
+  inviterName: SortOptions = null
 }
 
 scalar _Any

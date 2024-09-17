@@ -1,6 +1,5 @@
 import pytest
 from httpx import AsyncClient
-
 from core.config import settings
 
 
@@ -15,30 +14,35 @@ async def test_users_query(client: AsyncClient, mock_get_users_newest_first, moc
                 firstName
                 lastName
                 organizationId
+                invited
+                inviteStatus
+                inviterName
             }
         }
     """
 
     response = await client.post(
         f"{settings.API_STR}/graphql",
-        json={
-            "query": query,
-        },
+        json={"query": query},
     )
 
     assert response.status_code == 200
     data = response.json()
 
     assert not data.get("errors")
-    assert data.get("data", {}).get("users")
+    users = data.get("data", {}).get("users")
+    assert users is not None
 
-    for user in data["data"]["users"]:
+    for user in users:
         assert "id" in user
         assert "email" in user
         assert "timeJoined" in user
         assert "firstName" in user
         assert "lastName" in user
         assert "organizationId" in user
+        assert "invited" in user
+        assert "inviteStatus" in user
+        assert "inviterName" in user
 
 
 @pytest.mark.asyncio
@@ -61,6 +65,9 @@ async def test_update_user_mutation(
                 email
                 timeJoined
                 organizationId
+                invited
+                inviteStatus
+                inviterName
             }
         }
     """
@@ -74,15 +81,15 @@ async def test_update_user_mutation(
             "email": "updated@example.com",
             "currentPassword": "currentPassword123",
             "newPassword": "newPassword123",
+            "invited": True,
+            "inviteStatus": "ACCEPTED",  # Use uppercase values as per GraphQL schema
+            "inviterName": "John Doe",
         }
     }
 
     response = await client.post(
         f"{settings.API_STR}/graphql",
-        json={
-            "query": mutation,
-            "variables": variables,
-        },
+        json={"query": mutation, "variables": variables},
     )
 
     assert response.status_code == 200
@@ -94,3 +101,4 @@ async def test_update_user_mutation(
     assert user["firstName"] == "UpdatedFirstName"
     assert user["lastName"] == "UpdatedLastName"
     assert user["email"] == "updated@example.com"
+    assert user["inviteStatus"] == "ACCEPTED"

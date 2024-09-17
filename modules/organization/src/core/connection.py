@@ -4,7 +4,7 @@ from core.config import settings
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("main")
 
 
 def create_mongo_client() -> AsyncIOMotorClient:
