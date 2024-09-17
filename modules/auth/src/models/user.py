@@ -1,11 +1,20 @@
 from datetime import datetime
-from typing import Self, Optional
+from typing import Self, Optional, List
 from uuid import UUID
+from enum import Enum
 
 import strawberry
 from pydantic import BaseModel
 from strawberry.federation.schema_directives import Shareable
 from .sort_filter import BaseFilter, FilterOptions, SortOptions
+
+
+@strawberry.enum
+class InviteStatus(Enum):
+    ACCEPTED = "accepted"
+    PENDING = "pending"
+    REJECTED = "rejected"
+    NONE = "none"
 
 
 class SuperTokensUser(BaseModel):
@@ -21,6 +30,9 @@ class GraphQLUser:
     email: str
     time_joined: datetime
     organization_id: UUID | None = strawberry.field(directives=[Shareable()])
+    invited: bool = False
+    invite_status: InviteStatus = InviteStatus.NONE
+    inviter_name: str | None = None
 
     @classmethod
     def from_supertokens(cls, supertokens_user: dict) -> Self:
@@ -31,6 +43,9 @@ class GraphQLUser:
             first_name=supertokens_user.get("firstName"),
             last_name=supertokens_user.get("lastName"),
             organization_id=supertokens_user.get("organization_id"),
+            invited=supertokens_user.get("invited", False),
+            invite_status=InviteStatus(supertokens_user.get("invite_status", InviteStatus.NONE)),
+            inviter_name=supertokens_user.get("inviter_name"),
         )
 
     @classmethod
@@ -47,6 +62,9 @@ class UserFilters(BaseFilter):
     last_name: FilterOptions | None = None
     email: FilterOptions | None = None
     organization_id: FilterOptions | None = None
+    invited: FilterOptions | None = None
+    invite_status: FilterOptions | None = None
+    inviter_name: FilterOptions | None = None
 
 
 @strawberry.input
@@ -56,6 +74,9 @@ class UserSort(BaseFilter):
     last_name: SortOptions | None = None
     name: SortOptions | None = None
     organization_id: SortOptions | None = None
+    invited: SortOptions | None = None
+    invite_status: SortOptions | None = None
+    inviter_name: SortOptions | None = None
 
 
 @strawberry.input
@@ -66,3 +87,19 @@ class UpdateUserInput:
     email: Optional[str] = None
     current_password: Optional[str] = None
     new_password: Optional[str] = None
+    invited: Optional[bool] = None
+    invite_status: Optional[InviteStatus] = None
+    inviter_name: Optional[str] = None
+    organization_id: Optional[UUID] = None
+
+
+@strawberry.input
+class InviteUsersInput:
+    emails: List[str]
+
+
+@strawberry.type
+class InviteResult:
+    email: str
+    status: str
+    message: str = ""

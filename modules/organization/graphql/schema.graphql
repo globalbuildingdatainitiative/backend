@@ -282,7 +282,7 @@ type Mutation {
   deleteOrganizations(ids: [UUID!]!): [UUID!]!
 }
 
-type Organization {
+type Organization @key(fields: "id") {
   id: UUID!
   name: String!
   address: String!
@@ -316,7 +316,7 @@ type User @key(fields: "id") {
 
 scalar _Any
 
-union _Entity = User
+union _Entity = Organization | User
 
 type _Service {
   sdl: String!

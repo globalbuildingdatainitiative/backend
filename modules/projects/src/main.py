@@ -1,6 +1,8 @@
 import logging.config
 from contextlib import asynccontextmanager
+from pathlib import Path
 
+import yaml
 from beanie import init_beanie
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,10 +16,11 @@ from core.connection import get_database
 from models import DBAssembly, DBProduct, DBEPD, DBTechFlow
 from routes import graphql_app
 
-if "test" not in settings.SERVER_NAME.lower():
-    logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
+log_config = yaml.safe_load((Path(__file__).parent / "logging.yaml").read_text())
+log_config["loggers"]["main"]["level"] = settings.LOG_LEVEL
+logging.config.dictConfig(log_config)
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("main")
 
 
 @asynccontextmanager

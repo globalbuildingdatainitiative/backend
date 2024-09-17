@@ -80,3 +80,6 @@ spec:
 
             - name: ROUTER_URL
               value: {{ .Values.backend.routerUrl }}
+
+            - name: LOG_LEVEL
+              value: {{ .Values.backend.logLevel }}

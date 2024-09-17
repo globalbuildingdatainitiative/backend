@@ -4,7 +4,7 @@ import logging
 from core.connection import health_check_mongo
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("main")
 
 
 async def main() -> None:

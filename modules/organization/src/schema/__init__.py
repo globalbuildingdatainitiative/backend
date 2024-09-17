@@ -41,4 +41,4 @@ class Mutation:
     )
 
 
-schema = strawberry.federation.Schema(query=Query, mutation=Mutation, types=[GraphQLUser], enable_federation_2=True)
+schema = strawberry.federation.Schema(query=Query, mutation=Mutation, enable_federation_2=True, types=[GraphQLUser])

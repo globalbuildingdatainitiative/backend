@@ -8,10 +8,11 @@ fastapi = { extras = ["all"], version = "*" }
 uvicorn = {extras = ["standard"], version = "*"}
 strawberry-graphql = {extras = ["fastapi", "cli"], version = ">=0.134.0"}
 supertokens-python = "*"
+pyyaml = "*"
 
 [dev-packages]
 asgi-lifespan="*"
-pydevd-pycharm = ">=222.4459.20"
+pydevd-pycharm = ">=242.21829.153"
 docker = "*"
 pytest = "*"
 pytest-asyncio = "*"
