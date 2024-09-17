@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List
 from uuid import UUID
 
 from starlette.requests import Request
@@ -34,7 +34,7 @@ async def invite_users(emails: List[str], inviter_id: UUID, request: Request) ->
                 sign_up_result = await sign_up("public", email, FAKE_PASSWORD)
 
                 if not isinstance(sign_up_result, SignUpOkResult):
-                    raise Exception("Failed to sign up user")
+                    raise InvitationFailed("Failed to sign up user", "Auth")
 
                 user_id = sign_up_result.user.user_id
 
