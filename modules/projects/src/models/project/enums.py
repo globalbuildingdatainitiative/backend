@@ -20,11 +20,6 @@ def create_enum(name: str, klass: Iterable) -> Type[strawberry.enum]:
     return strawberry.enum(Enum(name, [(_enum.name, _enum.value) for _enum in klass]))
 
 
-# GraphQLUnit = create_enum("Unit", LCAxUnit
-# @strawberry.enum
-# class GraphQLUnit(LCAxUnit):
-#     pass
-
 GraphQLUnit = strawberry.enum(LCAxUnit)
 
 GraphQLCountry = strawberry.enum(LCAxCountry)

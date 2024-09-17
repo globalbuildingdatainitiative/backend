@@ -32,3 +32,9 @@ class MicroServiceResponseError(GBDIApiError):
     """Raised when another microservice responds with an error"""
 
     pass
+
+
+class ThrottleError(GBDIApiError):
+    """Raised when a service is throttled"""
+
+    pass

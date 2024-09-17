@@ -13,6 +13,7 @@ from supertokens_python.recipe.session.exceptions import UnauthorisedError
 from core.auth import supertokens_init
 from core.config import settings
 from core.connection import get_database
+from core.exceptions import MicroServiceConnectionError
 from models import DBAssembly, DBProduct, DBEPD, DBTechFlow
 from routes import graphql_app
 
@@ -68,4 +69,14 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
     return JSONResponse(
         status_code=400,
         content={"data": "Invalid request data"},
+    )
+
+
+@app.exception_handler(MicroServiceConnectionError)
+async def microservice_exception_handler(request: Request, exc: MicroServiceConnectionError):
+    logger.error(exc)
+
+    return JSONResponse(
+        status_code=501,
+        content={"data": exc.message},
     )

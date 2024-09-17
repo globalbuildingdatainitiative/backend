@@ -29,13 +29,24 @@ def filter_model_query(
             for _field, value in fields.items():
                 if not _field:
                     continue
-                _field = to_snake(_field)
-
-                field = getattr(model, _field)
+                if _field == "id":
+                    _field = "_id"
 
                 if _filter == "equal":
-                    query = query.find(field == value)
+                    query = query.find({_field: value})
+                elif _filter == "gt":
+                    query = query.find({_field: {"$gt": value}})
+                elif _filter == "gte":
+                    query = query.find({_field: {"$gte": value}})
+                elif _filter == "lt":
+                    query = query.find({_field: {"$lt": value}})
+                elif _filter == "lte":
+                    query = query.find({_field: {"$lte": value}})
+                elif _filter == "not_equal":
+                    query = query.find({_field: {"$ne": value}})
                 elif _filter == "is_true" and value is not None:
+                    _field = to_snake(_field)
+                    field = getattr(model, _field)
                     query = query.find(field is True)
 
     return query
@@ -76,6 +87,11 @@ def sort_model_query(
 @strawberry.input
 class FilterBy(BaseFilter):
     equal: JSON | None = None
+    gt: JSON | None = None
+    gte: JSON | None = None
+    lt: JSON | None = None
+    lte: JSON | None = None
+    not_equal: JSON | None = None
     # contains: str | None = None
     # starts_with: str | None = None
     # ends_with: str | None = None

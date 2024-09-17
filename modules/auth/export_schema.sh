@@ -15,3 +15,4 @@ export SMTP_USERNAME=AKIAW3MEGUGUE7NP
 
 mkdir -p graphql
 strawberry export-schema --app-dir ./src schema > graphql/schema.graphql
+
