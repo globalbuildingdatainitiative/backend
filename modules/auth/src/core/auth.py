@@ -103,7 +103,7 @@ def custom_smtp_content_override(original_implementation: SMTPOverrideInput) -> 
                         padding: 20px;
                     }}
                     .header {{
-                        background-color: #4CAF50;
+                        background-color: #1d9a78;
                         color: white;
                         text-align: center;
                         padding: 20px;
@@ -116,7 +116,7 @@ def custom_smtp_content_override(original_implementation: SMTPOverrideInput) -> 
                     }}
                     .button {{
                         display: inline-block;
-                        background-color: #4CAF50;
+                        background-color: #1d9a78;
                         color: white;
                         text-decoration: none;
                         padding: 10px 20px;
@@ -124,7 +124,7 @@ def custom_smtp_content_override(original_implementation: SMTPOverrideInput) -> 
                         margin-top: 20px;
                     }}
                     .reject-button {{
-                        background-color: #f44336;
+                        background-color: #cc4125;
                     }}
                 </style>
             </head>
