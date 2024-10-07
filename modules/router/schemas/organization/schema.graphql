@@ -265,6 +265,7 @@ input InputOrganization {
   address: String!
   city: String!
   country: CountryCodes!
+  stakeholders: [String!]! = "annotation=NoneType required=False default_factory=list"
 }
 
 type Mutation {
@@ -288,6 +289,7 @@ type Organization @key(fields: "id") {
   address: String!
   city: String!
   country: CountryCodes!
+  stakeholders: [String!]!
 }
 
 input OrganizationFilter {
@@ -296,6 +298,7 @@ input OrganizationFilter {
   address: FilterOptions = null
   city: FilterOptions = null
   country: FilterOptions = null
+  stakeholders: FilterOptions = null
 }
 
 type Query {

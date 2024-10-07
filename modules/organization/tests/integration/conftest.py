@@ -2,7 +2,7 @@ from typing import Any
 
 import pytest
 from models import DBOrganization, CountryCodes
-
+from logic import ALLOWED_STAKEHOLDERS
 import supertokens_python.recipe.usermetadata.asyncio
 
 
@@ -27,7 +27,11 @@ async def organizations(mongo) -> list[DBOrganization]:
 
     for i in range(3):
         organization = DBOrganization(
-            name=f"Organization {i}", address=f"Address {i}", city=f"City {i}", country=CountryCodes.CAN
+            name=f"Organization {i}",
+            address=f"Address {i}",
+            city=f"City {i}",
+            country=CountryCodes.CAN,
+            stakeholders=[ALLOWED_STAKEHOLDERS[i], ALLOWED_STAKEHOLDERS[i + 1]],
         )
         await organization.insert()
         organizations.append(organization)

@@ -1,4 +1,5 @@
 from uuid import UUID, uuid4
+from typing import List
 
 import strawberry
 from beanie import Document
@@ -14,6 +15,7 @@ class OrganizationBase(BaseModel):
     address: str
     city: str
     country: CountryCodes
+    stakeholders: List[str] = Field(default_factory=list)
 
 
 class DBOrganization(OrganizationBase, Document):
@@ -27,6 +29,7 @@ class GraphQLOrganization:
     address: str
     city: str
     country: CountryCodes
+    stakeholders: List[str] = Field(default_factory=list)
 
     @classmethod
     async def resolve_reference(cls, id: UUID) -> "GraphQLOrganization":
@@ -42,6 +45,7 @@ class InputOrganization:
     address: str
     city: str
     country: CountryCodes
+    stakeholders: List[str] = Field(default_factory=list)
 
 
 @strawberry.input
@@ -51,3 +55,4 @@ class OrganizationFilter(BaseFilter):
     address: FilterOptions | None = None
     city: FilterOptions | None = None
     country: FilterOptions | None = None
+    stakeholders: FilterOptions | None = None

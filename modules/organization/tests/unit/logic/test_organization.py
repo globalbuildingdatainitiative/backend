@@ -5,6 +5,7 @@ from logic import (
     create_organizations_mutation,
     update_organizations_mutation,
     delete_organizations_mutation,
+    ALLOWED_STAKEHOLDERS,
 )
 from models import InputOrganization, CountryCodes
 
@@ -19,6 +20,7 @@ async def test_get_organizations(organizations):
     for i, organization in enumerate(fetched_organizations):
         assert organization.id == organizations[i].id
         assert organization.name == organizations[i].name
+        assert organization.stakeholders == organizations[i].stakeholders
 
 
 @pytest.mark.asyncio
@@ -29,8 +31,11 @@ async def test_create_organizations(app, user, mock_update_user_metadata):
     address = "123 Main St"
     city = "New City"
     country = CountryCodes.USA
+    stakeholders = [ALLOWED_STAKEHOLDERS[0], ALLOWED_STAKEHOLDERS[1]]
 
-    organization_data = InputOrganization(name=name, address=address, city=city, country=country)
+    organization_data = InputOrganization(
+        name=name, address=address, city=city, country=country, stakeholders=stakeholders
+    )
 
     created_organization = await create_organizations_mutation(organizations=[organization_data], current_user=user)
 
@@ -38,6 +43,7 @@ async def test_create_organizations(app, user, mock_update_user_metadata):
     assert created_organization[0].address == address
     assert created_organization[0].city == city
     assert created_organization[0].country == country
+    assert created_organization[0].stakeholders == stakeholders
 
 
 @pytest.mark.asyncio
@@ -49,9 +55,15 @@ async def test_update_organizations(organizations):
     new_address = "Updated Address"
     new_city = "Updated City"
     new_country = CountryCodes.PAK
+    new_stakeholders = [ALLOWED_STAKEHOLDERS[2], ALLOWED_STAKEHOLDERS[3]]
 
     input_organization = InputOrganization(
-        id=organization.id, name=new_name, address=new_address, city=new_city, country=new_country
+        id=organization.id,
+        name=new_name,
+        address=new_address,
+        city=new_city,
+        country=new_country,
+        stakeholders=new_stakeholders,
     )
     updated_organizations = await update_organizations_mutation(organizations=[input_organization])
 
@@ -62,6 +74,7 @@ async def test_update_organizations(organizations):
     assert updated_organization.address == new_address
     assert updated_organization.city == new_city
     assert updated_organization.country == new_country
+    assert updated_organization.stakeholders == new_stakeholders
 
 
 @pytest.mark.asyncio
