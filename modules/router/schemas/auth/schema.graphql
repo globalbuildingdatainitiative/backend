@@ -40,6 +40,9 @@ type Mutation {
 
   """Reject an invitation"""
   rejectInvitation(userId: String!): Boolean!
+
+  """Resend an invitation"""
+  resendInvitation(userId: String!): InviteResult!
 }
 
 type Query {

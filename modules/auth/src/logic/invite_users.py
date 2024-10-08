@@ -1,8 +1,14 @@
+import logging
 from typing import List
 from uuid import UUID
 
 from starlette.requests import Request
-from supertokens_python.recipe.emailpassword.asyncio import send_reset_password_email, sign_up, get_user_by_email
+from supertokens_python.recipe.emailpassword.asyncio import (
+    send_reset_password_email,
+    sign_up,
+    get_user_by_email,
+    get_user_by_id,
+)
 from supertokens_python.recipe.emailpassword.interfaces import SignUpOkResult
 from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
 
@@ -11,6 +17,7 @@ from models import InviteStatus, InviteResult
 
 
 FAKE_PASSWORD = "asokdA87fnf30efjoiOI**cwjkn"
+logger = logging.getLogger("main")
 
 
 async def invite_users(emails: List[str], inviter_id: UUID, request: Request) -> list[InviteResult]:
@@ -55,3 +62,27 @@ async def invite_users(emails: List[str], inviter_id: UUID, request: Request) ->
         except Exception as e:
             raise InvitationFailed(f"Failed to invite user {email} due to : {str(e)}", "Auth")
     return results
+
+
+async def resend_invitation(user_id: str, request: Request) -> InviteResult:
+    user = await get_user_by_id(user_id)
+    if not user:
+        raise InvitationFailed("User not found", "Auth")
+
+    user_email = user.email
+
+    if not user_email:
+        raise InvitationFailed("User not found or has no email", "Auth")
+
+    user_metadata = await get_user_metadata(user_id)
+    invite_status = user_metadata.metadata.get("invite_status", InviteStatus.NONE.value)
+
+    if invite_status.lower() != "pending":
+        raise InvitationFailed("User's invitation is not in pending state", "Auth")
+
+    try:
+        await send_reset_password_email("public", user_id, user_context={"user_id": user_id, "request": request})
+        return InviteResult(email=user_email, status="resent", message="Invitation resent successfully")
+    except Exception as e:
+        logger.error(f"Failed to resend invitation to user {user_email}: {str(e)}")
+        raise InvitationFailed(f"Failed to resend invitation to user {user_email} due to: {str(e)}", "Auth")
