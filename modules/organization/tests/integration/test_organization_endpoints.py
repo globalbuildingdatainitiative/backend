@@ -2,8 +2,7 @@ import pytest
 from httpx import AsyncClient
 
 from core.config import settings
-from models import CountryCodes
-from logic import ALLOWED_STAKEHOLDERS
+from models import StakeholderEnum, CountryCodes
 
 
 @pytest.mark.asyncio
@@ -13,7 +12,9 @@ async def test_organizations_query(client: AsyncClient, organizations):
             organizations {
                 id
                 name
-                stakeholders
+                metaData {
+                    stakeholders
+                }
             }
         }
     """
@@ -30,7 +31,7 @@ async def test_organizations_query(client: AsyncClient, organizations):
 
     assert not data.get("errors")
     assert data.get("data", {}).get("organizations")
-    assert all("stakeholders" in org for org in data["data"]["organizations"])
+    assert all("metaData" in org and "stakeholders" in org["metaData"] for org in data["data"]["organizations"])
 
 
 @pytest.mark.asyncio
@@ -41,7 +42,7 @@ async def test_create_organizations_mutation(client: AsyncClient, mock_update_us
     address = "123 Main St"
     city = "New City"
     country = CountryCodes.USA.value
-    stakeholders = [ALLOWED_STAKEHOLDERS[0], ALLOWED_STAKEHOLDERS[1]]
+    stakeholders = [StakeholderEnum.BUILDING_USERS.name, StakeholderEnum.CIVIL_SOCIETY.name]
 
     response = await client.post(
         f"{settings.API_STR}/graphql",
@@ -54,7 +55,9 @@ async def test_create_organizations_mutation(client: AsyncClient, mock_update_us
                             address
                             city
                             country
-                            stakeholders
+                            metaData {
+                                stakeholders
+                            }
                         }
                     }
                 """,
@@ -65,7 +68,7 @@ async def test_create_organizations_mutation(client: AsyncClient, mock_update_us
                         "address": address,
                         "city": city,
                         "country": country,
-                        "stakeholders": stakeholders,
+                        "metaData": {"stakeholders": stakeholders},
                     }
                 ]
             },
@@ -85,7 +88,7 @@ async def test_create_organizations_mutation(client: AsyncClient, mock_update_us
     assert created_organization_data["address"] == address
     assert created_organization_data["city"] == city
     assert created_organization_data["country"] == country
-    assert created_organization_data["stakeholders"] == stakeholders
+    assert created_organization_data["metaData"]["stakeholders"] == stakeholders
 
 
 @pytest.mark.asyncio
@@ -97,7 +100,7 @@ async def test_update_organizations_mutation(client: AsyncClient, organizations)
     new_address = "Updated Address"
     new_city = "Updated City"
     new_country = CountryCodes.PAK.value
-    new_stakeholders = [ALLOWED_STAKEHOLDERS[2], ALLOWED_STAKEHOLDERS[3]]
+    new_stakeholders = [StakeholderEnum.CONSTRUCTION_COMPANIES.name, StakeholderEnum.FACILITY_MANAGERS.name]
 
     response = await client.post(
         f"{settings.API_STR}/graphql",
@@ -110,7 +113,9 @@ async def test_update_organizations_mutation(client: AsyncClient, organizations)
                             address
                             city
                             country
-                            stakeholders
+                            metaData {
+                                stakeholders
+                            }
                         }
                     }
                 """,
@@ -122,7 +127,7 @@ async def test_update_organizations_mutation(client: AsyncClient, organizations)
                         "address": new_address,
                         "city": new_city,
                         "country": new_country,
-                        "stakeholders": new_stakeholders,
+                        "metaData": {"stakeholders": new_stakeholders},
                     }
                 ]
             },
@@ -142,7 +147,7 @@ async def test_update_organizations_mutation(client: AsyncClient, organizations)
     assert updated_organization_data["address"] == new_address
     assert updated_organization_data["city"] == new_city
     assert updated_organization_data["country"] == new_country
-    assert updated_organization_data["stakeholders"] == new_stakeholders
+    assert updated_organization_data["metaData"]["stakeholders"] == new_stakeholders
 
 
 @pytest.mark.asyncio

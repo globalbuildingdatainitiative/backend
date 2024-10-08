@@ -1,32 +1,6 @@
 from uuid import UUID
-from models import DBOrganization, OrganizationFilter, InputOrganization, SuperTokensUser
+from models import DBOrganization, OrganizationFilter, InputOrganization, SuperTokensUser, OrganizationMetaDataModel
 from exceptions.exceptions import EntityNotFound
-
-# Define the allowed stakeholders list for validation
-ALLOWED_STAKEHOLDERS = [
-    "Building data owners",
-    "Building design professionals (architects, engineers)",
-    "Building design / LCA tool developers and providers",
-    "Building LCA consultants and service providers",
-    "Building users",
-    "Civil society",
-    "Clients / inventors / owners (of building data)",
-    "Construction companies",
-    "Construction product manufacturers",
-    "Facility managers",
-    "Financial service providers / insurance companies",
-    "Funding (system) developers and providers",
-    "Inter / National standardization bodies",
-    "Media representatives",
-    "Policy and law makers, regulators (national, local)",
-    "Product LCA database developers",
-    "Product LCA/EPD data developers",
-    "Researchers (basic / applied building LCA research)",
-    "Surveyors, valuation professionals",
-    "Sustainability assessment system developers and providers",
-    "Sustainability assessors/auditors",
-    "Sustainability / ESG consultants and service providers",
-]
 
 
 async def get_organizations(filters: OrganizationFilter | None = None) -> list[DBOrganization]:
@@ -41,9 +15,6 @@ async def get_organizations(filters: OrganizationFilter | None = None) -> list[D
         if filters.name:
             if filters.name.equal:
                 query = query.find(DBOrganization.name == filters.name.equal)
-        if filters.stakeholders:
-            if filters.stakeholders.equal:
-                query = query.find(DBOrganization.stakeholders == filters.stakeholders.equal)
     organizations = await query.to_list()
     return organizations
 
@@ -60,7 +31,7 @@ async def create_organizations_mutation(
             address=organization_data.address,
             city=organization_data.city,
             country=organization_data.country,
-            stakeholders=organization_data.stakeholders,
+            meta_data=OrganizationMetaDataModel(stakeholders=organization_data.meta_data.stakeholders),
         )
         await new_organization.insert()
         new_organizations.append(new_organization)
@@ -77,17 +48,15 @@ async def update_organizations_mutation(organizations: list[InputOrganization]) 
         organization_id = organization_data.id
         organization = await DBOrganization.get(document_id=organization_id)
         if organization:
-            # Validate stakeholders
-            invalid_stakeholders = [s for s in organization_data.stakeholders if s not in ALLOWED_STAKEHOLDERS]
-            if invalid_stakeholders:
-                raise ValueError(f"Invalid stakeholders: {invalid_stakeholders}")
             update_doc = {
                 "$set": {
                     "name": organization_data.name,
                     "address": organization_data.address,
                     "city": organization_data.city,
                     "country": organization_data.country,
-                    "stakeholders": organization_data.stakeholders,
+                    "meta_data": OrganizationMetaDataModel(
+                        stakeholders=organization_data.meta_data.stakeholders
+                    ).dict(),
                 }
             }
             await organization.update(update_doc)

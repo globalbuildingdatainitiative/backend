@@ -3,8 +3,7 @@ from typing import Any
 import pytest
 import supertokens_python.recipe.usermetadata.asyncio
 
-from models import DBOrganization, CountryCodes
-from logic import ALLOWED_STAKEHOLDERS
+from models import DBOrganization, CountryCodes, StakeholderEnum, OrganizationMetaDataModel
 
 
 @pytest.fixture(scope="session")
@@ -31,7 +30,9 @@ async def organizations(app) -> list[DBOrganization]:
             address=f"Address {i}",
             city=f"City {i}",
             country=CountryCodes.CAN,
-            stakeholders=[ALLOWED_STAKEHOLDERS[i], ALLOWED_STAKEHOLDERS[i + 1]],
+            meta_data=OrganizationMetaDataModel(
+                stakeholders=[StakeholderEnum.BUILDING_USERS, StakeholderEnum.CIVIL_SOCIETY]
+            ),
         )
         await organization.insert()
         organizations.append(organization)

@@ -265,7 +265,11 @@ input InputOrganization {
   address: String!
   city: String!
   country: CountryCodes!
-  stakeholders: [String!]! = "annotation=NoneType required=False default_factory=list"
+  metaData: InputOrganizationMetaData! = {stakeholders: []}
+}
+
+input InputOrganizationMetaData {
+  stakeholders: [StakeholderEnum!]! = []
 }
 
 type Mutation {
@@ -289,7 +293,7 @@ type Organization @key(fields: "id") {
   address: String!
   city: String!
   country: CountryCodes!
-  stakeholders: [String!]!
+  metaData: OrganizationMetaData!
 }
 
 input OrganizationFilter {
@@ -298,6 +302,14 @@ input OrganizationFilter {
   address: FilterOptions = null
   city: FilterOptions = null
   country: FilterOptions = null
+  metaData: OrganizationMetaDataFilter = null
+}
+
+type OrganizationMetaData {
+  stakeholders: [StakeholderEnum!]!
+}
+
+input OrganizationMetaDataFilter {
   stakeholders: FilterOptions = null
 }
 
@@ -307,6 +319,31 @@ type Query {
 
   """Returns all Organizations"""
   organizations(filters: OrganizationFilter = null): [Organization!]!
+}
+
+enum StakeholderEnum {
+  BUILDING_DATA_OWNERS
+  DESIGN_PROFESSIONALS
+  LCA_TOOL_DEVELOPERS
+  LCA_CONSULTANTS
+  BUILDING_USERS
+  CIVIL_SOCIETY
+  CLIENTS_INVESTORS_OWNERS
+  CONSTRUCTION_COMPANIES
+  CONSTRUCTION_PRODUCT_MANUFACTURERS
+  FACILITY_MANAGERS
+  FINANCIAL_SERVICE_PROVIDERS
+  FUNDING_SYSTEM_DEVELOPERS
+  STANDARDIZATION_BODIES
+  MEDIA_REPRESENTATIVES
+  POLICY_LAW_MAKERS
+  PRODUCT_LCA_DATABASE_DEVELOPERS
+  PRODUCT_LCA_EPD_DATA_DEVELOPERS
+  RESEARCHERS
+  SURVEYORS_VALUATION_PROFESSIONALS
+  SUSTAINABILITY_ASSESSMENT_SYSTEM_DEVELOPERS
+  SUSTAINABILITY_AUDITORS
+  ESG_CONSULTANTS
 }
 
 scalar UUID
