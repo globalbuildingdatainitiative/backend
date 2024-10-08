@@ -1,4 +1,4 @@
-from .db_model import DBProject, DBAssembly, DBProduct, DBEPD, DBTechFlow
+from models.database.db_model import DBProject, DBAssembly, DBProduct, DBEPD, DBTechFlow
 from .inputs import GraphQLInputProject
 from .types import GraphQLProject
 

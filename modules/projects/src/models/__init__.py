@@ -1,5 +1,5 @@
 from .contribution import DBContribution, GraphQLContribution, InputContribution, GraphQLUser
-from .project import (
+from .openbdf import (
     DBProject,
     DBAssembly,
     DBProduct,

@@ -50,7 +50,7 @@ async def create_contributions(contributions: list[InputContribution], user: Sup
 
 def check_fetch_projects(info: Info) -> bool:
     if contribution_field := [field for field in info.selected_fields if field.name == "items"]:
-        if [_field for _field in contribution_field[0].selections if _field.name == "project"]:
+        if [_field for _field in contribution_field[0].selections if _field.name == "openbdf"]:
             return True
 
     return False

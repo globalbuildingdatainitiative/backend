@@ -15,7 +15,7 @@ from lcax import Source as LCAxSource
 from lcax import ValueUnit as LCAxValueUnit
 from strawberry.scalars import JSON
 
-from models.project.enums import (
+from models.openbdf.enums import (
     GraphQLUnit,
     GraphQLCountry,
     GraphQLStandard,

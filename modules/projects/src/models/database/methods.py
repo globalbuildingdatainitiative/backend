@@ -37,7 +37,7 @@ async def group_projects(organization_id: UUID, group_by: str, limit: int, items
 
     aggregation = {}
     projection = {
-        "$project": {
+        "$openbdf": {
             "_id": None,
             "group": "$_id",
             "items": "$items",
@@ -62,7 +62,7 @@ async def group_projects(organization_id: UUID, group_by: str, limit: int, items
             else:
                 aggregation[key] = {f"${method}": f"${field}"}
                 aggregation_projection.append({"method": method, "value": f"${key}", "field": field})
-        projection["$project"]["aggregation"] = aggregation_projection
+        projection["$openbdf"]["aggregation"] = aggregation_projection
 
     groups = (
         await DBProject.find(DBProject.contribution.organizationId == organization_id, fetch_links=True)

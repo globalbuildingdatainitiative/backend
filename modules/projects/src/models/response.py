@@ -103,7 +103,7 @@ class GraphQLResponse[T]:
         organization_id = user.organization_id
 
         if self._type == "Project":
-            from models.project.methods import group_projects
+            from models.database.methods import group_projects
 
             return await group_projects(
                 organization_id,
@@ -122,7 +122,7 @@ class GraphQLResponse[T]:
         organization_id = user.organization_id
 
         if self._type == "Project":
-            from models.project.methods import aggregate_projects
+            from models.database.methods import aggregate_projects
 
             return await aggregate_projects(organization_id, apply)
         return []

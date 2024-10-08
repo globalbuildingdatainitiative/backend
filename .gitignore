@@ -115,11 +115,11 @@ env.bak/
 venv.bak/
 skaffold.env
 
-# Spyder project settings
+# Spyder openbdf settings
 .spyderproject
 .spyproject
 
-# Rope project settings
+# Rope openbdf settings
 .ropeproject
 
 # mkdocs documentation
