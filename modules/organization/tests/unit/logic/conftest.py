@@ -3,7 +3,7 @@ from typing import Any
 import pytest
 import supertokens_python.recipe.usermetadata.asyncio
 
-from models import DBOrganization, CountryCodes
+from models import DBOrganization, CountryCodes, StakeholderEnum, OrganizationMetaDataModel
 
 
 @pytest.fixture(scope="session")
@@ -26,7 +26,13 @@ async def organizations(app) -> list[DBOrganization]:
 
     for i in range(3):
         organization = DBOrganization(
-            name=f"Organization {i}", address=f"Address {i}", city=f"City {i}", country=CountryCodes.CAN
+            name=f"Organization {i}",
+            address=f"Address {i}",
+            city=f"City {i}",
+            country=CountryCodes.CAN,
+            meta_data=OrganizationMetaDataModel(
+                stakeholders=[StakeholderEnum.BUILDING_USERS, StakeholderEnum.CIVIL_SOCIETY]
+            ),
         )
         await organization.insert()
         organizations.append(organization)

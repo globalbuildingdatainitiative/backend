@@ -1,5 +1,5 @@
 from uuid import UUID
-from models import DBOrganization, OrganizationFilter, InputOrganization, SuperTokensUser
+from models import DBOrganization, OrganizationFilter, InputOrganization, SuperTokensUser, OrganizationMetaDataModel
 from exceptions.exceptions import EntityNotFound
 
 
@@ -31,6 +31,7 @@ async def create_organizations_mutation(
             address=organization_data.address,
             city=organization_data.city,
             country=organization_data.country,
+            meta_data=OrganizationMetaDataModel(stakeholders=organization_data.meta_data.stakeholders),
         )
         await new_organization.insert()
         new_organizations.append(new_organization)
@@ -53,6 +54,9 @@ async def update_organizations_mutation(organizations: list[InputOrganization]) 
                     "address": organization_data.address,
                     "city": organization_data.city,
                     "country": organization_data.country,
+                    "meta_data": OrganizationMetaDataModel(
+                        stakeholders=organization_data.meta_data.stakeholders
+                    ).dict(),
                 }
             }
             await organization.update(update_doc)
