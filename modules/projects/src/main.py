@@ -16,6 +16,7 @@ from core.connection import get_database
 from core.exceptions import MicroServiceConnectionError
 from models import DBAssembly, DBProduct, DBEPD, DBTechFlow
 from routes import graphql_app
+from routes.openbdf import openbdf_router
 
 log_config = yaml.safe_load((Path(__file__).parent / "logging.yaml").read_text())
 log_config["loggers"]["main"]["level"] = settings.LOG_LEVEL
@@ -50,6 +51,7 @@ if settings.BACKEND_CORS_ORIGINS:
     )
 
 app.include_router(graphql_app, prefix=settings.API_STR)
+app.include_router(openbdf_router, prefix=settings.API_STR)
 
 
 @app.exception_handler(UnauthorisedError)

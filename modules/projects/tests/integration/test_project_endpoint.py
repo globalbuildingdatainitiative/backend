@@ -16,6 +16,16 @@ async def test_projects_query(client: AsyncClient, contributions, projects):
                         id
                         name
                         unit
+                        products {
+                            id
+                            name
+                            impactData {
+                                ...on EPD {
+                                    id
+                                }                        
+                            }
+                            referenceServiceLife
+                        }
                     }
                 }
                 count

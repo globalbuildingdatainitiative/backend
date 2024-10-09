@@ -13,6 +13,8 @@ lcax = "==2.6.0"
 async_lru = "*"
 iso3166 = "*"
 pyyaml = "*"
+polyfactory = "*"
+dacite = "*"
 
 [dev-packages]
 asgi-lifespan="*"
