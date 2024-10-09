@@ -9,7 +9,7 @@ from .organization import (
     OrganizationMetaDataFilter,
     InputOrganizationMetaData,
 )
-from .user import GraphQLUser, Role
+from .user import GraphQLUser
 from .country_codes import CountryCodes
 from .stakeholder import StakeholderEnum
 from .supertokens import SuperTokensUser
@@ -24,7 +24,6 @@ __all__ = [
     OrganizationMetaData,
     OrganizationMetaDataModel,
     OrganizationMetaDataFilter,
-    Role,
     StakeholderEnum,
     SuperTokensUser,
     CountryCodes,

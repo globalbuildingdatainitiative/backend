@@ -1,5 +1,3 @@
-from enum import Enum
-
 from typing import Self
 from uuid import UUID
 
@@ -7,12 +5,6 @@ import strawberry
 from strawberry.federation.schema_directives import Shareable
 
 from models import GraphQLOrganization, OrganizationFilter
-
-
-@strawberry.enum
-class Role(Enum):
-    OWNER = "owner"
-    MEMBER = "member"
 
 
 async def get_user_organization(root: "GraphQLUser") -> GraphQLOrganization | None:
@@ -33,7 +25,6 @@ class GraphQLUser:
     id: UUID
     organizationId: UUID | None = strawberry.field(directives=[Shareable()])
     organization: GraphQLOrganization | None = strawberry.field(resolver=get_user_organization)
-    role: Role | None = strawberry.field(directives=[Shareable()])
 
     @classmethod
     async def resolve_reference(cls, id: UUID) -> Self:

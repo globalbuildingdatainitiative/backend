@@ -5,7 +5,6 @@ from models import (
     InputOrganization,
     SuperTokensUser,
     OrganizationMetaDataModel,
-    Role,
 )
 from exceptions.exceptions import EntityNotFound
 
@@ -42,9 +41,7 @@ async def create_organizations_mutation(
         )
         await new_organization.insert()
         new_organizations.append(new_organization)
-    await update_user_metadata(
-        str(current_user.id), {"organization_id": str(new_organizations[0].id), "role": Role.OWNER.value}
-    )
+    await update_user_metadata(str(current_user.id), {"organization_id": str(new_organizations[0].id), "role": "owner"})
 
     return new_organizations
 

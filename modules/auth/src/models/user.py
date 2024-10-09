@@ -39,7 +39,7 @@ class GraphQLUser:
     invited: bool = False
     invite_status: InviteStatus = InviteStatus.NONE
     inviter_name: str | None = None
-    role: Role | None = strawberry.field(directives=[Shareable()])
+    role: Role | None
 
     @classmethod
     def from_supertokens(cls, supertokens_user: dict) -> Self:
