@@ -3,7 +3,7 @@ import logging
 from strawberry.types import Info
 
 from core.context import get_user
-from logic import get_users, update_user, invite_users, accept_invitation, reject_invitation
+from logic import get_users, update_user, invite_users, accept_invitation, reject_invitation, resend_invitation
 from models import GraphQLUser, UserFilters, UserSort, UpdateUserInput, InviteUsersInput, InviteResult
 
 logger = logging.getLogger("main")
@@ -35,4 +35,11 @@ async def accept_invitation_mutation(user_id: str) -> bool:
 async def reject_invitation_mutation(user_id: str) -> bool:
     """Reject an invitation"""
     result = await reject_invitation(user_id)
+    return result
+
+
+async def resend_invitation_mutation(info: Info, user_id: str) -> InviteResult:
+    """Resend an invitation"""
+
+    result = await resend_invitation(user_id=user_id, request=info.context.get("request"))
     return result
