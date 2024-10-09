@@ -53,6 +53,11 @@ type Query {
   users(filters: UserFilters = null, sortBy: UserSort = null): [User!]!
 }
 
+enum Role {
+  OWNER
+  MEMBER
+}
+
 enum SortOptions {
   ASC
   DSC
@@ -70,6 +75,7 @@ input UpdateUserInput {
   invited: Boolean = null
   inviteStatus: InviteStatus = null
   inviterName: String = null
+  role: Role = null
   organizationId: UUID = null
 }
 
@@ -83,6 +89,7 @@ type User @key(fields: "id") {
   invited: Boolean!
   inviteStatus: InviteStatus!
   inviterName: String
+  role: Role @shareable
 }
 
 input UserFilters {
@@ -94,6 +101,7 @@ input UserFilters {
   invited: FilterOptions = null
   inviteStatus: FilterOptions = null
   inviterName: FilterOptions = null
+  role: FilterOptions = null
 }
 
 input UserSort {
@@ -105,6 +113,7 @@ input UserSort {
   invited: SortOptions = null
   inviteStatus: SortOptions = null
   inviterName: SortOptions = null
+  role: SortOptions = null
 }
 
 scalar _Any

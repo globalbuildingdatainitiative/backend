@@ -17,6 +17,12 @@ class InviteStatus(Enum):
     NONE = "none"
 
 
+@strawberry.enum
+class Role(Enum):
+    OWNER = "owner"
+    MEMBER = "member"
+
+
 class SuperTokensUser(BaseModel):
     id: UUID
     organization_id: UUID | None
@@ -33,6 +39,7 @@ class GraphQLUser:
     invited: bool = False
     invite_status: InviteStatus = InviteStatus.NONE
     inviter_name: str | None = None
+    role: Role | None = strawberry.field(directives=[Shareable()])
 
     @classmethod
     def from_supertokens(cls, supertokens_user: dict) -> Self:
@@ -46,6 +53,7 @@ class GraphQLUser:
             invited=supertokens_user.get("invited", False),
             invite_status=InviteStatus(supertokens_user.get("invite_status", InviteStatus.NONE)),
             inviter_name=supertokens_user.get("inviter_name"),
+            role=Role(supertokens_user.get("role", Role.MEMBER)),
         )
 
     @classmethod
@@ -65,6 +73,7 @@ class UserFilters(BaseFilter):
     invited: FilterOptions | None = None
     invite_status: FilterOptions | None = None
     inviter_name: FilterOptions | None = None
+    role: FilterOptions | None = None
 
 
 @strawberry.input
@@ -77,6 +86,7 @@ class UserSort(BaseFilter):
     invited: SortOptions | None = None
     invite_status: SortOptions | None = None
     inviter_name: SortOptions | None = None
+    role: SortOptions | None = None
 
 
 @strawberry.input
@@ -90,6 +100,7 @@ class UpdateUserInput:
     invited: Optional[bool] = None
     invite_status: Optional[InviteStatus] = None
     inviter_name: Optional[str] = None
+    role: Optional[Role] = None
     organization_id: Optional[UUID] = None
 
 

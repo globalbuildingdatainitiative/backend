@@ -27,6 +27,7 @@ async def get_auth_user(uid: UUID) -> dict[str, str]:
         users(filters: {id: {equal: $id}}) {
             id
             organizationId
+            role
         }
     }
     """

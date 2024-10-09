@@ -321,6 +321,11 @@ type Query {
   organizations(filters: OrganizationFilter = null): [Organization!]!
 }
 
+enum Role {
+  OWNER
+  MEMBER
+}
+
 enum StakeholderEnum {
   BUILDING_DATA_OWNERS
   DESIGN_PROFESSIONALS
@@ -352,6 +357,7 @@ type User @key(fields: "id") {
   id: UUID!
   organizationId: UUID @shareable
   organization: Organization
+  role: Role @shareable
 }
 
 scalar _Any
