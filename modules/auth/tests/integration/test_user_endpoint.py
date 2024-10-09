@@ -17,6 +17,7 @@ async def test_users_query(client: AsyncClient, mock_get_users_newest_first, moc
                 invited
                 inviteStatus
                 inviterName
+                role
             }
         }
     """
@@ -43,6 +44,7 @@ async def test_users_query(client: AsyncClient, mock_get_users_newest_first, moc
         assert "invited" in user
         assert "inviteStatus" in user
         assert "inviterName" in user
+        assert "role" in user
 
 
 @pytest.mark.asyncio
@@ -68,6 +70,7 @@ async def test_update_user_mutation(
                 invited
                 inviteStatus
                 inviterName
+                role
             }
         }
     """
@@ -82,8 +85,9 @@ async def test_update_user_mutation(
             "currentPassword": "currentPassword123",
             "newPassword": "newPassword123",
             "invited": True,
-            "inviteStatus": "ACCEPTED",  # Use uppercase values as per GraphQL schema
+            "inviteStatus": "ACCEPTED",
             "inviterName": "John Doe",
+            "role": "MEMBER",
         }
     }
 
@@ -102,3 +106,4 @@ async def test_update_user_mutation(
     assert user["lastName"] == "UpdatedLastName"
     assert user["email"] == "updated@example.com"
     assert user["inviteStatus"] == "ACCEPTED"
+    assert user["role"] == "MEMBER"

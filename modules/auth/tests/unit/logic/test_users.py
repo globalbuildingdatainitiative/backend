@@ -1,6 +1,6 @@
 import pytest
 from logic import get_users, update_user
-from models import UpdateUserInput, InviteStatus
+from models import UpdateUserInput, InviteStatus, Role
 
 
 @pytest.mark.asyncio
@@ -30,6 +30,7 @@ async def test_update_user(
         "invited": True,
         "invite_status": InviteStatus.ACCEPTED,  # Use the correct enum
         "inviter_name": "John Doe",
+        "role": Role.MEMBER,
     }
 
     user = await update_user(UpdateUserInput(**user_input))
@@ -39,4 +40,6 @@ async def test_update_user(
     assert user.last_name == "UpdatedLastName"
     assert user.email == "updated@example.com"
     assert user.invite_status == InviteStatus.ACCEPTED
+    assert user.role == Role.MEMBER
+
     print("\nAssertion Completed")

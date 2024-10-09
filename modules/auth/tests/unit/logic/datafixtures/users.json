@@ -9,7 +9,8 @@
     "organizationId": "55363466436",
     "invited": true,
     "invite_status": "pending",
-    "inviter_name": "John Doe"
+    "inviter_name": "John Doe",
+    "role": "owner"
   },
   {
     "email": "hassan.shahzad@epfl.ch",
@@ -21,6 +22,7 @@
     "organizationId": "55363436436456",
     "invited": false,
     "invite_status": "none",
-    "inviter_name": ""
+    "inviter_name": "",
+    "role": "member"
   }
 ]

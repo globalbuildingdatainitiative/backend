@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from core.exceptions import EntityNotFound
-from models import GraphQLUser, UserFilters, UserSort, UpdateUserInput, InviteStatus
+from models import GraphQLUser, UserFilters, UserSort, UpdateUserInput, InviteStatus, Role
 from models.sort_filter import FilterOptions
 
 
@@ -27,6 +27,7 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
         invited = metadata_response.metadata.get("invited", False)
         invite_status = metadata_response.metadata.get("invite_status", InviteStatus.NONE.value)
         inviter_name = metadata_response.metadata.get("inviter_name", "")
+        role = metadata_response.metadata.get("role", Role.MEMBER.value)
 
         effective_org_id = organization_id if not invited else pending_org_id
 
@@ -40,6 +41,7 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
             invited=invited,
             invite_status=InviteStatus(invite_status.lower()),
             inviter_name=inviter_name,
+            role=Role(role.lower()) if role else Role.MEMBER,
         )
 
         gql_users.append(user)
@@ -69,6 +71,8 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
         metadata_update["invite_status"] = user_input.invite_status.value
     if user_input.inviter_name is not None:
         metadata_update["inviter_name"] = user_input.inviter_name
+    if user_input.role is not None:
+        metadata_update["role"] = user_input.role.value
 
     if metadata_update:
         await update_user_metadata(str(user_input.id), metadata_update)
@@ -101,6 +105,7 @@ async def accept_invitation(user_id: str) -> bool:
     update_data = {
         "invite_status": InviteStatus.ACCEPTED.value,
         "invited": True,
+        "role": Role.MEMBER.value,
     }
 
     if "pending_org_id" in current_metadata.metadata:

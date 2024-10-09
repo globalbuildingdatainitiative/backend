@@ -16,7 +16,7 @@ import core.auth
 import core.context
 import logic as logic
 from core.config import settings
-from models import SuperTokensUser, GraphQLUser, UserFilters, UserSort, InviteStatus
+from models import SuperTokensUser, GraphQLUser, UserFilters, UserSort, InviteStatus, Role
 
 
 @pytest.fixture(scope="session")
@@ -96,6 +96,7 @@ def mock_get_users_newest_first(users, session_mocker):
             invited: bool
             invite_status: str
             inviter_name: str
+            role: str
 
             def to_json(self):
                 return {
@@ -110,6 +111,7 @@ def mock_get_users_newest_first(users, session_mocker):
                         "invited": self.invited,
                         "invite_status": self.invite_status,
                         "inviter_name": self.inviter_name,
+                        "role": self.role,
                     }
                 }
 
@@ -142,6 +144,7 @@ def mock_get_user_metadata(session_mocker, users):
                     "invited": False,
                     "invite_status": InviteStatus.ACCEPTED.value,
                     "inviter_name": "",
+                    "role": Role.MEMBER.value,
                 }
                 return FakeMetadata(metadata=metadata)
 
@@ -169,6 +172,8 @@ def mock_update_user_metadata(session_mocker, users):
                     user["invite_status"] = metadata.get("invite_status")
                 if "inviter_name" in metadata:
                     user["inviter_name"] = metadata.get("inviter_name")
+                if "role" in metadata:
+                    user["role"] = metadata.get("role")
 
     session_mocker.patch.object(
         supertokens_python.recipe.usermetadata.asyncio,
@@ -226,6 +231,7 @@ def mock_get_users(session_mocker, users):
                 invited=user.get("invited", False),
                 invite_status=InviteStatus(user.get("invite_status", InviteStatus.NONE.value)),
                 inviter_name=user.get("inviter_name", ""),
+                role=Role(user.get("role", Role.MEMBER.value)),
             )
             for user in users
             if not filters or (filters.id and filters.id.equal == user["id"])
