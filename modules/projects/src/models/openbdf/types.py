@@ -3,6 +3,7 @@ from typing import Union
 from uuid import UUID
 
 import strawberry
+from dataclasses_jsonschema import JsonSchemaMixin
 from iso3166 import countries
 from lcax import AreaType as LCAxAreaType
 from lcax import Assembly as LCAxAssembly
@@ -195,7 +196,7 @@ class GraphQLAssemblyMetaData:
 
 
 @strawberry.experimental.pydantic.type(model=LCAxAssembly, name="Assembly")
-class GraphQLAssembly:
+class GraphQLAssembly(JsonSchemaMixin):
     classification: list[GraphQLClassification] | None = None
     comment: strawberry.auto
     description: strawberry.auto
