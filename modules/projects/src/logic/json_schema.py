@@ -6,6 +6,7 @@ import typing as t
 import uuid
 from types import UnionType
 
+from strawberry.annotation import StrawberryAnnotation
 from strawberry.types.base import StrawberryList, StrawberryOptional
 from strawberry.types.enum import EnumDefinition
 from strawberry.types.scalar import ScalarWrapper
@@ -122,6 +123,8 @@ class _GetSchema:
 
             if isinstance(type_, StrawberryOptional):
                 type_ = type_.of_type
+            elif isinstance(type_, StrawberryAnnotation):
+                type_ = type_.raw_annotation
             schema["properties"][field.name] = self.get_field_schema(type_, field.default, SchemaAnnotation())
             field_is_optional = self.is_field_optional(field, type_hints[field.name])
             if not field_is_optional:
