@@ -4,7 +4,7 @@ import strawberry
 from beanie import Document, Link
 from pydantic import BaseModel, Field
 
-from .project import DBProject, GraphQLProject, GraphQLInputProject
+from .openbdf import DBProject, GraphQLProject, GraphQLInputProject
 from .sort_filter import BaseFilter, FilterBy
 
 

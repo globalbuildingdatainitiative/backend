@@ -64,6 +64,7 @@ enum BuildingType {
   retrofit_and_extension_works
   fit_out_works
   operations
+  unknown
   other
 }
 
@@ -75,6 +76,9 @@ enum BuildingTypology {
   industrial
   infrastructure
   agricultural
+  educational
+  health
+  unknown
   other
 }
 
@@ -750,6 +754,7 @@ enum RoofType {
   pitched
   saddle
   pyramid
+  unknown
   other
 }
 

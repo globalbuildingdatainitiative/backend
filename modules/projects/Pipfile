@@ -4,12 +4,12 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-fastapi = {extras = ["all"], version = ">=0.114.0"}
+fastapi = {extras = ["all"], version = ">=0.115.2"}
 strawberry-graphql = {extras = ["fastapi", "cli"], version = ">=0.235.2"}
 tenacity = "*"
 beanie = "*"
 supertokens-python = "*"
-lcax = "==2.5.1"
+lcax = "==2.6.0"
 async_lru = "*"
 iso3166 = "*"
 pyyaml = "*"
