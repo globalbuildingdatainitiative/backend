@@ -1,4 +1,3 @@
-
 import dataclasses
 import datetime
 import enum
@@ -10,6 +9,7 @@ from types import UnionType
 from strawberry.types.base import StrawberryList, StrawberryOptional
 from strawberry.types.enum import EnumDefinition
 from strawberry.types.scalar import ScalarWrapper
+from strawberry.types.union import StrawberryUnion
 
 _MISSING = dataclasses.MISSING
 
@@ -67,11 +67,7 @@ class SchemaAnnotation:
             "max_items": "maxItems",
             "unique_items": "uniqueItems",
         }
-        return {
-            key_map.get(k, k): v
-            for k, v in dataclasses.asdict(self).items()
-            if v is not None
-        }
+        return {key_map.get(k, k): v for k, v in dataclasses.asdict(self).items() if v is not None}
 
 
 class _GetSchema:
@@ -126,9 +122,7 @@ class _GetSchema:
 
             if isinstance(type_, StrawberryOptional):
                 type_ = type_.of_type
-            schema["properties"][field.name] = self.get_field_schema(
-                type_, field.default, SchemaAnnotation()
-            )
+            schema["properties"][field.name] = self.get_field_schema(type_, field.default, SchemaAnnotation())
             field_is_optional = self.is_field_optional(field, type_hints[field.name])
             if not field_is_optional:
                 schema["required"].append(field.name)
@@ -153,23 +147,25 @@ class _GetSchema:
             return self.get_literal_schema(type_, default, annotation)
         if t.get_origin(type_) == t.Annotated:
             return self.get_annotated_schema(type_, default)
-        elif type_ == dict or t.get_origin(type_) == dict:
+        elif type_ is dict or t.get_origin(type_) is dict:
             return self.get_dict_schema(type_, annotation)
         elif isinstance(type_, StrawberryList):
             return self.get_list_schema(type_, annotation)
-        elif type_ == list or t.get_origin(type_) == list:
+        elif isinstance(type_, StrawberryUnion):
+            return self.get_union_schema(type_, default, annotation)
+        elif type_ is list or t.get_origin(type_) is list:
             return self.get_list_schema(type_, annotation)
-        elif type_ == tuple or t.get_origin(type_) == tuple:
+        elif type_ is tuple or t.get_origin(type_) is tuple:
             return self.get_tuple_schema(type_, default, annotation)
-        elif type_ == set or t.get_origin(type_) == set:
+        elif type_ is set or t.get_origin(type_) is set:
             return self.get_set_schema(type_, annotation)
-        elif type_ is None or type_ == type(None):
+        elif type_ is None or type_ is type(None):
             return self.get_none_schema(default, annotation)
-        elif type_ == str:
+        elif type_ is str:
             return self.get_str_schema(default, annotation)
-        elif type_ == bool:
+        elif type_ is bool:
             return self.get_bool_schema(default, annotation)
-        elif type_ == int:
+        elif type_ is int:
             return self.get_int_schema(default, annotation)
         elif type_.__name__ == "Base64":
             return self.get_str_schema(default, annotation)
@@ -194,20 +190,20 @@ class _GetSchema:
             return dc.__name__
         else:
             return dc.name
+
     def get_union_schema(self, type_, default, annotation):
         args = t.get_args(type_)
         if default is _MISSING:
             return {
-                "anyOf": [
-                    self.get_field_schema(arg, _MISSING, SchemaAnnotation())
-                    for arg in args
-                ],
+                "anyOf": [self.get_field_schema(arg, _MISSING, SchemaAnnotation()) for arg in args],
                 **annotation.schema(),
             }
         else:
             return {
                 "anyOf": [
-                    self.get_field_schema(arg if not isinstance(arg, ScalarWrapper) else arg.wrap, _MISSING, SchemaAnnotation())
+                    self.get_field_schema(
+                        arg if not isinstance(arg, ScalarWrapper) else arg.wrap, _MISSING, SchemaAnnotation()
+                    )
                     for arg in args
                 ],
                 "default": default,
@@ -226,12 +222,10 @@ class _GetSchema:
         args = t.get_args(type_)
         assert len(args) in (0, 2)
         if args:
-            assert args[0] == str
+            assert args[0] is str
             return {
                 "type": "object",
-                "additionalProperties": self.get_field_schema(
-                    args[1], _MISSING, SchemaAnnotation()
-                ),
+                "additionalProperties": self.get_field_schema(args[1], _MISSING, SchemaAnnotation()),
                 **annotation.schema(),
             }
         else:
@@ -270,10 +264,7 @@ class _GetSchema:
         elif args:
             schema = {
                 "type": "array",
-                "prefixItems": [
-                    self.get_field_schema(arg, _MISSING, SchemaAnnotation())
-                    for arg in args
-                ],
+                "prefixItems": [self.get_field_schema(arg, _MISSING, SchemaAnnotation()) for arg in args],
                 "minItems": len(args),
                 "maxItems": len(args),
                 **schema,
@@ -320,7 +311,6 @@ class _GetSchema:
             return {"type": "integer", "default": default, **annotation.schema()}
 
     def get_number_schema(self, default, annotation):
-
         if default is _MISSING:
             return {"type": "number", **annotation.schema()}
         else:
@@ -356,4 +346,8 @@ class _GetSchema:
         return {"type": "string", "format": "date", **annotation.schema()}
 
     def get_uuid_schema(self):
-        return {"type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"}
+        return {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        }

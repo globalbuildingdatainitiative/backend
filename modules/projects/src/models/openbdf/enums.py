@@ -1,6 +1,3 @@
-from enum import Enum
-from typing import Type, Iterable
-
 import strawberry
 from lcax import BuildingModelScope as LCAxBuildingModelScope
 from lcax import BuildingType as LCAxBuildingType
@@ -14,7 +11,6 @@ from lcax import RoofType as LCAxRoofType
 from lcax import Standard as LCAxStandard
 from lcax import SubType as LCAxSubType
 from lcax import Unit as LCAxUnit
-
 
 
 GraphQLUnit = strawberry.enum(LCAxUnit)

@@ -1,4 +1,3 @@
-
 from typing import Any
 
 from fastapi import APIRouter
@@ -10,8 +9,6 @@ openbdf_router = APIRouter(
 )
 
 
-
 @openbdf_router.get("")
 async def get_openbdf_schema() -> Any:
     return await serialize_openbdf_schema()
-

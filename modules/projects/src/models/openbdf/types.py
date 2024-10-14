@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Union
 from uuid import UUID
 
 import strawberry
@@ -174,7 +175,7 @@ class GraphQLProductMetaData:
 class GraphQLProduct:
     description: strawberry.auto
     id: UUID
-    # impact_data: Union[GraphQLEPD, GraphQLTechFlow]
+    impact_data: Union[GraphQLEPD, GraphQLTechFlow]
     meta_data: GraphQLProductMetaData | None = None
     name: strawberry.auto
     quantity: strawberry.auto
@@ -455,7 +456,7 @@ class GraphQLProject:
     classification_system: strawberry.auto
     comment: strawberry.auto
     description: strawberry.auto
-    format_version: str = '0.2.0'
+    format_version: str = "0.2.0"
     id: UUID
     impact_categories: list[GraphQLImpactCategoryKey]
     lcia_method: strawberry.auto
