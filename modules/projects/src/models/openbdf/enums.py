@@ -16,12 +16,8 @@ from lcax import SubType as LCAxSubType
 from lcax import Unit as LCAxUnit
 
 
-def create_enum(name: str, klass: Iterable) -> Type[strawberry.enum]:
-    return strawberry.enum(Enum(name, [(_enum.name, _enum.value) for _enum in klass]))
-
 
 GraphQLUnit = strawberry.enum(LCAxUnit)
-
 GraphQLCountry = strawberry.enum(LCAxCountry)
 GraphQLStandard = strawberry.enum(LCAxStandard)
 GraphQLSubType = strawberry.enum(LCAxSubType)

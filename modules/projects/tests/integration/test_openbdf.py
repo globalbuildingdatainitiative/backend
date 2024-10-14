@@ -12,3 +12,5 @@ async def test_openbdf(client: AsyncClient, contributions):
 
     data = response.json()
     assert data
+
+    assert data.get("title") == "Project"

@@ -14,9 +14,10 @@ async_lru = "*"
 iso3166 = "*"
 pyyaml = "*"
 polyfactory = "*"
-dacite = "*"
+#dacite = "*"
 dataclasses-jsonschema = "*"
 dc-schema = "*"
+#graphql-pydantic-converter = "*"
 
 [dev-packages]
 asgi-lifespan="*"
