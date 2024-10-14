@@ -62,66 +62,236 @@ class GraphQLSource:
 
 @strawberry.type(name="ImpactCategoryResults")
 class GraphQLImpactCategoryResults:
-    a0: float | None = None
-    a1a3: float | None = None
-    a4: float | None = None
-    a5: float | None = None
-    b1: float | None = None
-    b2: float | None = None
-    b3: float | None = None
-    b4: float | None = None
-    b5: float | None = None
-    b6: float | None = None
-    b7: float | None = None
-    b8: float | None = None
-    c1: float | None = None
-    c2: float | None = None
-    c3: float | None = None
-    c4: float | None = None
-    d: float | None = None
-    total: float | None = None
+    @strawberry.field()
+    def a0(self: dict) -> float | None:
+        return self.get("a0")
+
+    @strawberry.field()
+    def a1a3(self: dict) -> float | None:
+        return self.get("a1a3")
+
+    @strawberry.field()
+    def a4(self: dict) -> float | None:
+        return self.get("a4")
+
+    @strawberry.field()
+    def a5(self: dict) -> float | None:
+        return self.get("a5")
+
+    @strawberry.field()
+    def b1(self: dict) -> float | None:
+        return self.get("b1")
+
+    @strawberry.field()
+    def b2(self: dict) -> float | None:
+        return self.get("b2")
+
+    @strawberry.field()
+    def b3(self: dict) -> float | None:
+        return self.get("b3")
+
+    @strawberry.field()
+    def b4(self: dict) -> float | None:
+        return self.get("b4")
+
+    @strawberry.field()
+    def b5(self: dict) -> float | None:
+        return self.get("b5")
+
+    @strawberry.field()
+    def b6(self: dict) -> float | None:
+        return self.get("b6")
+
+    @strawberry.field()
+    def b7(self: dict) -> float | None:
+        return self.get("b7")
+
+    @strawberry.field()
+    def b8(self: dict) -> float | None:
+        return self.get("b8")
+
+    @strawberry.field()
+    def c1(self: dict) -> float | None:
+        return self.get("c1")
+
+    @strawberry.field()
+    def c2(self: dict) -> float | None:
+        return self.get("c2")
+
+    @strawberry.field()
+    def c3(self: dict) -> float | None:
+        return self.get("c3")
+
+    @strawberry.field()
+    def c4(self: dict) -> float | None:
+        return self.get("c4")
+
+    @strawberry.field()
+    def d(self: dict) -> float | None:
+        return self.get("d")
+
+    @strawberry.field()
+    def total(self: dict) -> float | None:
+        total = 0
+        for value in self.values():
+            if isinstance(value, float):
+                total += value
+        return total
 
 
 @strawberry.type(name="Results")
 class GraphQLResults:
-    gwp: GraphQLImpactCategoryResults | None = None
-    gwp_fos: GraphQLImpactCategoryResults | None = None
-    gwp_bio: GraphQLImpactCategoryResults | None = None
-    gwp_lul: GraphQLImpactCategoryResults | None = None
-    odp: GraphQLImpactCategoryResults | None = None
-    ap: GraphQLImpactCategoryResults | None = None
-    ep: GraphQLImpactCategoryResults | None = None
-    ep_fw: GraphQLImpactCategoryResults | None = None
-    ep_mar: GraphQLImpactCategoryResults | None = None
-    ep_ter: GraphQLImpactCategoryResults | None = None
-    pocp: GraphQLImpactCategoryResults | None = None
-    adpe: GraphQLImpactCategoryResults | None = None
-    adpf: GraphQLImpactCategoryResults | None = None
-    penre: GraphQLImpactCategoryResults | None = None
-    pere: GraphQLImpactCategoryResults | None = None
-    perm: GraphQLImpactCategoryResults | None = None
-    pert: GraphQLImpactCategoryResults | None = None
-    penrt: GraphQLImpactCategoryResults | None = None
-    penrm: GraphQLImpactCategoryResults | None = None
-    sm: GraphQLImpactCategoryResults | None = None
-    pm: GraphQLImpactCategoryResults | None = None
-    wdp: GraphQLImpactCategoryResults | None = None
-    irp: GraphQLImpactCategoryResults | None = None
-    etp_fw: GraphQLImpactCategoryResults | None = None
-    htp_c: GraphQLImpactCategoryResults | None = None
-    htp_nc: GraphQLImpactCategoryResults | None = None
-    sqp: GraphQLImpactCategoryResults | None = None
-    rsf: GraphQLImpactCategoryResults | None = None
-    nrsf: GraphQLImpactCategoryResults | None = None
-    fw: GraphQLImpactCategoryResults | None = None
-    hwd: GraphQLImpactCategoryResults | None = None
-    nhwd: GraphQLImpactCategoryResults | None = None
-    rwd: GraphQLImpactCategoryResults | None = None
-    cru: GraphQLImpactCategoryResults | None = None
-    mrf: GraphQLImpactCategoryResults | None = None
-    mer: GraphQLImpactCategoryResults | None = None
-    eee: GraphQLImpactCategoryResults | None = None
-    eet: GraphQLImpactCategoryResults | None = None
+    @strawberry.field()
+    def gwp(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("gwp")
+
+    @strawberry.field()
+    def gwp_fos(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("gwp_fos")
+
+    @strawberry.field()
+    def gwp_bio(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("gwp_bio")
+
+    @strawberry.field()
+    def gwp_lul(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("gwp_lul")
+
+    @strawberry.field()
+    def odp(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("odp")
+
+    @strawberry.field()
+    def ap(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("ap")
+
+    @strawberry.field()
+    def ep(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("ep")
+
+    @strawberry.field()
+    def ep_fw(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("ep_fw")
+
+    @strawberry.field()
+    def ep_mar(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("ep_mar")
+
+    @strawberry.field()
+    def ep_ter(self) -> GraphQLImpactCategoryResults | None:
+        return self.get("ep_ter")
+
+    @strawberry.field()
+    def pocp(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("pocp")
+
+    @strawberry.field()
+    def adpe(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("adpe")
+
+    @strawberry.field()
+    def adpf(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("adpf")
+
+    @strawberry.field()
+    def penre(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("penre")
+
+    @strawberry.field()
+    def pere(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("pere")
+
+    @strawberry.field()
+    def perm(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("perm")
+
+    @strawberry.field()
+    def pert(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("pert")
+
+    @strawberry.field()
+    def penrt(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("penrt")
+
+    @strawberry.field()
+    def penrm(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("penrm")
+
+    @strawberry.field()
+    def sm(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("sm")
+
+    @strawberry.field()
+    def pm(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("pm")
+
+    @strawberry.field()
+    def wdp(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("wdp")
+
+    @strawberry.field()
+    def irp(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("irp")
+
+    @strawberry.field()
+    def etp_fw(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("etp_fw")
+
+    @strawberry.field()
+    def htp_c(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("htp_c")
+
+    @strawberry.field()
+    def htp_nc(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("htp_nc")
+
+    @strawberry.field()
+    def sqp(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("sqp")
+
+    @strawberry.field()
+    def rsf(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("rsf")
+
+    @strawberry.field()
+    def nrsf(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("nrsf")
+
+    @strawberry.field()
+    def fw(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("fw")
+
+    @strawberry.field()
+    def hwd(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("hwd")
+
+    @strawberry.field()
+    def nhwd(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("nhwd")
+
+    @strawberry.field()
+    def rwd(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("rwd")
+
+    @strawberry.field()
+    def cru(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("cru")
+
+    @strawberry.field()
+    def mrf(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("mrf")
+
+    @strawberry.field()
+    def mer(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("mer")
+
+    @strawberry.field()
+    def eee(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("eee")
+
+    @strawberry.field()
+    def eet(self: dict) -> GraphQLImpactCategoryResults | None:
+        return self.get("eet")
 
 
 @strawberry.experimental.pydantic.type(model=LCAxEPD, name="EPD")
