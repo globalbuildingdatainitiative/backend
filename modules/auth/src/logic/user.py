@@ -76,8 +76,9 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     if user_input.role is not None:
         metadata_update["role"] = user_input.role.value
     if user_input.organization_id is not UNSET:
-        metadata_update["organization_id"] = None
-        metadata_update["role"] = None
+        metadata_update["organization_id"] = user_input.organization_id
+        if user_input.organization_id is None:
+            metadata_update["role"] = None
     if metadata_update:
         await update_user_metadata(str(user_input.id), metadata_update)
 
