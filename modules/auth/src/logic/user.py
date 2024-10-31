@@ -1,17 +1,18 @@
 from datetime import datetime
 
+import strawberry
 from strawberry import UNSET
+from supertokens_python.asyncio import get_users_newest_first
+from supertokens_python.recipe.emailpassword.asyncio import update_email_or_password, sign_in
+from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
 
 from core.exceptions import EntityNotFound
-from models import GraphQLUser, UserFilters, UserSort, UpdateUserInput, InviteStatus, Role
+from models import GraphQLUser, UserFilters, UserSort, UpdateUserInput, InviteStatus, Role, AcceptInvitationInput
 from models.sort_filter import FilterOptions
 
 
 async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None = None) -> list[GraphQLUser]:
     """Returns all Users & their metadata"""
-
-    from supertokens_python.asyncio import get_users_newest_first
-    from supertokens_python.recipe.usermetadata.asyncio import get_user_metadata
 
     users = await get_users_newest_first("public")
     gql_users = []
@@ -35,8 +36,8 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
 
         user = GraphQLUser(
             id=user_id,
-            email=user_data["email"],
-            time_joined=datetime.fromtimestamp(round(user_data["timeJoined"] / 1000)),
+            email=user_data.get("email"),
+            time_joined=datetime.fromtimestamp(round(user_data.get("timeJoined", 0) / 1000)),
             first_name=first_name,
             last_name=last_name,
             organization_id=effective_org_id,
@@ -56,9 +57,6 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
 
 async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     """Update user details & metadata"""
-
-    from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
-    from supertokens_python.recipe.emailpassword.asyncio import update_email_or_password, sign_in
 
     metadata_update = {}
     if user_input.first_name is not None:
@@ -101,12 +99,12 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     return user_data[0]
 
 
-async def accept_invitation(user_id: str) -> bool:
+async def accept_invitation(user: AcceptInvitationInput) -> bool:
     """Updates user metadata when invitation is accepted"""
 
-    from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
+    await update_user(UpdateUserInput(**strawberry.asdict(user)))
 
-    current_metadata = await get_user_metadata(user_id)
+    current_metadata = await get_user_metadata(str(user.id))
     update_data = {
         "invite_status": InviteStatus.ACCEPTED.value,
         "invited": None,
@@ -120,14 +118,12 @@ async def accept_invitation(user_id: str) -> bool:
     if "inviter_name" in current_metadata.metadata:
         update_data["inviter_name"] = current_metadata.metadata["inviter_name"]
 
-    await update_user_metadata(user_id, update_data)
+    await update_user_metadata(str(user.id), update_data)
     return True
 
 
 async def reject_invitation(user_id: str) -> bool:
     """Updates user metadata when invitation is rejected"""
-
-    from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
 
     current_metadata = await get_user_metadata(user_id)
     update_data = {
