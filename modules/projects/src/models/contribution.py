@@ -13,6 +13,7 @@ class ContributionBase(BaseModel):
     uploaded_at: datetime.datetime = Field(default_factory=datetime.datetime.now, alias="uploadedAt")
     user_id: UUID = Field(alias="userId")
     organization_id: UUID = Field(alias="organizationId")
+    public: bool = Field(default=False)
 
 
 class DBContribution(ContributionBase, Document):
@@ -37,6 +38,7 @@ class GraphQLContribution:
 @strawberry.input
 class InputContribution:
     project: GraphQLInputProject
+    public: bool = False
 
 
 @strawberry.input
@@ -45,3 +47,4 @@ class ContributionFilter(BaseFilter):
     uploaded_at: FilterBy | None = None
     user_id: FilterBy | None = None
     organization_id: FilterBy | None = None
+    public: FilterBy | None = None

@@ -40,7 +40,10 @@ async def create_contributions(contributions: list[InputContribution], user: Sup
     _contributions = []
     for _contribution in contributions:
         contribution = DBContribution(
-            project=DBProject(**as_dict(_contribution.project)), user_id=user.id, organization_id=user.organization_id
+            project=DBProject(**as_dict(_contribution.project)),
+            user_id=user.id,
+            organization_id=user.organization_id,
+            public=_contribution.public,
         )
         await contribution.insert(link_rule=WriteRules.WRITE)
         _contributions.append(contribution)
