@@ -1,6 +1,7 @@
 from .user import (
     GraphQLUser,
     SuperTokensUser,
+    AcceptInvitationInput,
     UserFilters,
     UserSort,
     UpdateUserInput,
@@ -13,6 +14,7 @@ from .user import (
 __all__ = [
     GraphQLUser,
     SuperTokensUser,
+    AcceptInvitationInput,
     UserFilters,
     UserSort,
     UpdateUserInput,

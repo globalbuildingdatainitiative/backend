@@ -3,6 +3,14 @@ schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key", "
   mutation: Mutation
 }
 
+input AcceptInvitationInput {
+  id: UUID!
+  firstName: String = null
+  lastName: String = null
+  currentPassword: String! = "asokdA87fnf30efjoiOI**cwjkn"
+  newPassword: String = null
+}
+
 """Date with time (isoformat)"""
 scalar DateTime
 
@@ -36,7 +44,7 @@ type Mutation {
   inviteUsers(input: InviteUsersInput!): [InviteResult!]!
 
   """Accept an invitation"""
-  acceptInvitation(userId: String!): Boolean!
+  acceptInvitation(user: AcceptInvitationInput!): Boolean!
 
   """Reject an invitation"""
   rejectInvitation(userId: String!): Boolean!

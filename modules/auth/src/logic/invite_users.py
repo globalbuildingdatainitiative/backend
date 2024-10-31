@@ -12,11 +12,11 @@ from supertokens_python.recipe.emailpassword.asyncio import (
 from supertokens_python.recipe.emailpassword.interfaces import SignUpOkResult
 from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
 
+from core.auth import FAKE_PASSWORD
 from core.exceptions import UserHasNoOrganization, InvitationFailed
 from models import InviteStatus, InviteResult
 
 
-FAKE_PASSWORD = "asokdA87fnf30efjoiOI**cwjkn"
 logger = logging.getLogger("main")
 
 
