@@ -5,10 +5,10 @@ schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key", "
 
 input AcceptInvitationInput {
   id: UUID!
-  firstName: String!
-  lastName: String!
+  firstName: String = null
+  lastName: String = null
   currentPassword: String! = "asokdA87fnf30efjoiOI**cwjkn"
-  newPassword: String!
+  newPassword: String = null
 }
 
 """Date with time (isoformat)"""

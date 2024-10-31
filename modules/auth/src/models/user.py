@@ -121,7 +121,7 @@ class InviteResult:
 @strawberry.input
 class AcceptInvitationInput:
     id: UUID
-    first_name: str
-    last_name: str
+    first_name: str | None = None
+    last_name: str | None = None
     current_password: str = FAKE_PASSWORD
-    new_password: str
+    new_password: str | None = None
