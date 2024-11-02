@@ -6,6 +6,8 @@ from enum import Enum
 import strawberry
 from pydantic import BaseModel
 from strawberry.federation.schema_directives import Shareable
+
+from core.auth import FAKE_PASSWORD
 from .sort_filter import BaseFilter, FilterOptions, SortOptions
 
 
@@ -114,3 +116,12 @@ class InviteResult:
     email: str
     status: str
     message: str = ""
+
+
+@strawberry.input
+class AcceptInvitationInput:
+    id: UUID
+    first_name: str | None = None
+    last_name: str | None = None
+    current_password: str = FAKE_PASSWORD
+    new_password: str | None = None

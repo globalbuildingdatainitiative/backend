@@ -3,15 +3,18 @@ import json
 from datetime import datetime
 from typing import Iterator
 from uuid import uuid4
+
 import docker
 import pytest
 import supertokens_python.asyncio
-from asgi_lifespan import LifespanManager
-from fastapi import FastAPI
-from httpx import AsyncClient
 import supertokens_python.recipe.session.asyncio
 import supertokens_python.recipe.usermetadata.asyncio
+import supertokens_python.recipe.emailpassword
+from asgi_lifespan import LifespanManager
+from fastapi import FastAPI
 from fastapi.requests import Request
+from httpx import AsyncClient
+
 import core.auth
 import core.context
 import logic as logic
@@ -30,15 +33,132 @@ def user() -> SuperTokensUser:
     yield _user
 
 
-@pytest.fixture(scope="session")
-def mock_supertokens(session_mocker):
+@pytest.fixture
+def mock_update_email_or_password():
+    async def fake_update_email_or_password(user_id: str, email: str, password: str):
+        return
+
+    return fake_update_email_or_password
+
+
+@pytest.fixture
+def mock_sign_in():
+    @dataclasses.dataclass
+    class SignInOkResult:
+        status: str = "OK"
+
+    @dataclasses.dataclass
+    class SignInWrongCredentialsError:
+        status: str = "WRONG_CREDENTIALS_ERROR"
+
+    async def fake_sign_in(tenant_id: str, email: str, password: str):
+        if password == "currentPassword123":
+            return SignInOkResult()
+        else:
+            return SignInWrongCredentialsError()
+
+    return fake_sign_in
+
+
+@pytest.fixture
+def mock_update_user_metadata(users):
+    async def fake_update_user_metadata(user_id: str, metadata: dict):
+        for user in users:
+            if user["id"] == user_id:
+                if "first_name" in metadata:
+                    user["firstName"] = metadata.get("first_name")
+                if "last_name" in metadata:
+                    user["lastName"] = metadata.get("last_name")
+                if "email" in metadata:
+                    user["email"] = metadata.get("email")
+                if "invited" in metadata:
+                    user["invited"] = metadata.get("invited")
+                if "invite_status" in metadata:
+                    user["invite_status"] = metadata.get("invite_status")
+                if "inviter_name" in metadata:
+                    user["inviter_name"] = metadata.get("inviter_name")
+                if "role" in metadata:
+                    user["role"] = metadata.get("role")
+
+    return fake_update_user_metadata
+
+
+@pytest.fixture()
+def mock_supertokens(session_mocker, users, mock_sign_in, mock_update_email_or_password, mock_update_user_metadata):
     def fake_supertokens_init():
         pass
+
+    def fake_supertoken_get_instance():
+        class FakeUser:
+            def __init__(self, user: dict):
+                self._user = user
+
+            def to_json(self):
+                return {"user": self._user}
+
+        class FakeUsers:
+            @property
+            def users(self):
+                return [FakeUser(_user) for _user in users]
+
+        class FakeRecipes:
+            async def get_user_metadata(self, user_id, user_context):
+                class FakeMetadata:
+                    @property
+                    def metadata(self):
+                        return {
+                            "first_name": "",
+                            "last_name": "",
+                            "email": "",
+                            "organization_id": "",
+                            "pending_organization_id": "",
+                        }
+
+                return FakeMetadata()
+
+            async def update_user_metadata(self, user_id, _update, context):
+                return await mock_update_user_metadata(user_id, _update)
+
+            async def sign_in(self, email, password, tenant_id, user_context):
+                return await mock_sign_in(email, password, tenant_id)
+
+            async def update_email_or_password(self, user_id, email, password, *args):
+                return await mock_update_email_or_password(user_id, email, password)
+
+        class FakeSuperTokens:
+            async def get_users(
+                self, tenant_id, time_joined_order, limit, pagination_token, include_recipe_ids, query, user_context
+            ):
+                return FakeUsers()
+
+            @property
+            def recipe_implementation(self):
+                return FakeRecipes()
+
+        return FakeSuperTokens()
 
     session_mocker.patch.object(
         core.auth,
         "supertokens_init",
         fake_supertokens_init,
+    )
+
+    session_mocker.patch.object(
+        supertokens_python.Supertokens,
+        "get_instance",
+        fake_supertoken_get_instance,
+    )
+
+    session_mocker.patch.object(
+        supertokens_python.recipe.emailpassword.EmailPasswordRecipe,
+        "get_instance",
+        fake_supertoken_get_instance,
+    )
+
+    session_mocker.patch.object(
+        supertokens_python.recipe.usermetadata.UserMetadataRecipe,
+        "get_instance",
+        fake_supertoken_get_instance,
     )
 
 
@@ -76,7 +196,7 @@ async def client(app: FastAPI) -> Iterator[AsyncClient]:
             print(exc)
 
 
-@pytest.fixture
+@pytest.fixture()
 def users(datafix_dir):
     yield json.loads((datafix_dir / "users.json").read_text())
 
@@ -152,68 +272,6 @@ def mock_get_user_metadata(session_mocker, users):
         supertokens_python.recipe.usermetadata.asyncio,
         "get_user_metadata",
         fake_get_user_metadata,
-    )
-
-
-@pytest.fixture
-def mock_update_user_metadata(session_mocker, users):
-    async def fake_update_user_metadata(user_id: str, metadata: dict):
-        for user in users:
-            if user["id"] == user_id:
-                if "first_name" in metadata:
-                    user["firstName"] = metadata.get("first_name")
-                if "last_name" in metadata:
-                    user["lastName"] = metadata.get("last_name")
-                if "email" in metadata:
-                    user["email"] = metadata.get("email")
-                if "invited" in metadata:
-                    user["invited"] = metadata.get("invited")
-                if "invite_status" in metadata:
-                    user["invite_status"] = metadata.get("invite_status")
-                if "inviter_name" in metadata:
-                    user["inviter_name"] = metadata.get("inviter_name")
-                if "role" in metadata:
-                    user["role"] = metadata.get("role")
-
-    session_mocker.patch.object(
-        supertokens_python.recipe.usermetadata.asyncio,
-        "update_user_metadata",
-        fake_update_user_metadata,
-    )
-
-
-@pytest.fixture
-def mock_update_email_or_password(session_mocker):
-    async def fake_update_email_or_password(user_id: str, email: str, password: str):
-        return
-
-    session_mocker.patch.object(
-        supertokens_python.recipe.emailpassword.asyncio,
-        "update_email_or_password",
-        fake_update_email_or_password,
-    )
-
-
-@pytest.fixture
-def mock_sign_in(session_mocker):
-    @dataclasses.dataclass
-    class SignInOkResult:
-        status: str = "OK"
-
-    @dataclasses.dataclass
-    class SignInWrongCredentialsError:
-        status: str = "WRONG_CREDENTIALS_ERROR"
-
-    async def fake_sign_in(tenant_id: str, email: str, password: str):
-        if password == "currentPassword123":
-            return SignInOkResult()
-        else:
-            return SignInWrongCredentialsError()
-
-    session_mocker.patch.object(
-        supertokens_python.recipe.emailpassword.asyncio,
-        "sign_in",
-        fake_sign_in,
     )
 
 

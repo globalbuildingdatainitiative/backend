@@ -4,7 +4,15 @@ from strawberry.types import Info
 
 from core.context import get_user
 from logic import get_users, update_user, invite_users, accept_invitation, reject_invitation, resend_invitation
-from models import GraphQLUser, UserFilters, UserSort, UpdateUserInput, InviteUsersInput, InviteResult
+from models import (
+    GraphQLUser,
+    UserFilters,
+    UserSort,
+    UpdateUserInput,
+    InviteUsersInput,
+    InviteResult,
+    AcceptInvitationInput,
+)
 
 logger = logging.getLogger("main")
 
@@ -26,9 +34,9 @@ async def invite_users_mutation(info: Info, input: InviteUsersInput) -> list[Inv
     return results
 
 
-async def accept_invitation_mutation(user_id: str) -> bool:
+async def accept_invitation_mutation(user: AcceptInvitationInput) -> bool:
     """Accept an invitation"""
-    result = await accept_invitation(user_id)
+    result = await accept_invitation(user)
     return result
 
 
