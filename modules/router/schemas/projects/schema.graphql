@@ -156,6 +156,7 @@ type Contribution {
   uploadedAt: DateTime!
   userId: UUID!
   organizationId: UUID!
+  public: Boolean!
 }
 
 type ContributionGraphQLGroupResponse {
@@ -601,6 +602,7 @@ input InputClassification {
 
 input InputContribution {
   project: InputProject!
+  public: Boolean! = false
 }
 
 input InputConversion {
