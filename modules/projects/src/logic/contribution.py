@@ -20,7 +20,7 @@ async def get_contributions(
     offset: int,
     fetch_links: bool = False,
 ) -> list[DBContribution]:
-    query = DBContribution.find(DBContribution.organization_id == organization_id, fetch_links=fetch_links)
+    query = DBContribution.find(DBContribution.organization_id == organization_id)
 
     query = filter_model_query(DBContribution, filter_by, query)
     query = sort_model_query(DBContribution, sort_by, query)
@@ -30,7 +30,8 @@ async def get_contributions(
 
     if offset:
         query = query.skip(offset)
-
+    if fetch_links:
+        query = query.find({}, fetch_links=True)
     contributions = await query.to_list()
     logger.debug(f"Found {len(contributions)} projects for organization {organization_id}")
     return contributions
