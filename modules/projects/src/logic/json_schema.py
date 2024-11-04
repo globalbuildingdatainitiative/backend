@@ -198,7 +198,12 @@ class _GetSchema:
         args = t.get_args(type_)
         if default is _MISSING:
             return {
-                "anyOf": [self.get_field_schema(arg if not isinstance(arg, ScalarWrapper) else arg.wrap, _MISSING, SchemaAnnotation()) for arg in args],
+                "anyOf": [
+                    self.get_field_schema(
+                        arg if not isinstance(arg, ScalarWrapper) else arg.wrap, _MISSING, SchemaAnnotation()
+                    )
+                    for arg in args
+                ],
                 **annotation.schema(),
             }
         else:
