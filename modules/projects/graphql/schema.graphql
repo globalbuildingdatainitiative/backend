@@ -479,7 +479,7 @@ union EPDTechFlow = EPD | TechFlow
 type Energy {
   toolEnergyModeling: String
   toolEnergyModelingVersion: String
-  eneryModelMethodologyReference: String
+  energyModelMethodologyReference: String
   gwpEnergySourcesYear: Float
   siteLocationWeatherData: String
   electricityProvider: String
