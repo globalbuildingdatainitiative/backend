@@ -856,6 +856,7 @@ type ProjectInfo {
 }
 
 type ProjectMetaData {
+  source: Source
   productClassificationSystem: String
   image: Base64
   climateZone: String

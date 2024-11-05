@@ -811,6 +811,10 @@ class GraphQLStructuralMetaData:
 @strawberry.type(name="ProjectMetaData")
 class GraphQLProjectMetaData:
     @strawberry.field
+    def source(self: dict) -> GraphQLSource | None:
+        return GraphQLSource(**self.get("source"))
+
+    @strawberry.field
     def product_classification_system(self: dict) -> str | None:
         return self.get("product_classification_system")
 
