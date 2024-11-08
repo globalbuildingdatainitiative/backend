@@ -2,6 +2,11 @@ import logging
 from uuid import UUID
 
 from models import DBProject, FilterBy, SortBy, filter_model_query, sort_model_query
+from core.exceptions import (
+    EntityNotFound,
+    DatabaseError,
+    DatabaseConfigurationError,
+)
 
 logger = logging.getLogger("main")
 
@@ -43,5 +48,9 @@ async def get_projects(
         return projects
 
     except Exception as e:
-        logger.error(f"Error fetching projects: {str(e)}")
-        raise
+        if "Document not found" in str(e):
+            raise EntityNotFound(message=f"No projects found for organization {organization_id}", name="Projects")
+        elif "Collection was not initialized" in str(e):
+            raise DatabaseConfigurationError("Database collection was not properly initialized")
+        else:
+            raise DatabaseError(f"Database operation failed: {str(e)}")
