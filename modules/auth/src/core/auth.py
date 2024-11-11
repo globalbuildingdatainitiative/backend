@@ -26,6 +26,7 @@ from supertokens_python.recipe.emailpassword.asyncio import get_user_by_id
 from supertokens_python.recipe.usermetadata.asyncio import get_user_metadata, update_user_metadata
 
 FAKE_PASSWORD = "asokdA87fnf30efjoiOI**cwjkn"
+LOGO_URL = "https://app.gbdi.io/favicon.png"
 
 
 def get_origin(request: BaseRequest | None, user_context) -> str:
@@ -97,22 +98,45 @@ def custom_smtp_content_override(original_implementation: SMTPOverrideInput) -> 
                     body {{
                         font-family: Arial, sans-serif;
                         line-height: 1.6;
-                        color: #333;
+                        color: #E6E6E6;
+                        background-color: #1C1C1C;
+                        margin: 0;
+                        padding: 20px;
+                    }}
+                    .container {{
                         max-width: 600px;
                         margin: 0 auto;
-                        padding: 20px;
                     }}
                     .header {{
                         background-color: #1d9a78;
-                        color: white;
-                        text-align: center;
                         padding: 20px;
-                        border-radius: 5px 5px 0 0;
+                        border-radius: 5px;
+                        position: relative;
+                    }}
+                    .header-content {{
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        position: relative;
+                        max-width: 80%;
+                        margin: 0 auto;
+                    }}
+                    .header h1 {{
+                        color: white;
+                        font-size: 24px;
+                        margin: 0;
+                    }}
+                    .logo {{
+                        width: 80px;
+                        height: auto;
+                        margin-left: 20px;
                     }}
                     .content {{
-                        background-color: #f9f9f9;
-                        padding: 20px;
-                        border-radius: 0 0 5px 5px;
+                        padding: 20px 0;
+                    }}
+                    p {{
+                        margin: 16px 0;
+                        font-size: 16px;
                     }}
                     .button {{
                         display: inline-block;
@@ -121,7 +145,8 @@ def custom_smtp_content_override(original_implementation: SMTPOverrideInput) -> 
                         text-decoration: none;
                         padding: 10px 20px;
                         border-radius: 5px;
-                        margin-top: 20px;
+                        margin-right: 10px;
+                        margin-top: 10px;
                     }}
                     .reject-button {{
                         background-color: #cc4125;
@@ -129,19 +154,26 @@ def custom_smtp_content_override(original_implementation: SMTPOverrideInput) -> 
                 </style>
             </head>
             <body>
-                <div class="header">
-                    <h1>Invitation to Join {organization_name}</h1>
-                </div>
-                <div class="content">
-                    <p>Dear Invitee,</p>
-                    <p>You have been invited by {inviter_name} to join the organization {organization_name}.</p>
-                    <p>We're excited to have you on board! Please choose one of the following options:</p>
-                    <a href="{accept_new_user_url}" class="button">Accept Invitation and Create Account</a>
-                    <a href="{accept_signin_url}" class="button">Accept Invitation and Sign In</a>
-                    <p>If you don't want to join this organization, you can reject the invitation:</p>
-                    <a href="{reject_url}" class="button reject-button">Reject Invitation</a>
-                    <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
-                    <p>Best regards,<br>The {organization_name} Team</p>
+                <div class="container">
+                    <div class="header">
+                        <div class="header-content">
+                            <h1>Invitation to Join {organization_name}</h1>
+                            <img src="{LOGO_URL}" alt="{organization_name} Logo" class="logo">
+                        </div>
+                    </div>
+                    <div class="content">
+                        <p>Dear Invitee,</p>
+                        <p>You have been invited by {inviter_name} to join the organization {organization_name}.</p>
+                        <p>We're excited to have you on board! Please choose one of the following options:</p>
+                        <div>
+                            <a href="{accept_new_user_url}" class="button">Accept Invitation and Create Account</a>
+                            <a href="{accept_signin_url}" class="button">Accept Invitation and Sign In</a>
+                        </div>
+                        <p>If you don't want to join this organization, you can reject the invitation:</p>
+                        <a href="{reject_url}" class="button reject-button">Reject Invitation</a>
+                        <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+                        <p>Best regards,<br>The {organization_name} Team</p>
+                    </div>
                 </div>
             </body>
             </html>
@@ -158,44 +190,72 @@ def custom_smtp_content_override(original_implementation: SMTPOverrideInput) -> 
                                 body {{
                                     font-family: Arial, sans-serif;
                                     line-height: 1.6;
-                                    color: #333;
+                                    color: #E6E6E6;
+                                    background-color: #1C1C1C;
+                                    margin: 0;
+                                    padding: 20px;
+                                }}
+                                .container {{
                                     max-width: 600px;
                                     margin: 0 auto;
-                                    padding: 20px;
                                 }}
                                 .header {{
-                                    background-color: #3498db;
-                                    color: white;
-                                    text-align: center;
+                                    background-color: #1d9a78;
                                     padding: 20px;
-                                    border-radius: 5px 5px 0 0;
+                                    border-radius: 5px;
+                                    position: relative;
+                                }}
+                                .header-content {{
+                                    display: flex;
+                                    justify-content: center;
+                                    align-items: center;
+                                    position: relative;
+                                    max-width: 80%;
+                                    margin: 0 auto;
+                                }}
+                                .header h1 {{
+                                    color: white;
+                                    font-size: 24px;
+                                    margin: 0;
+                                }}
+                                .logo {{
+                                    width: 80px;
+                                    height: auto;
+                                    margin-left: 20px;
                                 }}
                                 .content {{
-                                    background-color: #f9f9f9;
-                                    padding: 20px;
-                                    border-radius: 0 0 5px 5px;
+                                    padding: 20px 0;
+                                }}
+                                p {{
+                                    margin: 16px 0;
+                                    font-size: 16px;
                                 }}
                                 .button {{
                                     display: inline-block;
-                                    background-color: #3498db;
+                                    background-color: #1d9a78;
                                     color: white;
                                     text-decoration: none;
                                     padding: 10px 20px;
                                     border-radius: 5px;
-                                    margin-top: 20px;
+                                    margin-top: 10px;
                                 }}
                             </style>
                         </head>
                         <body>
-                            <div class="header">
-                                <h1>Password Reset</h1>
-                            </div>
-                            <div class="content">
-                                <p>Dear User,</p>
-                                <p>You have requested to reset your password. Click the button below to set a new password:</p>
-                                <a href="{password_reset_url}" class="button">Reset Password</a>
-                                <p>If you didn't request a password reset, please ignore this email or contact our support team if you have any concerns.</p>
-                                <p>Best regards,<br>The Support Team</p>
+                            <div class="container">
+                                <div class="header">
+                                    <div class="header-content">
+                                        <h1>Password Reset</h1>
+                                        <img src="{LOGO_URL}" alt="Company Logo" class="logo">
+                                    </div>
+                                </div>
+                                <div class="content">
+                                    <p>Dear User,</p>
+                                    <p>You have requested to reset your password. Click the button below to set a new password:</p>
+                                    <a href="{password_reset_url}" class="button">Reset Password</a>
+                                    <p>If you didn't request a password reset, please ignore this email or contact our support team if you have any concerns.</p>
+                                    <p>Best regards,<br>The Support Team</p>
+                                </div>
                             </div>
                         </body>
                         </html>
