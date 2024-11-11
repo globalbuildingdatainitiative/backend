@@ -1,10 +1,12 @@
 import re
 from typing import Type
+from uuid import UUID
 
 import strawberry
 from beanie import Document
 from beanie.odm.queries.find import FindMany, FindQueryResultType
 from strawberry.scalars import JSON
+from iso3166 import countries as iso_countries
 
 
 class BaseFilter:  # pragma: no cover
@@ -18,6 +20,18 @@ class BaseFilter:  # pragma: no cover
         return [(key, value) for key, value in self.dict().items() if value]
 
 
+def get_matching_country_codes(search_text: str) -> list[str]:
+    """Get country codes that match the search text"""
+    matching_codes = []
+    search_text = search_text.lower()
+
+    for country in iso_countries:
+        if search_text in country.name.lower():
+            matching_codes.append(country.alpha3.lower())
+
+    return matching_codes
+
+
 def filter_model_query(
     model: Type[Document], filters: BaseFilter, query: FindMany[FindQueryResultType] | None = None
 ) -> FindMany[FindQueryResultType]:
@@ -26,38 +40,59 @@ def filter_model_query(
 
     if filters:
         for _filter, fields in filters.items():
+            if not fields:
+                continue
+
             for _field, value in fields.items():
-                if not _field:
+                if not _field or value is None:
                     continue
-                if _field == "id":
-                    _field = "_id"
 
-                if _filter == "equal":
-                    query = query.find({_field: value})
-                elif _filter == "gt":
-                    query = query.find({_field: {"$gt": value}})
-                elif _filter == "gte":
-                    query = query.find({_field: {"$gte": value}})
-                elif _filter == "lt":
-                    query = query.find({_field: {"$lt": value}})
-                elif _filter == "lte":
-                    query = query.find({_field: {"$lte": value}})
-                elif _filter == "not_equal":
-                    query = query.find({_field: {"$ne": value}})
-                elif _filter == "is_true" and value is not None:
-                    _field = to_snake(_field)
-                    field = getattr(model, _field)
-                    query = query.find(field is True)
+                # Handle special case for country field
+                if _field in ["countryName", "project.location.countryName"]:
+                    field_path = "project.location.country"
+                    if _filter == "contains":
+                        matching_codes = get_matching_country_codes(value)
+                        if matching_codes:
+                            query = query.find({field_path: {"$in": matching_codes}})
+                        else:
+                            # If no matches found, ensure no results are returned
+                            query = query.find({"_id": None})
+                    continue
 
-    return query
+                # Map other field names to database paths
+                field_mapping = {
+                    "name": "project.name",
+                    "buildingType": "project.projectInfo.buildingType",
+                    "uploadedAt": "uploadedAt",
+                    "public": "public",  # Not working
+                    "organization_id": "organization_id",
+                    "id": "_id",
+                    "_id": "_id",
+                    "lifeCycleStages": "project.lifeCycleStages",
+                    "impactCategories": "project.impactCategories",
+                }
 
+                field_path = field_mapping.get(_field, _field)
 
-def to_camel(string: str) -> str:
-    return "".join(word.capitalize() for word in string.split("_"))
+                # Handle UUID fields specially
+                if isinstance(value, UUID) or (isinstance(value, str) and len(value) == 36):
+                    if _filter == "equal":
+                        if isinstance(value, str):
+                            try:
+                                value = UUID(value)
+                            except ValueError:
+                                continue
+                        query = query.find({field_path: value})
+                else:
+                    # Handle other field types
+                    if _filter == "contains":
+                        query = query.find({field_path: {"$regex": f".*{value}.*", "$options": "i"}})
+                    elif _filter == "equal":
+                        query = query.find({field_path: value})
+                    elif _filter == "is_true" and value is not None:
+                        query = query.find({field_path: True})
 
-
-def to_snake(string: str) -> str:
-    return re.sub(r"(?<!^)(?=[A-Z])", "_", string).lower()
+            return query
 
 
 def sort_model_query(
@@ -71,33 +106,49 @@ def sort_model_query(
             field = getattr(sort_by, sort_direction)
             if not field:
                 continue
-            field = to_snake(field)
 
-            if not hasattr(model, field):
-                raise AttributeError(f"Field {field} does not exist in model {model}")
+            # Map frontend field paths to database paths
+            field_mappings = {
+                "name": "project.name",  # Not working
+                "project.location.countryName": "project.location.country",
+                "project.projectInfo.buildingType": "project.projectInfo.buildingType",
+                "uploadedAt": "uploadedAt",
+                "public": "public",
+                "project.lifeCycleStages": "project.lifeCycleStages",
+                "project.impactCategories": "project.impactCategories",
+            }
 
+            # Get the correct field path or use the original if no mapping exists
+            field_path = field_mappings.get(field, field)
+
+            # Add sort to existing query
             if sort_direction == "dsc":
-                query = query.sort(f"-{field}")
+                query = query.sort([(field_path, -1)])
             else:
-                query = query.sort(f"+{field}")
+                query = query.sort([(field_path, 1)])
 
     return query
+
+
+def to_camel(string: str) -> str:
+    return "".join(word.capitalize() for word in string.split("_"))
+
+
+def to_snake(string: str) -> str:
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", string).lower()
 
 
 @strawberry.input
 class FilterBy(BaseFilter):
     equal: JSON | None = None
+    contains: JSON | None = None
+    starts_with: JSON | None = None
+    ends_with: JSON | None = None
     gt: JSON | None = None
     gte: JSON | None = None
     lt: JSON | None = None
     lte: JSON | None = None
     not_equal: JSON | None = None
-    # contains: str | None = None
-    # starts_with: str | None = None
-    # ends_with: str | None = None
-    # is_empty: bool | None = None
-    # is_not_empty: bool | None = None
-    # is_any_of: list[str] | None = None
     is_true: bool | None = None
 
 
