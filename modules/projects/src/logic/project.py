@@ -1,6 +1,8 @@
 import logging
 from uuid import UUID
 
+from beanie.exceptions import DocumentNotFound, CollectionWasNotInitialized
+
 from models import DBProject, FilterBy, SortBy, filter_model_query, sort_model_query
 from core.exceptions import (
     EntityNotFound,
@@ -47,10 +49,8 @@ async def get_projects(
         logger.debug(f"Found {len(projects)} projects for organization {organization_id}")
         return projects
 
-    except Exception as e:
-        if "Document not found" in str(e):
-            raise EntityNotFound(message=f"No projects found for organization {organization_id}", name="Projects")
-        elif "Collection was not initialized" in str(e):
-            raise DatabaseConfigurationError("Database collection was not properly initialized")
-        else:
-            raise DatabaseError(f"Database operation failed: {str(e)}")
+    # TODO - Update and check for proper exceptions
+    except DocumentNotFound as e:
+        raise EntityNotFound(message=f"No projects found for organization {organization_id}", name="Projects")
+    except CollectionWasNotInitialized as e:
+        raise DatabaseConfigurationError("Database collection was not properly initialized")
