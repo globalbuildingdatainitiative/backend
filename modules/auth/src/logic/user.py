@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 import strawberry
 from strawberry import UNSET
@@ -51,6 +52,8 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
 
     if filters:
         gql_users = filter_users(gql_users, filters)
+    if sort_by:
+        gql_users = sort_users(gql_users, sort_by)
 
     return gql_users
 
@@ -142,15 +145,97 @@ async def reject_invitation(user_id: str) -> bool:
 
 
 def filter_users(users: list[GraphQLUser], filters: UserFilters) -> list[GraphQLUser]:
-    filtered_users = []
+    filtered_users = users.copy()
 
-    for filter_key, filter_value in filters.__dict__.items():
-        if filter_value and filter_value.equal is not None:
-            if filter_key == "organizationId":
-                filtered_users = [
-                    user for user in filtered_users if str(user.organization_id) == str(filter_value.equal)
-                ]
-            elif hasattr(users[0], filter_key):
-                filtered_users = [user for user in users if getattr(user, filter_key) == filter_value.equal]
+    for field_name, filter_value in filters.__dict__.items():
+        if not filter_value:
+            continue
+
+        # Map frontend field names to model attributes
+        field_mapping = {
+            "timeJoined": "time_joined",
+            "organizationId": "organization_id",
+            "firstName": "first_name",
+            "lastName": "last_name",
+            "inviteStatus": "invite_status",
+            "inviterName": "inviter_name",
+        }
+
+        model_field = field_mapping.get(field_name, field_name)
+
+        if filter_value.equal is not None:
+            filtered_users = [
+                user
+                for user in filtered_users
+                if (model_field == "role" and user.role and user.role.value.lower() == str(filter_value.equal).lower())
+                or (
+                    model_field != "role"
+                    and str(getattr(user, model_field, None)).lower() == str(filter_value.equal).lower()
+                )
+            ]
+        elif filter_value.contains is not None:
+            filtered_users = [
+                user
+                for user in filtered_users
+                if (model_field == "role" and user.role and filter_value.contains.lower() in user.role.value.lower())
+                or (
+                    model_field != "role"
+                    and filter_value.contains.lower() in str(getattr(user, model_field, "")).lower()
+                )
+            ]
+        elif filter_value.is_true is not None:
+            filtered_users = [
+                user for user in filtered_users if bool(getattr(user, model_field, False)) == filter_value.is_true
+            ]
 
     return filtered_users
+
+
+def sort_users(users: list[GraphQLUser], sort_by: UserSort | None = None) -> list[GraphQLUser]:
+    if not sort_by:
+        return users
+
+    sorted_users = users.copy()
+
+    field = None
+    reverse = False
+
+    if sort_by.asc is not strawberry.UNSET:
+        field = sort_by.asc
+        reverse = False
+    elif sort_by.dsc is not strawberry.UNSET:
+        field = sort_by.dsc
+        reverse = True
+
+    if not field:
+        return sorted_users
+
+    field_mapping = {
+        "name": "first_name",
+        "firstName": "first_name",
+        "lastName": "last_name",
+        "timeJoined": "time_joined",
+        "organizationId": "organization_id",
+        "inviteStatus": "invite_status",
+        "inviterName": "inviter_name",
+    }
+
+    sort_field = field_mapping.get(field, field)
+
+    def get_sort_key(user):
+        value = getattr(user, sort_field, None)
+        if value is None:
+            return (True, "")  # None values go last
+
+        # Handle special cases
+        if sort_field == "role":
+            return (False, value.value if value else "")  # Convert enum to string value
+        elif sort_field == "first_name" and field == "name":
+            return (False, f"{getattr(user, 'first_name', '')} {getattr(user, 'last_name', '')}")
+        elif isinstance(value, (datetime, UUID)):
+            return (False, str(value))
+        else:
+            return (False, str(value))
+
+    sorted_users.sort(key=get_sort_key, reverse=reverse)
+    return sorted_users
