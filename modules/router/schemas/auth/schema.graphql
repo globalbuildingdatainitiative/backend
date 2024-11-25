@@ -1,3 +1,5 @@
+directive @oneOf on INPUT_OBJECT
+
 schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key", "@shareable"]) {
   query: Query
   mutation: Mutation
@@ -16,6 +18,9 @@ scalar DateTime
 
 input FilterOptions {
   equal: String = null
+  contains: String = null
+  startsWith: String = null
+  endsWith: String = null
   isTrue: Boolean = null
 }
 
@@ -66,11 +71,6 @@ enum Role {
   MEMBER
 }
 
-enum SortOptions {
-  ASC
-  DSC
-}
-
 scalar UUID
 
 input UpdateUserInput {
@@ -110,18 +110,12 @@ input UserFilters {
   inviteStatus: FilterOptions = null
   inviterName: FilterOptions = null
   role: FilterOptions = null
+  timeJoined: FilterOptions = null
 }
 
-input UserSort {
-  id: SortOptions = null
-  firstName: SortOptions = null
-  lastName: SortOptions = null
-  name: SortOptions = null
-  organizationId: SortOptions = null
-  invited: SortOptions = null
-  inviteStatus: SortOptions = null
-  inviterName: SortOptions = null
-  role: SortOptions = null
+input UserSort @oneOf {
+  asc: String
+  dsc: String
 }
 
 scalar _Any

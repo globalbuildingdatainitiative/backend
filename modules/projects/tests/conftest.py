@@ -1,3 +1,5 @@
+import json
+from datetime import datetime
 from typing import Iterator
 from uuid import uuid4
 
@@ -134,3 +136,44 @@ async def client_unauthenticated(app_unauthenticated: FastAPI) -> Iterator[Async
             yield _client
         except Exception as exc:
             print(exc)
+
+
+@pytest.fixture
+async def projects(user, datafix_dir):
+    """Create test projects linked to contributions"""
+    from models import DBProject
+
+    # Load project template from JSON
+    project_data = json.loads((datafix_dir / "project.json").read_text())
+
+    # Create multiple test projects
+    _projects = []
+    for i in range(3):  # Create 3 test projects
+        project_data["id"] = str(uuid4())
+        project_data["name"] = f"Test Project {i}"
+        project = DBProject(**project_data)
+        await project.insert()
+        _projects.append(project)
+
+    return _projects
+
+
+@pytest.fixture
+async def contributions(user, projects):
+    """Create test contributions linked to projects"""
+    from models import DBContribution
+
+    _contributions = []
+    for project in projects:
+        contribution = DBContribution(
+            id=uuid4(),
+            project=project,
+            user_id=user.id,
+            organization_id=user.organization_id,
+            uploaded_at=datetime.now(),
+            public=True,
+        )
+        await contribution.insert()
+        _contributions.append(contribution)
+
+    return _contributions

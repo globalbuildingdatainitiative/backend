@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from strawberry.federation.schema_directives import Shareable
 
 from core.auth import FAKE_PASSWORD
-from .sort_filter import BaseFilter, FilterOptions, SortOptions
+from .sort_filter import BaseFilter, FilterOptions
 
 
 @strawberry.enum
@@ -76,19 +76,13 @@ class UserFilters(BaseFilter):
     invite_status: FilterOptions | None = None
     inviter_name: FilterOptions | None = None
     role: FilterOptions | None = None
+    time_joined: FilterOptions | None = None
 
 
-@strawberry.input
+@strawberry.input(one_of=True)
 class UserSort(BaseFilter):
-    id: SortOptions | None = None
-    first_name: SortOptions | None = None
-    last_name: SortOptions | None = None
-    name: SortOptions | None = None
-    organization_id: SortOptions | None = None
-    invited: SortOptions | None = None
-    invite_status: SortOptions | None = None
-    inviter_name: SortOptions | None = None
-    role: SortOptions | None = None
+    asc: str | None = strawberry.UNSET
+    dsc: str | None = strawberry.UNSET
 
 
 @strawberry.input

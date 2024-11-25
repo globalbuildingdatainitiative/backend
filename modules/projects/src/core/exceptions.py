@@ -38,3 +38,17 @@ class ThrottleError(GBDIApiError):
     """Raised when a service is throttled"""
 
     pass
+
+
+class DatabaseError(GBDIApiError):
+    """Raised when a database operation fails"""
+
+    def __init__(self, message: str = "Database operation failed"):
+        super().__init__(message=message, name="Database Error")
+
+
+class DatabaseConfigurationError(DatabaseError):
+    """Raised when there's a database configuration or initialization issue"""
+
+    def __init__(self, message: str = "Database configuration error"):
+        super().__init__(message=message)

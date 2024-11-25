@@ -490,6 +490,9 @@ type Energy {
 
 input FilterBy {
   equal: JSON = null
+  contains: JSON = null
+  startsWith: JSON = null
+  endsWith: JSON = null
   gt: JSON = null
   gte: JSON = null
   lt: JSON = null
