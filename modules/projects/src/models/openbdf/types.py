@@ -33,6 +33,7 @@ from models.openbdf.enums import (
     GraphQLProjectPhase,
     GraphQLBuildingModelScope,
 )
+from models.openbdf.utils import _resolve_dict_value
 
 
 @strawberry.experimental.pydantic.type(model=LCAxValueUnit, name="ValueUnit")
@@ -469,7 +470,7 @@ class GraphQLAssessmentMetaData:
 
     @strawberry.field
     def assessor(self: dict) -> GraphQLAssessor | None:
-        return self.get("assessor")
+        return _resolve_dict_value(self, "assessor", GraphQLAssessor)
 
     @strawberry.field
     def year(self: dict) -> int | None:
@@ -752,7 +753,7 @@ class GraphQLPublicationMetaData:
 class GraphQLStructuralMetaData:
     @strawberry.field
     def column_grid_long(self: dict) -> GraphQLValueUnit | None:
-        return self.get("column_grid_long")
+        return _resolve_dict_value(self, "column_grid_long", GraphQLValueUnit)
 
     @strawberry.field
     def risk_category(self: dict) -> str | None:
@@ -760,15 +761,15 @@ class GraphQLStructuralMetaData:
 
     @strawberry.field
     def live_load(self: dict) -> GraphQLValueUnit | None:
-        return self.get("live_load")
+        return _resolve_dict_value(self, "live_load", GraphQLValueUnit)
 
     @strawberry.field
     def snow_load(self: dict) -> GraphQLValueUnit | None:
-        return self.get("snow_load")
+        return _resolve_dict_value(self, "snow_load", GraphQLValueUnit)
 
     @strawberry.field
     def wind_speed(self: dict) -> GraphQLValueUnit | None:
-        return self.get("wind_speed")
+        return _resolve_dict_value(self, "wind_speed", GraphQLValueUnit)
 
     @strawberry.field
     def earthquake_importance_factor(self: dict) -> float | None:
@@ -804,7 +805,7 @@ class GraphQLStructuralMetaData:
 
     @strawberry.field
     def allowable_soil_bearing_pressure(self: dict) -> GraphQLValueUnit | None:
-        return self.get("allowable_soil_bearing_pressure")
+        return _resolve_dict_value(self, "allowable_soil_bearing_pressure", GraphQLValueUnit)
 
     @strawberry.field
     def foundation_type(self: dict) -> str | None:
@@ -815,7 +816,7 @@ class GraphQLStructuralMetaData:
 class GraphQLProjectMetaData:
     @strawberry.field
     def source(self: dict) -> GraphQLSource | None:
-        return GraphQLSource(**self.get("source"))
+        return _resolve_dict_value(self, "source", GraphQLSource)
 
     @strawberry.field
     def product_classification_system(self: dict) -> str | None:
@@ -831,11 +832,11 @@ class GraphQLProjectMetaData:
 
     @strawberry.field
     def owner(self: dict) -> GraphQLOwnerMetaData | None:
-        return self.get("owner")
+        return _resolve_dict_value(self, "owner", GraphQLOwnerMetaData)
 
     @strawberry.field
     def assessment(self: dict) -> GraphQLAssessmentMetaData | None:
-        return GraphQLAssessmentMetaData(**self.get("assessment"))
+        return _resolve_dict_value(self, "assessment", GraphQLAssessmentMetaData)
 
     @strawberry.field
     def lca_software_version(self: dict) -> str | None:
@@ -863,28 +864,23 @@ class GraphQLProjectMetaData:
 
     @strawberry.field
     def newly_built_area(self: dict) -> GraphQLValueUnit | None:
-        value = self.get("newly_built_area")
-        return GraphQLValueUnit(**value) if value else None
+        return _resolve_dict_value(self, "newly_built_area", GraphQLValueUnit)
 
     @strawberry.field
     def retrofitted_area(self: dict) -> GraphQLValueUnit | None:
-        value = self.get("retrofitted_area")
-        return GraphQLValueUnit(**value) if value else None
+        return _resolve_dict_value(self, "retrofitted_area", GraphQLValueUnit)
 
     @strawberry.field
     def demolished_area(self: dict) -> GraphQLValueUnit | None:
-        value = self.get("demolished_area")
-        return GraphQLValueUnit(**value) if value else None
+        return _resolve_dict_value(self, "demolished_area", GraphQLValueUnit)
 
     @strawberry.field
     def existing_area(self: dict) -> GraphQLValueUnit | None:
-        value = self.get("existing_area")
-        return GraphQLValueUnit(**value) if value else None
+        return _resolve_dict_value(self, "existing_area", GraphQLValueUnit)
 
     @strawberry.field
     def built_floor_area(self: dict) -> GraphQLValueUnit | None:
-        value = self.get("built_floor_area")
-        return GraphQLValueUnit(**value) if value else None
+        return _resolve_dict_value(self, "built_floor_area", GraphQLValueUnit)
 
     @strawberry.field
     def building_project_construction_type_2(self: dict) -> str | None:
@@ -908,44 +904,35 @@ class GraphQLProjectMetaData:
 
     @strawberry.field
     def project_work_area(self: dict) -> GraphQLValueUnit | None:
-        value = self.get("project_work_area")
-        return GraphQLValueUnit(**value) if value else None
+        return _resolve_dict_value(self, "project_work_area", GraphQLValueUnit)
 
     @strawberry.field
     def project_site_area(self: dict) -> GraphQLValueUnit | None:
-        value = self.get("project_site_area")
-        return GraphQLValueUnit(**value) if value else None
+        return _resolve_dict_value(self, "project_site_area", GraphQLValueUnit)
 
     @strawberry.field
     def conditioned_floor_area(self: dict) -> GraphQLValueUnit | None:
-        value = self.get("conditioned_floor_area")
-        return GraphQLValueUnit(**value) if value else None
+        return _resolve_dict_value(self, "conditioned_floor_area", GraphQLValueUnit)
 
     @strawberry.field
     def unconditioned_floor_area(self: dict) -> GraphQLValueUnit | None:
-        value = self.get("unconditioned_floor_area")
-        return GraphQLValueUnit(**value) if value else None
+        return _resolve_dict_value(self, "unconditioned_floor_area", GraphQLValueUnit)
 
     @strawberry.field
     def enclosed_parking_area(self: dict) -> GraphQLValueUnit | None:
-        value = self.get("enclosed_parking_area")
-        return GraphQLValueUnit(**value) if value else None
+        return _resolve_dict_value(self, "enclosed_parking_area", GraphQLValueUnit)
 
     @strawberry.field
     def detached_parking_area(self: dict) -> GraphQLValueUnit | None:
-        value = self.get("detached_parking_area")
-        return GraphQLValueUnit(**value) if value else None
+        return _resolve_dict_value(self, "detached_parking_area", GraphQLValueUnit)
 
     @strawberry.field
     def surface_parking_area(self: dict) -> GraphQLValueUnit | None:
-        value = self.get("surface_parking_area")
-        return GraphQLValueUnit(**value) if value else None
+        return _resolve_dict_value(self, "surface_parking_area", GraphQLValueUnit)
 
     @strawberry.field
     def detached_parking_structure_area(self: dict) -> GraphQLValueUnit | None:
-        value = self.get("detached_parking_structure_area")
-
-        return GraphQLValueUnit(**value) if value else None
+        return _resolve_dict_value(self, "detached_parking_structure_area", GraphQLValueUnit)
 
     @strawberry.field
     def ibc_construction_type(self: dict) -> str | None:
@@ -969,8 +956,7 @@ class GraphQLProjectMetaData:
 
     @strawberry.field
     def mean_roof_height(self: dict) -> GraphQLValueUnit | None:
-        value =self.get("mean_roof_height")
-        return GraphQLValueUnit(**value) if value else None
+        return _resolve_dict_value(self, "mean_roof_height", GraphQLValueUnit)
 
     @strawberry.field
     def window_wall_ratio(self: dict) -> float | None:
@@ -978,8 +964,7 @@ class GraphQLProjectMetaData:
 
     @strawberry.field
     def thermal_envelope_area(self: dict) -> GraphQLValueUnit | None:
-        value = self.get("thermal_envelope_area")
-        return GraphQLValueUnit(**value) if value else None
+        return _resolve_dict_value(self, "thermal_envelope_area", GraphQLValueUnit)
 
     @strawberry.field
     def residential_units(self: dict) -> int | None:
@@ -1023,7 +1008,7 @@ class GraphQLProjectMetaData:
 
     @strawberry.field
     def energy(self: dict) -> GraphQLEnergyMetaData | None:
-        return self.get("energy")
+        return _resolve_dict_value(self, "energy", GraphQLEnergyMetaData)
 
     @strawberry.field
     def architect_of_record(self: dict) -> str | None:
@@ -1070,7 +1055,7 @@ class GraphQLProjectMetaData:
         return self.get("work_completion_year")
 
     @strawberry.field
-    def construction_start(self: dict) -> date | None:
+    def construction_start(self: dict) -> str | None:
         return self.get("construction_start")
 
     @strawberry.field
@@ -1078,20 +1063,20 @@ class GraphQLProjectMetaData:
         return self.get("construction_year_existing_building")
 
     @strawberry.field
-    def building_occupancy_start(self: dict) -> date | None:
+    def building_occupancy_start(self: dict) -> str | None:
         return self.get("building_occupancy_start")
 
     @strawberry.field
     def cost(self: dict) -> GraphQLCostMetaData | None:
-        return self.get("cost")
+        return _resolve_dict_value(self, "cost", GraphQLCostMetaData)
 
     @strawberry.field
     def structural(self: dict) -> GraphQLStructuralMetaData | None:
-        return self.get("structural")
+        return _resolve_dict_value(self, "structural", GraphQLStructuralMetaData)
 
     @strawberry.field
     def publication(self: dict) -> GraphQLPublicationMetaData | None:
-        return self.get("publication")
+        return _resolve_dict_value(self, "publication", GraphQLPublicationMetaData)
 
 
 @strawberry.experimental.pydantic.type(model=LCAxProject, name="Project")
