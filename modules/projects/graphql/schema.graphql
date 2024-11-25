@@ -919,9 +919,9 @@ type ProjectMetaData {
   interiorDesigner: String
   otherProjectTeam: String
   workCompletionYear: Int
-  constructionStart: Date
+  constructionStart: String
   constructionYearExistingBuilding: Int
-  buildingOccupancyStart: Date
+  buildingOccupancyStart: String
   cost: Cost
   structural: Structural
   publication: Publication
