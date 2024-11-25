@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import Path
 from uuid import UUID
 
@@ -10,7 +11,6 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 from core.exceptions import MicroServiceConnectionError, ThrottleError
 from models import DBProject
 from models.response import AggregationMethod
-import logging
 
 logger = logging.getLogger(__name__)
 

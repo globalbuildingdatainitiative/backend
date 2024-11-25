@@ -3,12 +3,12 @@ from uuid import UUID
 
 from beanie.exceptions import DocumentNotFound, CollectionWasNotInitialized, RevisionIdWasChanged
 
-from models import DBProject, FilterBy, SortBy, filter_model_query, sort_model_query
 from core.exceptions import (
     EntityNotFound,
     DatabaseError,
     DatabaseConfigurationError,
 )
+from models import DBProject, FilterBy, SortBy, filter_model_query, sort_model_query
 
 logger = logging.getLogger("main")
 
