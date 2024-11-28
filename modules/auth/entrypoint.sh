@@ -6,7 +6,7 @@ cd /app/src
 
 echo "Running UVicorn "
 if [ "$RUN_STAGE" = 'DEV' ]; then
-  uvicorn main:app --host 0.0.0.0 --reload --no-access-log;
+  uvicorn main:app --host 0.0.0.0 --reload;
 else
   uvicorn main:app --host 0.0.0.0;
 fi;

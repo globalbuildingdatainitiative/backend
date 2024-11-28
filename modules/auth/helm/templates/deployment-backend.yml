@@ -129,7 +129,7 @@ spec:
     spec:
       containers:
         - name: supertokens
-          image: registry.supertokens.io/supertokens/supertokens-postgresql:9.0
+          image: 'registry.supertokens.io/supertokens/supertokens-postgresql:{{ .Values.supertokens.image.tag }}'
           ports:
             - containerPort: 3567
           env:
@@ -162,6 +162,9 @@ spec:
                 configMapKeyRef:
                   name: {{ .Values.db.configmap }}
                   key: POSTGRES_PORT
+
+            - name: ACCESS_TOKEN_VALIDITY
+              value: "{{ .Values.supertokens.accessTokenValidity }}"
 
           startupProbe:
             httpGet:

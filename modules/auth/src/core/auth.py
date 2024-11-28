@@ -1,7 +1,18 @@
+import logging
+from typing import List, Dict, Any, Union
+from uuid import UUID
+
 from supertokens_python import init, InputAppInfo, SupertokensConfig
 from supertokens_python.framework.request import BaseRequest
+from supertokens_python.ingredients.emaildelivery.types import (
+    EmailDeliveryConfig,
+    SMTPSettings,
+    SMTPSettingsFrom,
+    EmailContent,
+)
 from supertokens_python.recipe import session, userroles, usermetadata, emailpassword, dashboard, jwt, emailverification
 from supertokens_python.recipe.emailpassword import InputFormField
+from supertokens_python.recipe.emailpassword.asyncio import get_user_by_id
 from supertokens_python.recipe.emailpassword.interfaces import (
     APIInterface,
     APIOptions,
@@ -13,20 +24,13 @@ from supertokens_python.recipe.emailpassword.interfaces import (
     ResetPasswordUsingTokenInvalidTokenError,
 )
 from supertokens_python.recipe.emailpassword.types import FormField, PasswordResetEmailTemplateVars, SMTPOverrideInput
-from supertokens_python.ingredients.emaildelivery.types import (
-    EmailDeliveryConfig,
-    SMTPSettings,
-    SMTPSettingsFrom,
-    EmailContent,
-)
-from typing import List, Dict, Any, Union
-from core.config import settings
-from uuid import UUID
-from supertokens_python.recipe.emailpassword.asyncio import get_user_by_id
 from supertokens_python.recipe.usermetadata.asyncio import get_user_metadata, update_user_metadata
+
+from core.config import settings
 
 FAKE_PASSWORD = "asokdA87fnf30efjoiOI**cwjkn"
 LOGO_URL = "https://app.gbdi.io/favicon.png"
+logger = logging.getLogger("main")
 
 
 def get_origin(request: BaseRequest | None, user_context) -> str:

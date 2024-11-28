@@ -1,4 +1,5 @@
 import logging.config
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import yaml
@@ -7,7 +8,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
-from supertokens_python.recipe.session.exceptions import UnauthorisedError
+from supertokens_python.recipe.session.exceptions import UnauthorisedError, TryRefreshTokenError
+
 from core.auth import supertokens_init
 from core.config import settings
 from core.connection import get_database
@@ -19,10 +21,17 @@ logging.config.dictConfig(log_config)
 
 logger = logging.getLogger("main")
 
-app = FastAPI(
-    title=settings.SERVER_NAME,
-    openapi_url=f"{settings.API_STR}/openapi.json",
-)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    from models import DBOrganization
+
+    db = get_database()
+    await init_beanie(database=db, document_models=[DBOrganization])
+    yield
+
+
+app = FastAPI(title=settings.SERVER_NAME, openapi_url=f"{settings.API_STR}/openapi.json", lifespan=lifespan)
 
 supertokens_init()
 
@@ -37,14 +46,6 @@ if settings.BACKEND_CORS_ORIGINS:
     )
 
 app.include_router(graphql_app, prefix=settings.API_STR)
-
-
-@app.on_event("startup")
-async def app_init():
-    from models import DBOrganization
-
-    db = get_database()
-    await init_beanie(database=db, document_models=[DBOrganization])
 
 
 @app.exception_handler(UnauthorisedError)
@@ -64,4 +65,24 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
     return JSONResponse(
         status_code=400,
         content={"data": "Invalid request data"},
+    )
+
+
+@app.exception_handler(TryRefreshTokenError)
+async def refresh_exception_handler(request: Request, exc: TryRefreshTokenError):
+    logger.error(exc)
+
+    return JSONResponse(
+        status_code=401,
+        content={"data": "Access token expired"},
+    )
+
+
+@app.exception_handler(Exception)
+async def exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unknown Error {type(exc)} - {exc}")
+
+    return JSONResponse(
+        status_code=500,
+        content={"data": exc},
     )

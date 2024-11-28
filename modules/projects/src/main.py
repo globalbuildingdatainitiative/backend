@@ -8,7 +8,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
-from supertokens_python.recipe.session.exceptions import UnauthorisedError
+from supertokens_python.recipe.session.exceptions import UnauthorisedError, TryRefreshTokenError
 
 from core.auth import supertokens_init
 from core.config import settings
@@ -64,6 +64,16 @@ async def unauthorised_exception_handler(request: Request, exc: UnauthorisedErro
     )
 
 
+@app.exception_handler(TryRefreshTokenError)
+async def refresh_exception_handler(request: Request, exc: TryRefreshTokenError):
+    logger.error(exc)
+
+    return JSONResponse(
+        status_code=401,
+        content={"data": "Access token expired"},
+    )
+
+
 @app.exception_handler(ValidationError)
 async def validation_exception_handler(request: Request, exc: ValidationError):
     logger.error(exc)
@@ -76,7 +86,7 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
 
 @app.exception_handler(Exception)
 async def exception_handler(request: Request, exc: Exception):
-    logger.error(exc)
+    logger.error(f"Unknown Error {type(exc)} - {exc}")
 
     return JSONResponse(
         status_code=500,
