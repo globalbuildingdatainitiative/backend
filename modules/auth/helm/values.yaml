@@ -56,3 +56,8 @@ smtp:
     providerNamespace: ''
     passwordValue: ''
     usernameValue: ''
+
+supertokens:
+  accessTokenValidity: 3600
+  image:
+    tag: '9.0'
