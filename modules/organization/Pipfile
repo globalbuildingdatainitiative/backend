@@ -9,13 +9,13 @@ uvicorn = {extras = ["standard"], version = "*"}
 strawberry-graphql = {extras = ["fastapi", "cli"], version = ">=0.134.0"}
 tenacity = "*"
 beanie = "*"
-supertokens-python = "*"
+supertokens-python = "<0.25.0"
 httpx = "*"
 pyyaml = "*"
 
 [dev-packages]
 asgi-lifespan="*"
-pydevd-pycharm = ">=242.21829.153"
+pydevd-pycharm = ">=243.21565.199"
 pre-commit = "*"
 docker = "*"
 pytest = "*"
