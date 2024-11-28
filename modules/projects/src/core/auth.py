@@ -1,8 +1,12 @@
+import logging
+
 from supertokens_python import init, InputAppInfo, SupertokensConfig
 from supertokens_python.framework.request import BaseRequest
 from supertokens_python.recipe import session, userroles, usermetadata
 
 from core.config import settings
+
+logger = logging.getLogger("main")
 
 
 def get_origin(request: BaseRequest | None, user_context) -> str:
