@@ -130,7 +130,7 @@ manifests:
           backend.logLevel: "DEBUG"
           appDomain: "localhost:8000"
           appProtocol: "http"
-#          supertokens.accessTokenValidity: 45
+#          supertokens.accessTokenValidity: 120
         setValueTemplates:
           smtp.host: "{{ .SMTP_HOST }}"
           smtp.port: "{{ .SMTP_PORT }}"

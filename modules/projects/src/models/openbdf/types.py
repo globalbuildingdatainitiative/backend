@@ -1,4 +1,5 @@
-from datetime import date
+import logging
+from datetime import date, datetime
 from typing import Union
 from uuid import UUID
 
@@ -34,6 +35,8 @@ from models.openbdf.enums import (
     GraphQLBuildingModelScope,
 )
 from models.openbdf.utils import _resolve_dict_value
+
+logger = logging.getLogger("main")
 
 
 @strawberry.experimental.pydantic.type(model=LCAxValueUnit, name="ValueUnit")
@@ -456,177 +459,59 @@ class GraphQLAssessor:
 
 @strawberry.type(name="AssessmentMetaData")
 class GraphQLAssessmentMetaData:
-    @strawberry.field
-    def assessment_methodology_description(self: dict) -> str | None:
-        return self.get("assessment_methodology_description")
+    assessment_methodology_description: str | None = None
+    uncertainty: float | None = None
+    cutoff_method: str | None = None
+    assessor: GraphQLAssessor | None = None
+    year: int | None = None
 
     @strawberry.field
-    def uncertainty(self: dict) -> float | None:
-        return self.get("uncertainty")
+    def date(self) -> date | None:
+        value = self.date
+        if not value:
+            return None
+        elif isinstance(value, str):
+            return datetime.strptime(value, "%d/%m/%Y %H:%M:%S").date()
+        else:
+            return value
 
-    @strawberry.field
-    def cutoff_method(self: dict) -> str | None:
-        return self.get("cutoff_method")
-
-    @strawberry.field
-    def assessor(self: dict) -> GraphQLAssessor | None:
-        return _resolve_dict_value(self, "assessor", GraphQLAssessor)
-
-    @strawberry.field
-    def year(self: dict) -> int | None:
-        return self.get("year")
-
-    @strawberry.field
-    def date(self: dict) -> date | None:
-        return self.get("date")
-
-    @strawberry.field
-    def quantity_source(self: dict) -> str | None:
-        return self.get("quantity_source")
-
-    @strawberry.field
-    def quantity_source_detail(self: dict) -> str | None:
-        return self.get("quantity_source_detail")
-
-    @strawberry.field
-    def purpose(self: dict) -> str | None:
-        return self.get("purpose")
-
-    @strawberry.field
-    def iso21931_compliance(self: dict) -> bool | None:
-        return self.get("iso21931_compliance")
-
-    @strawberry.field
-    def en15978_compliance(self: dict) -> bool | None:
-        return self.get("en15978_compliance")
-
-    @strawberry.field
-    def rics_2017_compliance(self: dict) -> bool | None:
-        return self.get("rics_2017_compliance")
-
-    @strawberry.field
-    def rics_2023_compliance(self: dict) -> bool | None:
-        return self.get("rics_2023_compliance")
-
-    @strawberry.field
-    def ashrae_240p_compliance(self: dict) -> bool | None:
-        return self.get("ashrae_240p_compliance")
-
-    @strawberry.field
-    def sei_prestandard_compliance(self: dict) -> bool | None:
-        return self.get("sei_prestandard_compliance")
-
-    @strawberry.field
-    def verified(self: dict) -> bool | None:
-        return self.get("verified")
-
-    @strawberry.field
-    def verified_info(self: dict) -> str | None:
-        return self.get("verified_info")
-
-    @strawberry.field
-    def validity_period(self: dict) -> str | None:
-        return self.get("validity_period")
-
-    @strawberry.field
-    def results_validation_description(self: dict) -> str | None:
-        return self.get("results_validation_description")
-
-    @strawberry.field
-    def tool_report_upload(self: dict) -> Base64 | None:
-        return self.get("tool_report_upload")
-
-    @strawberry.field
-    def report_name(self: dict) -> str | None:
-        return self.get("report_name")
-
-    @strawberry.field
-    def additional_lca_report_name(self: dict) -> str | None:
-        return self.get("additional_lca_report_name")
-
-    @strawberry.field
-    def project_phase_at_reporting(self: dict) -> str | None:
-        return self.get("project_phase_at_reporting")
-
-    @strawberry.field
-    def project_phase_at_time_of_assessment(self: dict) -> str | None:
-        return self.get("project_phase_at_time_of_assessment")
-
-    @strawberry.field
-    def operational_energy_included(self: dict) -> bool | None:
-        return self.get("operational_energy_included")
-
-    @strawberry.field
-    def biogenic_carbon_included(self: dict) -> bool | None:
-        return self.get("biogenic_carbon_included")
-
-    @strawberry.field
-    def biogenic_carbon_accounting_method(self: dict) -> str | None:
-        return self.get("biogenic_carbon_accounting_method")
-
-    @strawberry.field
-    def bio_sustainability_certification(self: dict) -> str | None:
-        return self.get("bio_sustainability_certification")
-
-    @strawberry.field
-    def biogenic_carbon_description(self: dict) -> str | None:
-        return self.get("biogenic_carbon_description")
-
-    @strawberry.field
-    def project_refrigerants(self: dict) -> str | None:
-        return self.get("project_refrigerants")
-
-    @strawberry.field
-    def refrigerant_type_included(self: dict) -> str | None:
-        return self.get("refrigerant_type_included")
-
-    @strawberry.field
-    def substructure_scope(self: dict) -> str | None:
-        return self.get("substructure_scope")
-
-    @strawberry.field
-    def shell_superstructure_scope(self: dict) -> str | None:
-        return self.get("shell_superstructure_scope")
-
-    @strawberry.field
-    def shell_exterior_enclosure_scope(self: dict) -> str | None:
-        return self.get("shell_exterior_enclosure_scope")
-
-    @strawberry.field
-    def interior_construction_scope(self: dict) -> str | None:
-        return self.get("interior_construction_scope")
-
-    @strawberry.field
-    def interior_finishes_scope(self: dict) -> str | None:
-        return self.get("interior_finishes_scope")
-
-    @strawberry.field
-    def services_mechanical_scope(self: dict) -> str | None:
-        return self.get("services_mechanical_scope")
-
-    @strawberry.field
-    def services_electrical_scope(self: dict) -> str | None:
-        return self.get("services_electrical_scope")
-
-    @strawberry.field
-    def services_plumbing_scope(self: dict) -> str | None:
-        return self.get("services_plumbing_scope")
-
-    @strawberry.field
-    def sitework_scope(self: dict) -> str | None:
-        return self.get("sitework_scope")
-
-    @strawberry.field
-    def equipment_scope(self: dict) -> str | None:
-        return self.get("equipment_scope")
-
-    @strawberry.field
-    def furnishings_scope(self: dict) -> str | None:
-        return self.get("furnishings_scope")
-
-    @strawberry.field
-    def lca_requirements(self: dict) -> str | None:
-        return self.get("lca_requirements")
+    quantity_source: str | None = None
+    quantity_source_detail: str | None = None
+    purpose: str | None = None
+    iso21931_compliance: bool | None = None
+    en15978_compliance: bool | None = None
+    rics_2017_compliance: bool | None = None
+    rics_2023_compliance: bool | None = None
+    ashrae_240p_compliance: bool | None = None
+    sei_prestandard_compliance: bool | None = None
+    verified: bool | None = None
+    verified_info: str | None = None
+    validity_period: str | None = None
+    results_validation_description: str | None = None
+    tool_report_upload: Base64 | None = None
+    report_name: str | None = None
+    additional_lca_report_name: str | None = None
+    project_phase_at_reporting: str | None = None
+    project_phase_at_time_of_assessment: str | None = None
+    operational_energy_included: bool | None = None
+    biogenic_carbon_included: bool | None = None
+    biogenic_carbon_accounting_method: str | None = None
+    bio_sustainability_certification: str | None = None
+    biogenic_carbon_description: str | None = None
+    project_refrigerants: str | None = None
+    refrigerant_type_included: str | None = None
+    substructure_scope: str | None = None
+    shell_superstructure_scope: str | None = None
+    shell_exterior_enclosure_scope: str | None = None
+    interior_construction_scope: str | None = None
+    interior_finishes_scope: str | None = None
+    services_mechanical_scope: str | None = None
+    services_electrical_scope: str | None = None
+    services_plumbing_scope: str | None = None
+    sitework_scope: str | None = None
+    equipment_scope: str | None = None
+    furnishings_scope: str | None = None
+    lca_requirements: str | None = None
 
 
 @strawberry.type(name="Owner")
@@ -697,33 +582,13 @@ class GraphQLEnergyMetaData:
 
 @strawberry.type(name="Cost")
 class GraphQLCostMetaData:
-    @strawberry.field
-    def currency(self: dict) -> str | None:
-        return self.get("currency")
-
-    @strawberry.field
-    def total_cost(self: dict) -> float | None:
-        return self.get("total_cost")
-
-    @strawberry.field
-    def hard_cost(self: dict) -> float | None:
-        return self.get("hard_cost")
-
-    @strawberry.field
-    def soft_cost(self: dict) -> float | None:
-        return self.get("soft_cost")
-
-    @strawberry.field
-    def siteworks_cost(self: dict) -> float | None:
-        return self.get("siteworks_cost")
-
-    @strawberry.field
-    def cost_source(self: dict) -> str | None:
-        return self.get("cost_source")
-
-    @strawberry.field
-    def notes(self: dict) -> str | None:
-        return self.get("notes")
+    currency: str | None = None
+    total_cost: float | None = None
+    hard_cost: float | None = None
+    soft_cost: float | None = None
+    siteworks_cost: float | None = None
+    cost_source: str | None = None
+    notes: str | None = None
 
 
 @strawberry.type(name="Publication")
@@ -755,9 +620,7 @@ class GraphQLStructuralMetaData:
     def column_grid_long(self: dict) -> GraphQLValueUnit | None:
         return _resolve_dict_value(self, "column_grid_long", GraphQLValueUnit)
 
-    @strawberry.field
-    def risk_category(self: dict) -> str | None:
-        return self.get("risk_category")
+    risk_category: str | None = None
 
     @strawberry.field
     def live_load(self: dict) -> GraphQLValueUnit | None:
@@ -771,45 +634,20 @@ class GraphQLStructuralMetaData:
     def wind_speed(self: dict) -> GraphQLValueUnit | None:
         return _resolve_dict_value(self, "wind_speed", GraphQLValueUnit)
 
-    @strawberry.field
-    def earthquake_importance_factor(self: dict) -> float | None:
-        return self.get("earthquake_importance_factor")
-
-    @strawberry.field
-    def seismic_design_category(self: dict) -> str | None:
-        return self.get("seismic_design_category")
-
-    @strawberry.field
-    def horizontal_gravity_system(self: dict) -> str | None:
-        return self.get("horizontal_gravity_system")
-
-    @strawberry.field
-    def secondary_horizontal_gravity_system(self: dict) -> str | None:
-        return self.get("secondary_horizontal_gravity_system")
-
-    @strawberry.field
-    def vertical_gravity_system(self: dict) -> str | None:
-        return self.get("vertical_gravity_system")
-
-    @strawberry.field
-    def secondary_vertical_gravity_system(self: dict) -> str | None:
-        return self.get("secondary_vertical_gravity_system")
-
-    @strawberry.field
-    def lateral_system(self: dict) -> str | None:
-        return self.get("lateral_system")
-
-    @strawberry.field
-    def podium(self: dict) -> str | None:
-        return self.get("podium")
+    earthquake_importance_factor: float | None = None
+    seismic_design_category: str | None = None
+    horizontal_gravity_system: str | None = None
+    secondary_horizontal_gravity_system: str | None = None
+    vertical_gravity_system: str | None = None
+    secondary_vertical_gravity_system: str | None = None
+    lateral_system: str | None = None
+    podium: str | None = None
 
     @strawberry.field
     def allowable_soil_bearing_pressure(self: dict) -> GraphQLValueUnit | None:
         return _resolve_dict_value(self, "allowable_soil_bearing_pressure", GraphQLValueUnit)
 
-    @strawberry.field
-    def foundation_type(self: dict) -> str | None:
-        return self.get("foundation_type")
+    foundation_type: str | None = None
 
 
 @strawberry.type(name="ProjectMetaData")

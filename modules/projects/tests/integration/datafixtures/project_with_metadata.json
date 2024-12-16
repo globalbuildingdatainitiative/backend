@@ -1,0 +1,238 @@
+{
+  "assemblies": [
+    {
+      "classification": null,
+      "comment": null,
+      "description": null,
+      "id": "1b4db7eb-4057-5ddf-91e0-36dec72071f5",
+      "metaData": null,
+      "name": "",
+      "products": [
+        {
+          "description": "",
+          "id": "1b4db7eb-4057-5ddf-91e0-36dec72071f5",
+          "impactData": {
+            "comment": null,
+            "conversions": null,
+            "declaredUnit": "kg",
+            "formatVersion": "2.6.1",
+            "id": "1b4db7eb-4057-5ddf-91e0-36dec72071f5",
+            "impacts": {
+              "gwp": {
+                "a1a3": 2322.0,
+                "a4": 1062.0,
+                "a5": 421.0,
+                "b1": 0.0,
+                "b2": 0.0,
+                "b3": 0.0,
+                "b4": 0.0,
+                "b5": 0.0,
+                "c1": 0.0,
+                "c2": 11021.0,
+                "c3": 0.0,
+                "c4": 0.0,
+                "d": -3464.0
+              }
+            },
+            "location": "unknown",
+            "metaData": null,
+            "name": "",
+            "source": null,
+            "type": "actual"
+          },
+          "metaData": null,
+          "name": "",
+          "quantity": 1.0,
+          "referenceServiceLife": 1,
+          "results": {
+            "gwp": {
+              "a1a3": 2322.0,
+              "a4": 1062.0,
+              "a5": 421.0,
+              "b1": 0.0,
+              "b2": 0.0,
+              "b3": 0.0,
+              "b4": 0.0,
+              "b5": 0.0,
+              "c1": 0.0,
+              "c2": 11021.0,
+              "c3": 0.0,
+              "c4": 0.0,
+              "d": -3464.0
+            }
+          },
+          "transport": null,
+          "type": "actual",
+          "unit": "kg"
+        }
+      ],
+      "quantity": 1.0,
+      "results": {
+        "gwp": {
+          "a1a3": 2322.0,
+          "a4": 1062.0,
+          "a5": 421.0,
+          "b1": 0.0,
+          "b2": 0.0,
+          "b3": 0.0,
+          "b4": 0.0,
+          "b5": 0.0,
+          "c1": 0.0,
+          "c2": 11021.0,
+          "c3": 0.0,
+          "c4": 0.0,
+          "d": -3464.0
+        }
+      },
+      "type": "actual",
+      "unit": "kg"
+    }
+  ],
+  "classificationSystem": null,
+  "comment": null,
+  "description": "",
+  "formatVersion": "2.6.1",
+  "id": "f48a8a64-41fe-4173-8075-249aa5da79f8",
+  "impactCategories": [
+    "gwp"
+  ],
+  "lciaMethod": null,
+  "lifeCycleStages": [
+    "a1a3",
+    "a4",
+    "a5",
+    "b1",
+    "b2",
+    "b3",
+    "b4",
+    "b5",
+    "c1",
+    "c2",
+    "c3",
+    "c4",
+    "d"
+  ],
+  "location": {
+    "address": null,
+    "city": null,
+    "country": "unknown"
+  },
+  "metaData": {
+    "source": {
+      "name": "BECD",
+      "url": null
+    },
+    "construction_start": "01/01/2020 00:00:00",
+    "construction_year_existing_building": null,
+    "assessment": {
+      "year": 2021,
+      "date": "30/06/2021 00:00:00",
+      "en15978_compliance": true,
+      "rics_2017_compliance": true,
+      "verified": false,
+      "verified_info": "",
+      "assessor": {
+        "name": "Callum Kerr",
+        "email": "callum.kerr@atkinsglobal.com",
+        "organization": "Atkins"
+      },
+      "quantity_source": "consultants drawings"
+    },
+    "cost": {
+      "total_cost": 450000.0,
+      "currency": "gbp"
+    },
+    "demolished_area": {
+      "value": 0.0,
+      "unit": "m2"
+    },
+    "newly_built_area": {
+      "value": 491.31,
+      "unit": "m2"
+    },
+    "retrofitted_area": {
+      "value": 0.0,
+      "unit": "m2"
+    },
+    "project_site_area": null,
+    "thermal_envelope_area": {
+      "value": 0.0,
+      "unit": "m2"
+    },
+    "structural": {
+      "column_grid_long": {
+        "value": 4.5,
+        "unit": "m"
+      },
+      "foundation_type": "Reinforced pads/strips",
+      "vertical_gravity_system": "Timber",
+      "secondary_vertical_gravity_system": "Not applicable",
+      "horizontal_gravity_system": "Timber",
+      "secondary_horizontal_gravity_system": "Not applicable"
+    }
+  },
+  "name": "Building D1",
+  "owner": null,
+  "projectInfo": {
+    "buildingCompletionYear": 2020,
+    "buildingFootprint": {
+      "unit": "m",
+      "value": 239.0
+    },
+    "buildingHeight": {
+      "unit": "m",
+      "value": 9.356
+    },
+    "buildingMass": null,
+    "buildingModelScope": null,
+    "buildingPermitYear": null,
+    "buildingType": "new_construction_works",
+    "buildingTypology": [
+      "unknown"
+    ],
+    "buildingUsers": null,
+    "certifications": null,
+    "energyDemandElectricity": null,
+    "energyDemandHeating": null,
+    "energySupplyElectricity": null,
+    "energySupplyHeating": null,
+    "exportedElectricity": null,
+    "floorsAboveGround": 3,
+    "floorsBelowGround": 0,
+    "frameType": null,
+    "generalEnergyClass": "unknown",
+    "grossFloorArea": {
+      "definition": "GIA",
+      "unit": "m2",
+      "value": 491.31
+    },
+    "heatedFloorArea": null,
+    "localEnergyClass": null,
+    "roofType": "unknown",
+    "type": "buildingInfo"
+  },
+  "projectPhase": "other",
+  "referenceStudyPeriod": 1,
+  "results": {
+    "gwp": {
+      "a1a3": 31814.0,
+      "a4": 7969.0,
+      "a5": 4830.0,
+      "b1": 0.0,
+      "b2": 0.0,
+      "b3": 0.0,
+      "b4": 0.0,
+      "b5": 0.0,
+      "c1": 0.0,
+      "c2": 68243.0,
+      "c3": 0.0,
+      "c4": 0.0,
+      "d": -53716.0
+    }
+  },
+  "softwareInfo": {
+    "calculationType": null,
+    "goalAndScopeDefinition": "Only shell and core",
+    "lcaSoftware": "Structural Carbon Toolkit"
+  }
+}
