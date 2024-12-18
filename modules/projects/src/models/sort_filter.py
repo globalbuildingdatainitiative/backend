@@ -1,4 +1,5 @@
 import re
+from logging import getLogger
 from typing import Type
 from uuid import UUID
 
@@ -8,6 +9,7 @@ from beanie.odm.queries.find import FindMany, FindQueryResultType
 from strawberry.scalars import JSON
 from iso3166 import countries as iso_countries
 
+logger = getLogger('main')
 
 class BaseFilter:  # pragma: no cover
     def dict(self):
@@ -74,6 +76,8 @@ def filter_model_query(
 
                 field_path = field_mapping.get(_field, _field)
 
+                logger.debug(f"Filtering {_filter} by {_field} in {value}")
+
                 # Handle UUID fields specially
                 if isinstance(value, UUID) or (isinstance(value, str) and len(value) == 36):
                     if _filter == "equal":
@@ -91,8 +95,17 @@ def filter_model_query(
                         query = query.find({field_path: value})
                     elif _filter == "is_true" and value is not None:
                         query = query.find({field_path: True})
-
-            return query
+                    elif _filter == '_in':
+                        query = query.find({field_path: {"$in": value}})
+                    elif _filter == 'gt':
+                        query = query.find({field_path: {"$gt": value}})
+                    elif _filter == 'gte':
+                        query = query.find({field_path: {"$gte": value}})
+                    elif _filter == 'lt':
+                        query = query.find({field_path: {"$lt": value}})
+                    elif _filter == 'lte':
+                        query = query.find({field_path: {"$lte": value}})
+        return query
 
 
 def sort_model_query(
@@ -109,7 +122,7 @@ def sort_model_query(
 
             # Map frontend field paths to database paths
             field_mappings = {
-                "name": "project.name",  # Not working
+                # "name": "project.name",  # Not working
                 "project.location.countryName": "project.location.country",
                 "project.projectInfo.buildingType": "project.projectInfo.buildingType",
                 "uploadedAt": "uploadedAt",
@@ -120,6 +133,8 @@ def sort_model_query(
 
             # Get the correct field path or use the original if no mapping exists
             field_path = field_mappings.get(field, field)
+
+            logger.debug(f"Sorting {field_path} by {sort_direction}")
 
             # Add sort to existing query
             if sort_direction == "dsc":
@@ -150,6 +165,7 @@ class FilterBy(BaseFilter):
     lte: JSON | None = None
     not_equal: JSON | None = None
     is_true: bool | None = None
+    _in: JSON | None = strawberry.field(name="in", default=None)
 
 
 @strawberry.input(one_of=True)

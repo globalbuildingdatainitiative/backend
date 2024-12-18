@@ -499,6 +499,7 @@ input FilterBy {
   lte: JSON = null
   notEqual: JSON = null
   isTrue: Boolean = null
+  in: JSON = null
 }
 
 enum GeneralEnergyClass {
