@@ -9,7 +9,8 @@ from beanie.odm.queries.find import FindMany, FindQueryResultType
 from strawberry.scalars import JSON
 from iso3166 import countries as iso_countries
 
-logger = getLogger('main')
+logger = getLogger("main")
+
 
 class BaseFilter:  # pragma: no cover
     def dict(self):
@@ -95,15 +96,15 @@ def filter_model_query(
                         query = query.find({field_path: value})
                     elif _filter == "is_true" and value is not None:
                         query = query.find({field_path: True})
-                    elif _filter == '_in':
+                    elif _filter == "_in":
                         query = query.find({field_path: {"$in": value}})
-                    elif _filter == 'gt':
+                    elif _filter == "gt":
                         query = query.find({field_path: {"$gt": value}})
-                    elif _filter == 'gte':
+                    elif _filter == "gte":
                         query = query.find({field_path: {"$gte": value}})
-                    elif _filter == 'lt':
+                    elif _filter == "lt":
                         query = query.find({field_path: {"$lt": value}})
-                    elif _filter == 'lte':
+                    elif _filter == "lte":
                         query = query.find({field_path: {"$lte": value}})
         return query
 
