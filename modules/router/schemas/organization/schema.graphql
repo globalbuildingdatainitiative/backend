@@ -256,6 +256,9 @@ enum CountryCodes {
 
 input FilterOptions {
   equal: String = null
+  contains: String = null
+  startsWith: String = null
+  endsWith: String = null
   isTrue: Boolean = null
 }
 

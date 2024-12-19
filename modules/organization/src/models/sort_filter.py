@@ -8,12 +8,9 @@ from beanie.odm.queries.find import FindMany, FindQueryResultType
 @strawberry.input
 class FilterOptions:
     equal: str | None = None
-    # contains: str | None = None
-    # starts_with: str | None = None
-    # ends_with: str | None = None
-    # is_empty: bool | None = None
-    # is_not_empty: bool | None = None
-    # is_any_of: list[str] | None = None
+    contains: str | None = None
+    starts_with: str | None = None
+    ends_with: str | None = None
     is_true: bool | None = None
 
 
