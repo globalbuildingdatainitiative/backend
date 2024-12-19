@@ -1,4 +1,4 @@
-from .contribution import DBContribution, GraphQLContribution, InputContribution, GraphQLUser
+from .contribution import DBContribution, GraphQLContribution, InputContribution, GraphQLUser, UpdateContribution
 from .openbdf import (
     DBProject,
     DBAssembly,
@@ -23,6 +23,7 @@ __all__ = [
     DBContribution,
     GraphQLContribution,
     InputContribution,
+    UpdateContribution,
     SuperTokensUser,
     GraphQLUser,
     GraphQLResponse,

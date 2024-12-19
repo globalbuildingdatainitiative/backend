@@ -53,7 +53,6 @@ type AssessmentMetaData {
   cutoffMethod: String
   assessor: Assessor
   year: Int
-  date: Date
   quantitySource: String
   quantitySourceDetail: String
   purpose: String
@@ -91,6 +90,7 @@ type AssessmentMetaData {
   equipmentScope: String
   furnishingsScope: String
   lcaRequirements: String
+  date: Date
 }
 
 type Assessor {
@@ -499,6 +499,7 @@ input FilterBy {
   lte: JSON = null
   notEqual: JSON = null
   isTrue: Boolean = null
+  in: JSON = null
 }
 
 enum GeneralEnergyClass {
@@ -755,6 +756,12 @@ type Location {
 type Mutation {
   """Creates new Contributions"""
   addContributions(contributions: [InputContribution!]!): [Contribution!]!
+
+  """Deletes Contributions"""
+  deleteContributions(contributions: [UUID!]!): [UUID!]!
+
+  """Updates Contributions"""
+  updateContributions(contributions: [UpdateContribution!]!): [Contribution!]!
 }
 
 type Owner {
@@ -1029,11 +1036,7 @@ enum Standard {
 }
 
 type Structural {
-  columnGridLong: ValueUnit
   riskCategory: String
-  liveLoad: ValueUnit
-  snowLoad: ValueUnit
-  windSpeed: ValueUnit
   earthquakeImportanceFactor: Float
   seismicDesignCategory: String
   horizontalGravitySystem: String
@@ -1042,8 +1045,12 @@ type Structural {
   secondaryVerticalGravitySystem: String
   lateralSystem: String
   podium: String
-  allowableSoilBearingPressure: ValueUnit
   foundationType: String
+  columnGridLong: ValueUnit
+  liveLoad: ValueUnit
+  snowLoad: ValueUnit
+  windSpeed: ValueUnit
+  allowableSoilBearingPressure: ValueUnit
 }
 
 enum SubType {
@@ -1082,6 +1089,11 @@ enum Unit {
   tones_km
   kgm3
   unknown
+}
+
+input UpdateContribution {
+  id: UUID!
+  public: Boolean
 }
 
 type User @key(fields: "id") {

@@ -3,6 +3,7 @@ from uuid import UUID, uuid4
 import strawberry
 from beanie import Document, Link
 from pydantic import BaseModel, Field
+from strawberry import UNSET
 
 from .openbdf import DBProject, GraphQLProject, GraphQLInputProject
 from .sort_filter import BaseFilter, FilterBy
@@ -48,3 +49,9 @@ class ContributionFilter(BaseFilter):
     user_id: FilterBy | None = None
     organization_id: FilterBy | None = None
     public: FilterBy | None = None
+
+
+@strawberry.input
+class UpdateContribution:
+    id: UUID
+    public: bool | None = UNSET
