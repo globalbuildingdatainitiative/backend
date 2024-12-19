@@ -13,6 +13,7 @@ class FilterOptions:
     ends_with: str | None = None
     is_true: bool | None = None
 
+
 class BaseFilter:  # pragma: no cover
     def dict(self):
         return self.__dict__
