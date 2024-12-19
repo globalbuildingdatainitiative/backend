@@ -4,9 +4,10 @@ from enum import Enum
 from uuid import UUID
 
 from beanie import WriteRules
-from strawberry import Info
+from beanie.operators import In
+from strawberry import Info, UNSET
 
-from models import DBContribution, InputContribution, DBProject, SuperTokensUser
+from models import DBContribution, InputContribution, DBProject, SuperTokensUser, UpdateContribution
 from models.sort_filter import sort_model_query, filter_model_query, FilterBy, SortBy
 
 logger = logging.getLogger("main")
@@ -47,6 +48,39 @@ async def create_contributions(contributions: list[InputContribution], user: Sup
             public=_contribution.public,
         )
         await contribution.insert(link_rule=WriteRules.WRITE)
+        _contributions.append(contribution)
+
+    return _contributions
+
+
+async def delete_contributions(contributions: list[UUID], user: SuperTokensUser) -> list[UUID]:
+    _contributions = DBContribution.find(In(DBContribution.id, contributions)).find(
+        DBContribution.organization_id == user.organization_id
+    )
+    logger.debug(f"Deleting {len(contributions)} contributions for organization {user.organization_id}")
+    await _contributions.delete()
+
+    return contributions
+
+
+async def update_contributions(contributions: list[UpdateContribution], user: SuperTokensUser) -> list[DBContribution]:
+    _contributions = []
+    for _contribution in contributions:
+        contribution = await DBContribution.find(
+            DBContribution.id == _contribution.id, DBContribution.organization_id == user.organization_id
+        ).first_or_none()
+        if not contribution:
+            logger.debug(
+                f"Couldn't find Contribution with id {_contribution.id} and organization_id {user.organization_id}"
+            )
+            continue
+        for field, value in as_dict(_contribution).items():
+            if field == "id" or value is UNSET:
+                continue
+            setattr(contribution, field, value)
+
+        await contribution.save()
+        logger.debug(f"Updated Contribution with id {_contribution.id} and organization_id {user.organization_id}")
         _contributions.append(contribution)
 
     return _contributions

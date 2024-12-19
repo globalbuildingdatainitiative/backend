@@ -1,9 +1,10 @@
 from inspect import getdoc
+from uuid import UUID
 
 import strawberry
 
 from models import GraphQLContribution, GraphQLResponse, GraphQLProject, GraphQLUser
-from schema.contribution import add_contributions_mutation
+from schema.contribution import add_contributions_mutation, delete_contributions_mutation, update_contributions_mutation
 from schema.permisions import IsAuthenticated
 
 
@@ -25,6 +26,16 @@ class Mutation:
     add_contributions: list[GraphQLContribution] = strawberry.field(
         resolver=add_contributions_mutation,
         description=getdoc(add_contributions_mutation),
+        permission_classes=[IsAuthenticated],
+    )
+    delete_contributions: list[UUID] = strawberry.field(
+        resolver=delete_contributions_mutation,
+        description=getdoc(delete_contributions_mutation),
+        permission_classes=[IsAuthenticated],
+    )
+    update_contributions: list[GraphQLContribution] = strawberry.field(
+        resolver=update_contributions_mutation,
+        description=getdoc(update_contributions_mutation),
         permission_classes=[IsAuthenticated],
     )
 

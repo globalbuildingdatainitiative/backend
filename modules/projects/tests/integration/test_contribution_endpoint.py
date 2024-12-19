@@ -144,3 +144,56 @@ async def test_contributions_query_sort(client: AsyncClient, contributions):
     actual_items = [{"id": item["id"]} for item in data.get("data", {}).get("contributions", {}).get("items", [])]
 
     assert actual_items == expected_items
+
+
+@pytest.mark.asyncio
+async def test_delete_contributions_mutation(client: AsyncClient, contributions):
+    query = """
+        mutation($contributions: [UUID!]!) {
+            deleteContributions(contributions: $contributions)
+        }
+    """
+
+    response = await client.post(
+        f"{settings.API_STR}/graphql",
+        json={
+            "query": query,
+            "variables": {"contributions": [str(contributions[0].id)]},
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert not data.get("errors"), f"GraphQL errors: {data.get('errors')}"
+    assert data.get("data", {}).get("deleteContributions")
+    assert len(data.get("data", {}).get("deleteContributions")) == 1
+
+
+@pytest.mark.asyncio
+async def test_update_contributions_mutation(client: AsyncClient, contributions):
+    query = """
+        mutation($contributions: [UpdateContribution!]!) {
+            updateContributions(contributions: $contributions) {
+                id
+                public
+            }
+        }
+    """
+
+    response = await client.post(
+        f"{settings.API_STR}/graphql",
+        json={
+            "query": query,
+            "variables": {"contributions": [{"id": str(contributions[0].id), "public": True}]},
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert not data.get("errors"), f"GraphQL errors: {data.get('errors')}"
+    assert data.get("data", {}).get("updateContributions")
+    assert len(data.get("data", {}).get("updateContributions")) == 1
+
+    assert data.get("data", {}).get("updateContributions")[0].get("public") is True

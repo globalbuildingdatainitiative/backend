@@ -756,6 +756,12 @@ type Location {
 type Mutation {
   """Creates new Contributions"""
   addContributions(contributions: [InputContribution!]!): [Contribution!]!
+
+  """Deletes Contributions"""
+  deleteContributions(contributions: [UUID!]!): [UUID!]!
+
+  """Updates Contributions"""
+  updateContributions(contributions: [UpdateContribution!]!): [Contribution!]!
 }
 
 type Owner {
@@ -1083,6 +1089,11 @@ enum Unit {
   tones_km
   kgm3
   unknown
+}
+
+input UpdateContribution {
+  id: UUID!
+  public: Boolean
 }
 
 type User @key(fields: "id") {
