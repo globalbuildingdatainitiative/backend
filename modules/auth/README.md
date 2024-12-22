@@ -1,12 +1,12 @@
-# Organization
+# Auth
 
-This is the Organization module for [GBDI](https://gbdi.io).
+This is the Auth module for [GBDI](https://gbdi.io).
 It is a Python service with a GraphQL API, using the async capabilities of [FastAPI](https://fastapi.tiangolo.com/)
 and [Strawberry](https://strawberry.rocks).
 
 ## Description
 
-The Organization module handles CRUD operations related to organizations in the GBDI app.
+The Auth module handles users and authentication with [Supertokens](https://supertokens.com) in the GBDI app.
 
 ## Setup
 
@@ -23,6 +23,7 @@ and [Skaffold](https://skaffold.dev/).
 ├── helm               # Helm chart for deployment 
 ├── src                # Source code
 │   ├── core           # Code related to FastAPI/webserver
+│   ├── exceptions     # Custom exceptions
 │   ├── logic          # Logic for data handling
 │   ├── models         # GraphQL and database models
 │   ├── routes         # API routes. We only have one /api/graphql
@@ -87,4 +88,4 @@ The module should be run using Skaffold and the configuration file in the root d
 # Access API
 
 When the containers are running the API can be accessed
-at [http://localhost:7002/api/graphql](http://localhost:7002/api/graphql)
+at [http://localhost:7001/api/graphql](http://localhost:7002/api/graphql)
