@@ -9,10 +9,11 @@ uvicorn = {extras = ["standard"], version = "*"}
 strawberry-graphql = {extras = ["fastapi", "cli"], version = ">=0.134.0"}
 supertokens-python = "<0.25.0"
 pyyaml = "*"
+aiocache = "*"
 
 [dev-packages]
 asgi-lifespan="*"
-pydevd-pycharm = ">=243.21565.199"
+pydevd-pycharm = "==243.22562.220"
 docker = "*"
 pytest = "*"
 pytest-asyncio = "*"

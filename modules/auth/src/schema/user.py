@@ -3,7 +3,15 @@ import logging
 from strawberry.types import Info
 
 from core.context import get_user
-from logic import get_users, update_user, invite_users, accept_invitation, reject_invitation, resend_invitation
+from logic import (
+    get_users,
+    update_user,
+    invite_users,
+    accept_invitation,
+    reject_invitation,
+    resend_invitation,
+    check_is_admin,
+)
 from models import (
     GraphQLUser,
     UserFilters,
@@ -13,13 +21,23 @@ from models import (
     InviteResult,
     AcceptInvitationInput,
 )
+from models.sort_filter import FilterOptions
 
 logger = logging.getLogger("main")
 
 
-async def users_query(filters: UserFilters | None = None, sort_by: UserSort | None = None) -> list[GraphQLUser]:
+async def users_query(
+    info: Info, filters: UserFilters | None = None, sort_by: UserSort | None = None
+) -> list[GraphQLUser]:
     """Returns all Users"""
-    return await get_users(filters, sort_by)
+
+    is_admin = await check_is_admin(str(get_user(info).id))
+    if is_admin:
+        return await get_users(filters, sort_by)
+    else:
+        filters = filters or UserFilters()
+        filters.organization_id = FilterOptions(equal=get_user(info).organization_id)
+        return await get_users(filters, sort_by)
 
 
 async def update_user_mutation(user_input: UpdateUserInput) -> GraphQLUser:

@@ -1,21 +1,27 @@
 from datetime import datetime
+from logging import getLogger
 from uuid import UUID
 
 import strawberry
+from aiocache import cached
 from strawberry import UNSET
 from supertokens_python.asyncio import get_users_newest_first
 from supertokens_python.recipe.emailpassword.asyncio import update_email_or_password, sign_in
 from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
 
+
 from core.exceptions import EntityNotFound
 from models import GraphQLUser, UserFilters, UserSort, UpdateUserInput, InviteStatus, Role, AcceptInvitationInput
 from models.sort_filter import FilterOptions
+
+logger = getLogger("main")
 
 
 async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None = None) -> list[GraphQLUser]:
     """Returns all Users & their metadata"""
 
     users = await get_users_newest_first("public")
+
     gql_users = []
 
     for user in users.users:
@@ -239,3 +245,15 @@ def sort_users(users: list[GraphQLUser], sort_by: UserSort | None = None) -> lis
 
     sorted_users.sort(key=get_sort_key, reverse=reverse)
     return sorted_users
+
+
+@cached(ttl=60)
+async def check_is_admin(user_id: str) -> bool:
+    """Check if the user is an admin"""
+    from supertokens_python.recipe.userroles.asyncio import get_roles_for_user
+
+    _user = await get_roles_for_user("public", user_id)
+    if "admin" in _user.roles:
+        return True
+
+    return False
