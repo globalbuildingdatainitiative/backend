@@ -137,8 +137,9 @@ class GraphQLImpactCategoryResults:
     @strawberry.field()
     def total(self: dict) -> float | None:
         total = 0
+
         for value in self.values():
-            if isinstance(value, float):
+            if isinstance(value, float) or isinstance(value, int):
                 total += value
         return total
 

@@ -6,6 +6,7 @@ from uuid import UUID
 import strawberry
 from beanie import Document
 from beanie.odm.queries.find import FindMany, FindQueryResultType
+from strawberry import UNSET
 from strawberry.scalars import JSON
 from iso3166 import countries as iso_countries
 
@@ -47,7 +48,7 @@ def filter_model_query(
                 continue
 
             for _field, value in fields.items():
-                if not _field or value is None:
+                if not _field or value is UNSET:
                     continue
 
                 # Handle special case for country field
@@ -77,7 +78,7 @@ def filter_model_query(
 
                 field_path = field_mapping.get(_field, _field)
 
-                logger.debug(f"Filtering {_filter} by {_field} in {value}")
+                logger.debug(f"Filtering {_filter} by {field_path} in {value}")
 
                 # Handle UUID fields specially
                 if isinstance(value, UUID) or (isinstance(value, str) and len(value) == 36):
@@ -94,6 +95,8 @@ def filter_model_query(
                         query = query.find({field_path: {"$regex": f".*{value}.*", "$options": "i"}})
                     elif _filter == "equal":
                         query = query.find({field_path: value})
+                    elif _filter == "not_equal":
+                        query = query.find({field_path: {"$ne": value}})
                     elif _filter == "is_true" and value is not None:
                         query = query.find({field_path: True})
                     elif _filter == "_in":
@@ -106,7 +109,8 @@ def filter_model_query(
                         query = query.find({field_path: {"$lt": value}})
                     elif _filter == "lte":
                         query = query.find({field_path: {"$lte": value}})
-        return query
+
+    return query
 
 
 def sort_model_query(
@@ -156,20 +160,20 @@ def to_snake(string: str) -> str:
 
 @strawberry.input
 class FilterBy(BaseFilter):
-    equal: JSON | None = None
-    contains: JSON | None = None
-    starts_with: JSON | None = None
-    ends_with: JSON | None = None
-    gt: JSON | None = None
-    gte: JSON | None = None
-    lt: JSON | None = None
-    lte: JSON | None = None
-    not_equal: JSON | None = None
-    is_true: bool | None = None
-    _in: JSON | None = strawberry.field(name="in", default=None)
+    equal: JSON | None = UNSET
+    contains: JSON | None = UNSET
+    starts_with: JSON | None = UNSET
+    ends_with: JSON | None = UNSET
+    gt: JSON | None = UNSET
+    gte: JSON | None = UNSET
+    lt: JSON | None = UNSET
+    lte: JSON | None = UNSET
+    not_equal: JSON | None = UNSET
+    is_true: bool | None = UNSET
+    _in: JSON | None = strawberry.field(name="in", default=UNSET)
 
 
 @strawberry.input(one_of=True)
 class SortBy(BaseFilter):
-    asc: str | None = strawberry.UNSET
-    dsc: str | None = strawberry.UNSET
+    asc: str | None = UNSET
+    dsc: str | None = UNSET
