@@ -9,6 +9,7 @@ import pytest
 import supertokens_python.asyncio
 import supertokens_python.recipe.session.asyncio
 import supertokens_python.recipe.usermetadata.asyncio
+import supertokens_python.recipe.userroles.asyncio
 import supertokens_python.recipe.emailpassword
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
@@ -245,6 +246,22 @@ def mock_get_users_newest_first(users, session_mocker):
         supertokens_python.asyncio,
         "get_users_newest_first",
         fake_get_users_newest_first,
+    )
+
+
+@pytest.fixture
+def mock_get_roles_for_user(session_mocker):
+    @dataclasses.dataclass
+    class FakeUser:
+        roles: list[str]
+
+    async def fake_get_roles_for_user(tenant_id: str, user_id: str):
+        return FakeUser(roles=[])
+
+    session_mocker.patch.object(
+        supertokens_python.recipe.userroles.asyncio,
+        "get_roles_for_user",
+        fake_get_roles_for_user,
     )
 
 
