@@ -76,7 +76,7 @@ def custom_smtp_content_override(original_implementation: SMTPOverrideInput) -> 
         organization_id = user_metadata.metadata.get("pending_org_id")
         password_reset_url = template_vars.password_reset_link
 
-        subject = "Invitation to Join Organization"
+        subject = "Reset Your Password"
         body = ""
         is_html = True
 
