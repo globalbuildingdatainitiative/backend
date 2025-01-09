@@ -1,5 +1,5 @@
 import logging
-from datetime import date, datetime
+import datetime
 from typing import Union
 from uuid import UUID
 
@@ -465,14 +465,16 @@ class GraphQLAssessmentMetaData:
     cutoff_method: str | None = None
     assessor: GraphQLAssessor | None = None
     year: int | None = None
+    date: strawberry.Private[str] = None
 
-    @strawberry.field
-    def date(self) -> date | None:
+    @strawberry.field(name="date")
+    def _date(self) -> datetime.date | None:
         value = self.date
+
         if not value:
             return None
         elif isinstance(value, str):
-            return datetime.strptime(value, "%d/%m/%Y %H:%M:%S").date()
+            return datetime.datetime.strptime(value, "%d/%m/%Y %H:%M:%S").date()
         else:
             return value
 
