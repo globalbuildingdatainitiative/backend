@@ -10,7 +10,6 @@ from logic import (
     accept_invitation,
     reject_invitation,
     resend_invitation,
-    check_is_admin,
 )
 from models import (
     GraphQLUser,
@@ -21,7 +20,6 @@ from models import (
     InviteResult,
     AcceptInvitationInput,
 )
-from models.sort_filter import FilterOptions
 
 logger = logging.getLogger("main")
 
