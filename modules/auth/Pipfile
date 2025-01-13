@@ -7,7 +7,7 @@ name = "pypi"
 fastapi = { extras = ["all"], version = "*" }
 uvicorn = {extras = ["standard"], version = "*"}
 strawberry-graphql = {extras = ["fastapi", "cli"], version = ">=0.134.0"}
-supertokens-python = "<0.25.0"
+supertokens-python = ">=0.25.0"
 pyyaml = "*"
 aiocache = "*"
 

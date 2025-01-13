@@ -12,14 +12,14 @@ from supertokens_python.ingredients.emaildelivery.types import (
 )
 from supertokens_python.recipe import session, userroles, usermetadata, emailpassword, dashboard, jwt, emailverification
 from supertokens_python.recipe.emailpassword import InputFormField
-from supertokens_python.recipe.emailpassword.asyncio import get_user_by_id
+from supertokens_python.asyncio import get_user
 from supertokens_python.recipe.emailpassword.interfaces import (
     APIInterface,
     APIOptions,
     SignUpPostOkResult,
     RecipeInterface,
     SignInOkResult,
-    SignInWrongCredentialsError,
+    WrongCredentialsError,
     ResetPasswordUsingTokenOkResult,
     ResetPasswordUsingTokenInvalidTokenError,
 )
@@ -328,9 +328,9 @@ def functions_override(original_impl: RecipeInterface):
         if isinstance(result, ResetPasswordUsingTokenOkResult):
             user_id = user_context.get("user_id")
             if not user_id:
-                user = await get_user_by_id(result.user_id)
+                user = await get_user(result.user_id)
                 if user:
-                    user_id = user.user_id
+                    user_id = user.id
             if user_id:
                 user_metadata = await get_user_metadata(user_id)
                 pending_org_id = user_metadata.metadata.get("pending_org_id")
@@ -346,9 +346,9 @@ def functions_override(original_impl: RecipeInterface):
     # Prevents signing in with Fake password (User must change the password before signing in)
     async def emailpassword_sign_in(
         email: str, password: str, tenant_id: str, user_context: Dict[str, Any]
-    ) -> Union[SignInOkResult, SignInWrongCredentialsError]:
+    ) -> Union[SignInOkResult, WrongCredentialsError]:
         if password == FAKE_PASSWORD:
-            return SignInWrongCredentialsError()
+            return WrongCredentialsError()
         return await og_emailpassword_sign_in(email, password, tenant_id, user_context)
 
     original_impl.update_email_or_password = update_email_or_password
