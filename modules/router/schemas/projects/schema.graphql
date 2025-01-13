@@ -489,17 +489,17 @@ type Energy {
 }
 
 input FilterBy {
-  equal: JSON = null
-  contains: JSON = null
-  startsWith: JSON = null
-  endsWith: JSON = null
-  gt: JSON = null
-  gte: JSON = null
-  lt: JSON = null
-  lte: JSON = null
-  notEqual: JSON = null
-  isTrue: Boolean = null
-  in: JSON = null
+  equal: JSON
+  contains: JSON
+  startsWith: JSON
+  endsWith: JSON
+  gt: JSON
+  gte: JSON
+  lt: JSON
+  lte: JSON
+  notEqual: JSON
+  isTrue: Boolean
+  in: JSON
 }
 
 enum GeneralEnergyClass {

@@ -1,6 +1,7 @@
 import logging
 
 from strawberry.types import Info
+from supertokens_python.recipe.session import SessionContainer
 
 from core.context import get_user
 from logic import (
@@ -10,7 +11,7 @@ from logic import (
     accept_invitation,
     reject_invitation,
     resend_invitation,
-    check_is_admin,
+    check_is_admin, impersonate_user,
 )
 from models import (
     GraphQLUser,
@@ -31,7 +32,7 @@ async def users_query(
 ) -> list[GraphQLUser]:
     """Returns all Users"""
 
-    is_admin = await check_is_admin(str(get_user(info).id))
+    is_admin = await check_is_admin(get_user(info).id)
     if is_admin:
         return await get_users(filters, sort_by)
     else:
@@ -69,3 +70,9 @@ async def resend_invitation_mutation(info: Info, user_id: str) -> InviteResult:
 
     result = await resend_invitation(user_id=user_id, request=info.context.get("request"))
     return result
+
+
+async def impersonate_mutation(info: Info, user_id: str) -> bool:
+    """Impersonate a different user"""
+
+    return await impersonate_user(info.context.get("request"), None, user_id)

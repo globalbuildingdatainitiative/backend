@@ -3,12 +3,12 @@ from logging import getLogger
 from uuid import UUID
 
 import strawberry
-from aiocache import cached
 from strawberry import UNSET
 from supertokens_python.asyncio import get_users_newest_first
-from supertokens_python.recipe.emailpassword.asyncio import update_email_or_password, sign_in
+from supertokens_python.recipe.emailpassword.asyncio import update_email_or_password, sign_in, get_user_by_id
+from supertokens_python.recipe.session.asyncio import create_new_session
+from supertokens_python.recipe.session.interfaces import SessionContainer
 from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
-
 
 from core.exceptions import EntityNotFound
 from models import GraphQLUser, UserFilters, UserSort, UpdateUserInput, InviteStatus, Role, AcceptInvitationInput
@@ -246,14 +246,23 @@ def sort_users(users: list[GraphQLUser], sort_by: UserSort | None = None) -> lis
     sorted_users.sort(key=get_sort_key, reverse=reverse)
     return sorted_users
 
+async def impersonate_user(request, session, user_id: str) -> bool:
+    user = await get_user_by_id(user_id)
+    # import pydevd_pycharm
+    # pydevd_pycharm.settrace('host.minikube.internal', port=5476, stdoutToServer=True, stderrToServer=True)
+    if not user:
+        raise EntityNotFound("No user found with the provided ID", "Auth")
 
-@cached(ttl=60)
-async def check_is_admin(user_id: str) -> bool:
-    """Check if the user is an admin"""
-    from supertokens_python.recipe.userroles.asyncio import get_roles_for_user
+    # TODO - this doesn't work
+    res = await create_new_session(
+        request,
+        "public",
+        user_id,
+        {"isImpersonation": True},
+    )
 
-    _user = await get_roles_for_user("public", user_id)
-    if "admin" in _user.roles:
-        return True
+    # session.sync_update_session_data_in_database(res)
+    return True
 
-    return False
+
+

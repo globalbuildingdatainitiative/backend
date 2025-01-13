@@ -3,7 +3,7 @@ from inspect import getdoc
 import strawberry
 
 from models import GraphQLUser, InviteResult
-from schema.permissions import IsAuthenticated
+from schema.permissions import IsAuthenticated, IsAdmin
 from schema.user import (
     users_query,
     update_user_mutation,
@@ -11,6 +11,7 @@ from schema.user import (
     accept_invitation_mutation,
     reject_invitation_mutation,
     resend_invitation_mutation,
+    impersonate_mutation
 )
 
 
@@ -39,6 +40,9 @@ class Mutation:
         resolver=resend_invitation_mutation,
         description=getdoc(resend_invitation_mutation),
         permission_classes=[IsAuthenticated],
+    )
+    impersonate: bool = strawberry.field(
+        resolver=impersonate_mutation, description=getdoc(impersonate_mutation), permission_classes=[IsAdmin]
     )
 
 
