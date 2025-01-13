@@ -21,6 +21,9 @@ import core.context
 import logic as logic
 from core.config import settings
 from models import SuperTokensUser, GraphQLUser, UserFilters, UserSort, InviteStatus, Role
+from unittest.mock import patch
+from pydantic import AnyHttpUrl
+from core.config import Settings
 
 
 @pytest.fixture(scope="session")
@@ -353,3 +356,24 @@ async def client_unauthenticated(app_unauthenticated: FastAPI) -> Iterator[Async
             yield _client
         except Exception as exc:
             print(exc)
+
+
+@pytest.fixture(autouse=True)
+def mock_settings(session_mocker):
+    mock_settings = Settings(
+        SERVER_NAME="Test Server",
+        SERVER_HOST=AnyHttpUrl("http://localhost:8000"),
+        ROUTER_URL=AnyHttpUrl("http://localhost:3000"),
+        CONNECTION_URI=AnyHttpUrl("http://localhost:3567"),
+        API_KEY="test-api-key",
+        SMTP_HOST="test-smtp-host",
+        SMTP_PORT=587,
+        SMTP_EMAIL="test@email.com",
+        SMTP_NAME="Test SMTP",
+        SMTP_PASSWORD="test-password",
+        SMTP_USERNAME="test-username",
+    )
+
+    with patch("core.config.settings", mock_settings):
+        with patch("core.auth.settings", mock_settings):
+            yield mock_settings
