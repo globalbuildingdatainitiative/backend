@@ -63,6 +63,195 @@ smtp_settings = SMTPSettings(
 )
 
 
+def get_base_email_style() -> str:
+    return """
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #E6E6E6;
+            background-color: #1C1C1C;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .header {
+            background-color: #1d9a78;
+            padding: 20px;
+            border-radius: 5px;
+            position: relative;
+        }
+        .header-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            max-width: 80%;
+            margin: 0 auto;
+        }
+        .header h1 {
+            color: white;
+            font-size: 24px;
+            margin: 0;
+        }
+        .logo {
+            width: 80px;
+            height: auto;
+            margin-left: 20px;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        p {
+            margin: 16px 0;
+            font-size: 16px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #1d9a78;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        .reject-button {
+            background-color: #cc4125;
+        }
+    """
+
+
+async def generate_invitation_email_new_user(
+    organization_name: str, inviter_name: str, user_id: str, origin: str
+) -> tuple[str, str]:
+    """Generate invitation email for new users who don't have an account yet."""
+    accept_new_user_url = f"{origin}/accept-invite-new?user_id={user_id}"
+    reject_url = f"{origin}/reject-invite?user_id={user_id}"
+
+    subject = f"Invitation to join {organization_name}"
+    body = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{subject}</title>
+        <style>
+            {get_base_email_style()}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="header-content">
+                    <h1>Invitation to Join {organization_name}</h1>
+                    <img src="{LOGO_URL}" alt="{organization_name} Logo" class="logo">
+                </div>
+            </div>
+            <div class="content">
+                <p>Dear Invitee,</p>
+                <p>You have been invited by {inviter_name} to join the organization {organization_name}.</p>
+                <p>We're excited to have you on board! Click below to create your account:</p>
+                <div>
+                    <a href="{accept_new_user_url}" class="button">Accept Invitation and Create Account</a>
+                </div>
+                <p>If you don't want to join this organization, you can reject the invitation:</p>
+                <a href="{reject_url}" class="button reject-button">Reject Invitation</a>
+                <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+                <p>Best regards,<br>The {organization_name} Team</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return subject, body
+
+
+async def generate_invitation_email_existing_user(
+    organization_name: str, inviter_name: str, user_id: str, origin: str
+) -> tuple[str, str]:
+    """Generate invitation email for existing users who already have an account."""
+    accept_signin_url = f"{origin}/accept-invite?user_id={user_id}"
+    reject_url = f"{origin}/reject-invite?user_id={user_id}"
+
+    subject = f"Invitation to join {organization_name}"
+    body = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{subject}</title>
+        <style>
+            {get_base_email_style()}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="header-content">
+                    <h1>Invitation to Join {organization_name}</h1>
+                    <img src="{LOGO_URL}" alt="{organization_name} Logo" class="logo">
+                </div>
+            </div>
+            <div class="content">
+                <p>Dear Invitee,</p>
+                <p>You have been invited by {inviter_name} to join the organization {organization_name}.</p>
+                <p>We're excited to have you on board! Click below to sign in and accept the invitation:</p>
+                <div>
+                    <a href="{accept_signin_url}" class="button">Accept Invitation and Sign In</a>
+                </div>
+                <p>If you don't want to join this organization, you can reject the invitation:</p>
+                <a href="{reject_url}" class="button reject-button">Reject Invitation</a>
+                <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+                <p>Best regards,<br>The {organization_name} Team</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return subject, body
+
+
+async def generate_password_reset_email(password_reset_url: str) -> tuple[str, str]:
+    """Generate password reset email."""
+    subject = "Reset Your Password"
+    body = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{subject}</title>
+        <style>
+            {get_base_email_style()}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="header-content">
+                    <h1>Password Reset</h1>
+                    <img src="{LOGO_URL}" alt="Company Logo" class="logo">
+                </div>
+            </div>
+            <div class="content">
+                <p>Dear User,</p>
+                <p>You have requested to reset your password. Click the button below to set a new password:</p>
+                <a href="{password_reset_url}" class="button">Reset Password</a>
+                <p>If you didn't request a password reset, please ignore this email or contact our support team if you have any concerns.</p>
+                <p>Best regards,<br>The Support Team</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return subject, body
+
+
 def custom_smtp_content_override(original_implementation: SMTPOverrideInput) -> SMTPOverrideInput:
     """Overrides email content for password reset emails"""
 
@@ -74,198 +263,33 @@ def custom_smtp_content_override(original_implementation: SMTPOverrideInput) -> 
         user_metadata = await get_user_metadata(user_id)
         inviter_id = user_metadata.metadata.get("inviter_id")
         organization_id = user_metadata.metadata.get("pending_org_id")
-        password_reset_url = template_vars.password_reset_link
+        origin = get_origin(None, user_context)
 
-        subject = "Invitation to Join Organization"
+        subject = ""
         body = ""
-        is_html = True
 
+        # Handle invitation emails
         if inviter_id and organization_id:
             inviter_metadata = await get_user_metadata(inviter_id)
             inviter_name = f"{inviter_metadata.metadata.get('first_name', '')} {inviter_metadata.metadata.get('last_name', '')}".strip()
             organization_name = await get_organization_name(UUID(organization_id))
 
-            subject = f"Invitation to join {organization_name}"
+            # Check if user exists (has metadata)
+            user_exists = bool(user_metadata.metadata.get("first_name") or user_metadata.metadata.get("last_name"))
 
-            accept_signin_url = f"{get_origin(None, user_context)}/accept-invite?user_id={user_id}"
-            reject_url = f"{get_origin(None, user_context)}/reject-invite?user_id={user_id}"
-            accept_new_user_url = f"{get_origin(None, user_context)}/accept-invite-new?user_id={user_id}"
-
-            body = f"""
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Invitation to join {organization_name}</title>
-                <style>
-                    body {{
-                        font-family: Arial, sans-serif;
-                        line-height: 1.6;
-                        color: #E6E6E6;
-                        background-color: #1C1C1C;
-                        margin: 0;
-                        padding: 20px;
-                    }}
-                    .container {{
-                        max-width: 600px;
-                        margin: 0 auto;
-                    }}
-                    .header {{
-                        background-color: #1d9a78;
-                        padding: 20px;
-                        border-radius: 5px;
-                        position: relative;
-                    }}
-                    .header-content {{
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        position: relative;
-                        max-width: 80%;
-                        margin: 0 auto;
-                    }}
-                    .header h1 {{
-                        color: white;
-                        font-size: 24px;
-                        margin: 0;
-                    }}
-                    .logo {{
-                        width: 80px;
-                        height: auto;
-                        margin-left: 20px;
-                    }}
-                    .content {{
-                        padding: 20px 0;
-                    }}
-                    p {{
-                        margin: 16px 0;
-                        font-size: 16px;
-                    }}
-                    .button {{
-                        display: inline-block;
-                        background-color: #1d9a78;
-                        color: white;
-                        text-decoration: none;
-                        padding: 10px 20px;
-                        border-radius: 5px;
-                        margin-right: 10px;
-                        margin-top: 10px;
-                    }}
-                    .reject-button {{
-                        background-color: #cc4125;
-                    }}
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <div class="header-content">
-                            <h1>Invitation to Join {organization_name}</h1>
-                            <img src="{LOGO_URL}" alt="{organization_name} Logo" class="logo">
-                        </div>
-                    </div>
-                    <div class="content">
-                        <p>Dear Invitee,</p>
-                        <p>You have been invited by {inviter_name} to join the organization {organization_name}.</p>
-                        <p>We're excited to have you on board! Please choose one of the following options:</p>
-                        <div>
-                            <a href="{accept_new_user_url}" class="button">Accept Invitation and Create Account</a>
-                            <a href="{accept_signin_url}" class="button">Accept Invitation and Sign In</a>
-                        </div>
-                        <p>If you don't want to join this organization, you can reject the invitation:</p>
-                        <a href="{reject_url}" class="button reject-button">Reject Invitation</a>
-                        <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
-                        <p>Best regards,<br>The {organization_name} Team</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """
+            if user_exists:
+                subject, body = await generate_invitation_email_existing_user(
+                    organization_name, inviter_name, user_id, origin
+                )
+            else:
+                subject, body = await generate_invitation_email_new_user(
+                    organization_name, inviter_name, user_id, origin
+                )
+        # Handle password reset emails
         else:
-            body = f"""
-                        <!DOCTYPE html>
-                        <html lang="en">
-                        <head>
-                            <meta charset="UTF-8">
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                            <title>Password Reset</title>
-                            <style>
-                                body {{
-                                    font-family: Arial, sans-serif;
-                                    line-height: 1.6;
-                                    color: #E6E6E6;
-                                    background-color: #1C1C1C;
-                                    margin: 0;
-                                    padding: 20px;
-                                }}
-                                .container {{
-                                    max-width: 600px;
-                                    margin: 0 auto;
-                                }}
-                                .header {{
-                                    background-color: #1d9a78;
-                                    padding: 20px;
-                                    border-radius: 5px;
-                                    position: relative;
-                                }}
-                                .header-content {{
-                                    display: flex;
-                                    justify-content: center;
-                                    align-items: center;
-                                    position: relative;
-                                    max-width: 80%;
-                                    margin: 0 auto;
-                                }}
-                                .header h1 {{
-                                    color: white;
-                                    font-size: 24px;
-                                    margin: 0;
-                                }}
-                                .logo {{
-                                    width: 80px;
-                                    height: auto;
-                                    margin-left: 20px;
-                                }}
-                                .content {{
-                                    padding: 20px 0;
-                                }}
-                                p {{
-                                    margin: 16px 0;
-                                    font-size: 16px;
-                                }}
-                                .button {{
-                                    display: inline-block;
-                                    background-color: #1d9a78;
-                                    color: white;
-                                    text-decoration: none;
-                                    padding: 10px 20px;
-                                    border-radius: 5px;
-                                    margin-top: 10px;
-                                }}
-                            </style>
-                        </head>
-                        <body>
-                            <div class="container">
-                                <div class="header">
-                                    <div class="header-content">
-                                        <h1>Password Reset</h1>
-                                        <img src="{LOGO_URL}" alt="Company Logo" class="logo">
-                                    </div>
-                                </div>
-                                <div class="content">
-                                    <p>Dear User,</p>
-                                    <p>You have requested to reset your password. Click the button below to set a new password:</p>
-                                    <a href="{password_reset_url}" class="button">Reset Password</a>
-                                    <p>If you didn't request a password reset, please ignore this email or contact our support team if you have any concerns.</p>
-                                    <p>Best regards,<br>The Support Team</p>
-                                </div>
-                            </div>
-                        </body>
-                        </html>
-                        """
+            subject, body = await generate_password_reset_email(template_vars.password_reset_link)
 
-        return EmailContent(subject=subject, body=body, is_html=is_html, to_email=template_vars.user.email)
+        return EmailContent(subject=subject, body=body, is_html=True, to_email=template_vars.user.email)
 
     original_implementation.get_content = get_content
     return original_implementation
