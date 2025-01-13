@@ -31,13 +31,14 @@ async def users_query(
 ) -> list[GraphQLUser]:
     """Returns all Users"""
 
-    is_admin = await check_is_admin(str(get_user(info).id))
-    if is_admin:
-        return await get_users(filters, sort_by)
-    else:
-        filters = filters or UserFilters()
-        filters.organization_id = FilterOptions(equal=get_user(info).organization_id)
-        return await get_users(filters, sort_by)
+    return await get_users(filters, sort_by)
+    # is_admin = await check_is_admin(str(get_user(info).id))
+    # if is_admin:
+    #     return await get_users(filters, sort_by)
+    # else:
+    #     filters = filters or UserFilters()
+    #     filters.organization_id = FilterOptions(equal=get_user(info).organization_id)
+    #     return await get_users(filters, sort_by)
 
 
 async def update_user_mutation(user_input: UpdateUserInput) -> GraphQLUser:
