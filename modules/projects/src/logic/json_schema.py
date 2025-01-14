@@ -125,13 +125,23 @@ class _GetSchema:
                 type_ = type_.of_type
             elif isinstance(type_, StrawberryAnnotation):
                 type_ = type_.raw_annotation
-            schema["properties"][field.name] = self.get_field_schema(type_, field.default, SchemaAnnotation())
+            _property = self.get_field_schema(type_, field.default, SchemaAnnotation())
+            if _property is None:
+                continue
+            schema["properties"][self.get_field_name(field)] = _property
             field_is_optional = self.is_field_optional(field, type_hints[field.name])
             if not field_is_optional:
-                schema["required"].append(field.name)
+                schema["required"].append(self.get_field_name(field))
         if not schema["required"]:
             schema.pop("required")
         return schema
+
+    @staticmethod
+    def get_field_name(field):
+        if hasattr(field, "graphql_name") and field.graphql_name is not None:
+            return field.graphql_name
+        else:
+            return field.name
 
     @staticmethod
     def is_field_optional(field, origin_type):
@@ -304,7 +314,10 @@ class _GetSchema:
         if default is _MISSING:
             return {"type": "string", **annotation.schema()}
         else:
-            return {"type": "string", "default": default, **annotation.schema()}
+            try:
+                return {"type": "string", "default": default, **annotation.schema()}
+            except AttributeError:
+                return None
 
     def get_bool_schema(self, default, annotation):
         if default is _MISSING:

@@ -43,46 +43,6 @@ class GraphQLInputSource:
     pass
 
 
-# @strawberry.experimental.pydantic.input(model=LCAxEPD, name="InputEPD")
-# class GraphQLInputEPD:
-#     comment: strawberry.auto
-#     conversions: list[GraphQLInputConversion] | None = None
-#     declared_unit: GraphQLUnit
-#     format_version: strawberry.auto
-#     id: UUID | None = None
-#     impacts: JSON
-#     location: GraphQLCountry
-#     meta_data: JSON | None = None
-#     name: strawberry.auto
-#     published_date: strawberry.auto
-#     reference_service_life: strawberry.auto
-#     source: GraphQLInputSource | None = None
-#     standard: GraphQLStandard
-#     subtype: GraphQLSubType
-#     valid_until: strawberry.auto
-#     version: strawberry.auto
-#
-#
-# @strawberry.experimental.pydantic.input(model=LCAxTechFlow, name="InputTechFlow")
-# class GraphQLInputTechFlow:
-#     comment: strawberry.auto
-#     conversions: list[GraphQLInputConversion] | None = None
-#     declared_unit: GraphQLUnit
-#     format_version: strawberry.auto
-#     id: UUID | None = None
-#     impacts: JSON
-#     location: GraphQLCountry
-#     meta_data: JSON | None = None
-#     name: strawberry.auto
-#     source: GraphQLInputSource | None = None
-#
-#
-# @strawberry.input(one_of=True)
-# class GraphQLInputImpactData:
-#     epd: GraphQLInputEPD | None = strawberry.field(name="EPD", default=strawberry.UNSET)
-#     tech_flow: GraphQLInputTechFlow | None = strawberry.UNSET
-
-
 @strawberry.input(name="InputImpactData")
 class GraphQLInputImpactData:
     type: str
