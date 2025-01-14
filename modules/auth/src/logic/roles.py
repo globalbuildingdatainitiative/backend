@@ -1,13 +1,14 @@
 from logging import getLogger
 from uuid import UUID
 
-from supertokens_python.recipe.userroles.asyncio import create_new_role_or_add_permissions
 from aiocache import cached
 
 logger = getLogger("main")
 
 
 async def create_roles():
+    from supertokens_python.recipe.userroles.asyncio import create_new_role_or_add_permissions
+
     roles = [{"name": "admin", "permissions": ["all"]}]
 
     for role in roles:
@@ -22,6 +23,7 @@ async def create_roles():
 async def check_is_admin(user_id: str | UUID) -> bool:
     """Check if the user is an admin"""
     from supertokens_python.recipe.userroles.asyncio import get_roles_for_user
+
     if isinstance(user_id, UUID):
         user_id = str(user_id)
 

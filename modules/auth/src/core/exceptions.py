@@ -50,3 +50,7 @@ class InvitationFailed(GBDIApiError):
         self.message = message
         self.name = name
         super().__init__(self.message, self.name)
+
+
+class WrongCredentialsError(GBDIApiError):
+    """Raised when user tries to invite without being part of an organization"""

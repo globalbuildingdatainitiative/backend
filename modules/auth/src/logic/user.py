@@ -1,15 +1,17 @@
+import json
 from datetime import datetime
 from logging import getLogger
 from uuid import UUID
 
 import strawberry
 from strawberry import UNSET
-from supertokens_python.asyncio import get_users_newest_first
-from supertokens_python.recipe.emailpassword.asyncio import update_email_or_password, sign_in, get_user_by_id
-from supertokens_python.recipe.session.asyncio import create_new_session
-from supertokens_python.recipe.session.interfaces import SessionContainer
+from supertokens_python.asyncio import get_user, get_users_newest_first
+from supertokens_python.recipe.emailpassword.asyncio import update_email_or_password, verify_credentials
+from supertokens_python.recipe.emailpassword.interfaces import WrongCredentialsError
+from supertokens_python.recipe.session.asyncio import create_new_session, get_session
 from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
-
+from fastapi.requests import Request
+from core import exceptions
 from core.exceptions import EntityNotFound
 from models import GraphQLUser, UserFilters, UserSort, UpdateUserInput, InviteStatus, Role, AcceptInvitationInput
 from models.sort_filter import FilterOptions
@@ -25,11 +27,8 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
     gql_users = []
 
     for user in users.users:
-        user_data = user.to_json().get("user")
-        user_id = user_data["id"]
-
         # Fetch metadata for each user
-        metadata_response = await get_user_metadata(user_id)
+        metadata_response = await get_user_metadata(user.id)
         first_name = metadata_response.metadata.get("first_name")
         last_name = metadata_response.metadata.get("last_name")
         organization_id = metadata_response.metadata.get("organization_id")
@@ -42,9 +41,9 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
         effective_org_id = organization_id if not invited else pending_org_id
 
         user = GraphQLUser(
-            id=user_id,
-            email=user_data.get("email"),
-            time_joined=datetime.fromtimestamp(round(user_data.get("timeJoined", 0) / 1000)),
+            id=user.id,
+            email=user.emails[0],
+            time_joined=datetime.fromtimestamp(round(user.time_joined / 1000)),
             first_name=first_name,
             last_name=last_name,
             organization_id=effective_org_id,
@@ -64,46 +63,47 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
     return gql_users
 
 
-async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
+async def update_user(request: Request, user_input: UpdateUserInput) -> GraphQLUser:
     """Update user details & metadata"""
+    session = await get_session(request)
 
-    metadata_update = {}
-    if user_input.first_name is not None:
-        metadata_update["first_name"] = user_input.first_name
-    if user_input.last_name is not None:
-        metadata_update["last_name"] = user_input.last_name
-    if user_input.email is not None:
-        metadata_update["email"] = user_input.email
-    if user_input.invited is not None:
-        metadata_update["invited"] = user_input.invited
-    if user_input.invite_status is not None:
-        metadata_update["invite_status"] = user_input.invite_status.value
-    if user_input.inviter_name is not None:
-        metadata_update["inviter_name"] = user_input.inviter_name
-    if user_input.role is not None:
-        metadata_update["role"] = user_input.role.value
-    if user_input.organization_id is not UNSET:
-        metadata_update["organization_id"] = user_input.organization_id
-        if user_input.organization_id is None:
-            metadata_update["role"] = None
+    metadata_update = strawberry.asdict(user_input)
+    user_id = str(metadata_update.pop("id"))
+
+    user = await get_user(user_id)
+    if not user:
+        raise EntityNotFound(f"No user found with the provided ID: {user_input.id}", "Auth")
+
+    del metadata_update["current_password"]
+    del metadata_update["new_password"]
+    if metadata_update["organization_id"] is UNSET or metadata_update["organization_id"] is None:
+        metadata_update["role"] = metadata_update["organization_id"]
+
+    def custom_serializer(obj):
+        if isinstance(obj, InviteStatus):
+            return obj.value
+
+    metadata_update = json.dumps(
+        {key: value for key, value in metadata_update.items() if value is not UNSET}, default=custom_serializer
+    )
+
     if metadata_update:
-        await update_user_metadata(str(user_input.id), metadata_update)
+        await update_user_metadata(user_id, json.loads(metadata_update))
 
     # Update password if current password and new password are provided
 
     if user_input.current_password and user_input.new_password:
-        user_email = (await get_users(UserFilters(id=FilterOptions(equal=str(user_input.id)))))[0].email
-        await sign_in("public", str(user_email), str(user_input.current_password))
+        is_password_valid = await verify_credentials("public", str(user.emails[0]), str(user_input.current_password))
+        if isinstance(is_password_valid, WrongCredentialsError):
+            raise exceptions.WrongCredentialsError("Current password is incorrect")
+
         await update_email_or_password(
-            user_id=str(user_input.id),
-            email=user_email,
+            recipe_user_id=session.get_recipe_user_id(),
             password=user_input.new_password,
+            tenant_id_for_password_policy=session.get_tenant_id(),
         )
 
-    user_data = await get_users(UserFilters(id=FilterOptions(equal=str(user_input.id))))
-
-    if not user_data:
-        raise EntityNotFound("No user found with the provided ID", "Auth")
+    user_data = await get_users(UserFilters(id=FilterOptions(equal=user_id)))
 
     return user_data[0]
 
@@ -246,15 +246,16 @@ def sort_users(users: list[GraphQLUser], sort_by: UserSort | None = None) -> lis
     sorted_users.sort(key=get_sort_key, reverse=reverse)
     return sorted_users
 
+
 async def impersonate_user(request, session, user_id: str) -> bool:
-    user = await get_user_by_id(user_id)
+    user = await get_user(user_id)
     # import pydevd_pycharm
     # pydevd_pycharm.settrace('host.minikube.internal', port=5476, stdoutToServer=True, stderrToServer=True)
     if not user:
         raise EntityNotFound("No user found with the provided ID", "Auth")
 
     # TODO - this doesn't work
-    res = await create_new_session(
+    await create_new_session(
         request,
         "public",
         user_id,
@@ -263,6 +264,3 @@ async def impersonate_user(request, session, user_id: str) -> bool:
 
     # session.sync_update_session_data_in_database(res)
     return True
-
-
-

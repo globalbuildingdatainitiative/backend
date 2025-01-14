@@ -10,6 +10,7 @@ from .user import (
     InviteStatus,
     Role,
 )
+from .scalers import EmailAddress
 
 __all__ = [
     GraphQLUser,
@@ -22,4 +23,5 @@ __all__ = [
     InviteResult,
     InviteStatus,
     Role,
+    EmailAddress,
 ]

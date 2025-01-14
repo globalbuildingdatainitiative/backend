@@ -16,6 +16,8 @@ input AcceptInvitationInput {
 """Date with time (isoformat)"""
 scalar DateTime
 
+scalar EmailAddress
+
 input FilterOptions {
   equal: String = null
   contains: String = null
@@ -78,16 +80,16 @@ scalar UUID
 
 input UpdateUserInput {
   id: UUID!
-  firstName: String = null
-  lastName: String = null
-  email: String = null
-  currentPassword: String = null
-  newPassword: String = null
-  invited: Boolean = null
-  inviteStatus: InviteStatus = null
-  inviterName: String = null
-  role: Role = null
-  organizationId: UUID = null
+  firstName: String
+  lastName: String
+  email: EmailAddress
+  currentPassword: String
+  newPassword: String
+  invited: Boolean
+  inviteStatus: InviteStatus
+  inviterName: String
+  role: Role
+  organizationId: UUID
 }
 
 type User @key(fields: "id") {

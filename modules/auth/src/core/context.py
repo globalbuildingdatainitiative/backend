@@ -10,6 +10,7 @@ from models import SuperTokensUser
 
 logger = logging.getLogger("main")
 
+
 async def get_context(request: Request):
     from supertokens_python.recipe.session.asyncio import get_session
 

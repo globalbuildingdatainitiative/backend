@@ -1,10 +1,16 @@
 import dataclasses
 import json
-from datetime import datetime
+from pathlib import Path
+
+from supertokens_python import RecipeUserId
+from supertokens_python.recipe.emailpassword.asyncio import sign_up
+from supertokens_python.recipe.session.asyncio import create_new_session
+from time import sleep
 from typing import Iterator
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 import docker
+import httpx
 import pytest
 import supertokens_python.asyncio
 import supertokens_python.recipe.session.asyncio
@@ -18,14 +24,38 @@ from httpx import AsyncClient
 
 import core.auth
 import core.context
-import logic as logic
+import logic.roles
+import logic.user
 from core.config import settings
-from models import SuperTokensUser, GraphQLUser, UserFilters, UserSort, InviteStatus, Role
+from models import SuperTokensUser
 
 
 @pytest.fixture(scope="session")
 def docker_client():
     yield docker.from_env()
+
+
+@pytest.fixture(scope="session")
+async def supertokens(docker_client):
+    container = docker_client.containers.run(
+        image="registry.supertokens.io/supertokens/supertokens-postgresql",
+        ports={"3567": "3567"},
+        name="supertokens",
+        detach=True,
+        auto_remove=True,
+    )
+    while True:
+        sleep(0.1)
+        try:
+            response = httpx.get(f"{settings.CONNECTION_URI}/hello")
+            if response.status_code == 200 and response.text.strip() == "Hello":
+                break
+        except httpx.HTTPError:
+            pass
+    try:
+        yield container
+    finally:
+        container.stop()
 
 
 @pytest.fixture(scope="session")
@@ -85,7 +115,9 @@ def mock_update_user_metadata(users):
 
 
 @pytest.fixture()
-def mock_supertokens(session_mocker, users, mock_sign_in, mock_update_email_or_password, mock_update_user_metadata):
+def mock_supertokens(
+    session_mocker, users, mock_sign_in, mock_update_email_or_password, mock_update_user_metadata, mock_create_roles
+):
     def fake_supertokens_init():
         pass
 
@@ -175,154 +207,166 @@ def mock_get_context(user, session_mocker):
     )
 
 
-@pytest.fixture
-async def app(mock_supertokens, mock_get_context) -> FastAPI:
+@pytest.fixture(scope="session")
+async def app(supertokens) -> FastAPI:
     from main import app
+
+    @app.get("/login/{user_id}")
+    async def login(request: Request, user_id: str):  # type: ignore
+        res = await create_new_session(request, "public", RecipeUserId(user_id), {}, {})
+        return {"token": res.access_token}
 
     async with LifespanManager(app):
         yield app
 
 
+@pytest.fixture(scope="session")
+async def create_user(app) -> SuperTokensUser:
+    response = await sign_up("public", "my@email.com", "currentPassword123")
+    yield SuperTokensUser(id=UUID(response.user.id), organization_id=uuid4())
+
+
 @pytest.fixture()
-async def client(app: FastAPI) -> Iterator[AsyncClient]:
+async def client(app: FastAPI, client_unauthenticated, create_user) -> Iterator[AsyncClient]:
     """Async server client that handles lifespan and teardown"""
 
-    async with AsyncClient(
-        app=app,
-        base_url=settings.SERVER_HOST.__str__(),
-    ) as _client:
-        try:
-            yield _client
-        except Exception as exc:
-            print(exc)
+    response = await client_unauthenticated.get(f"/login/{create_user.id}")
+    response.raise_for_status()
+
+    client_unauthenticated.headers["Authorization"] = f"Bearer {response.json()['token']}"
+    yield client_unauthenticated
 
 
-@pytest.fixture()
-def users(datafix_dir):
-    yield json.loads((datafix_dir / "users.json").read_text())
+@pytest.fixture(scope="session")
+async def users(app):
+    users = json.loads((Path(__file__).parent / "datafixtures" / "users.json").read_text())
+    for user in users:
+        response = await sign_up("public", user.get("email"), "currentPassword123")
+        user.update({"id": response.user.id})
+    yield users
+
+
+# @pytest.fixture
+# def mock_get_users_newest_first(users, session_mocker):
+#     async def fake_get_users_newest_first(tenant_id: str):
+#         @dataclasses.dataclass
+#         class FakeUser:
+#             id: str
+#             email: str
+#             timeJoined: int
+#             tenantIds: list[str]
+#             firstName: str
+#             lastName: str
+#             organizationId: str
+#             invited: bool
+#             invite_status: str
+#             inviter_name: str
+#             role: str
+#
+#             def to_json(self):
+#                 return {
+#                     "user": {
+#                         "id": self.id,
+#                         "email": self.email,
+#                         "timeJoined": self.timeJoined,
+#                         "tenantIds": self.tenantIds,
+#                         "firstName": self.firstName,
+#                         "lastName": self.lastName,
+#                         "organizationId": self.organizationId,
+#                         "invited": self.invited,
+#                         "invite_status": self.invite_status,
+#                         "inviter_name": self.inviter_name,
+#                         "role": self.role,
+#                     }
+#                 }
+#
+#         @dataclasses.dataclass
+#         class FakeResponse:
+#             users: list[FakeUser]
+#
+#         return FakeResponse(users=[FakeUser(**user) for user in users])
+#
+#     session_mocker.patch.object(
+#         supertokens_python.asyncio,
+#         "get_users_newest_first",
+#         fake_get_users_newest_first,
+#     )
+#
+#
+# @pytest.fixture
+# def mock_get_roles_for_user(session_mocker):
+#     @dataclasses.dataclass
+#     class FakeUser:
+#         roles: list[str]
+#
+#     async def fake_get_roles_for_user(tenant_id: str, user_id: str):
+#         return FakeUser(roles=[])
+#
+#     session_mocker.patch.object(
+#         supertokens_python.recipe.userroles.asyncio,
+#         "get_roles_for_user",
+#         fake_get_roles_for_user,
+#     )
+#
+#
+# @pytest.fixture
+# def mock_get_user_metadata(session_mocker, users):
+#     @dataclasses.dataclass
+#     class FakeMetadata:
+#         metadata: dict
+#
+#     async def fake_get_user_metadata(user_id: str):
+#         for user in users:
+#             if user["id"] == user_id:
+#                 metadata = {
+#                     "first_name": user["firstName"],
+#                     "last_name": user["lastName"],
+#                     "organization_id": f"org-{user_id}",
+#                     "invited": False,
+#                     "invite_status": InviteStatus.ACCEPTED.value,
+#                     "inviter_name": "",
+#                     "role": Role.MEMBER.value,
+#                 }
+#                 return FakeMetadata(metadata=metadata)
+#
+#     session_mocker.patch.object(
+#         supertokens_python.recipe.usermetadata.asyncio,
+#         "get_user_metadata",
+#         fake_get_user_metadata,
+#     )
+#
+#
+# @pytest.fixture
+# def mock_get_users(session_mocker, users):
+#     async def fake_get_users(filters: UserFilters = None, sort_by: UserSort = None):
+#         filtered_users = [
+#             GraphQLUser(
+#                 id=user["id"],
+#                 email=user["email"],
+#                 time_joined=datetime.fromtimestamp(user["timeJoined"] / 1000),
+#                 first_name=user["firstName"],
+#                 last_name=user["lastName"],
+#                 organization_id=user["organizationId"],
+#                 invited=user.get("invited", False),
+#                 invite_status=InviteStatus(user.get("invite_status", InviteStatus.NONE.value)),
+#                 inviter_name=user.get("inviter_name", ""),
+#                 role=Role(user.get("role", Role.MEMBER.value)),
+#             )
+#             for user in users
+#             if not filters or (filters.id and filters.id.equal == user["id"])
+#         ]
+#
+#         return filtered_users
+#
+#     session_mocker.patch.object(
+#         logic.user,
+#         "get_users",
+#         fake_get_users,
+#     )
 
 
 @pytest.fixture
-def mock_get_users_newest_first(users, session_mocker):
-    async def fake_get_users_newest_first(tenant_id: str):
-        @dataclasses.dataclass
-        class FakeUser:
-            id: str
-            email: str
-            timeJoined: int
-            tenantIds: list[str]
-            firstName: str
-            lastName: str
-            organizationId: str
-            invited: bool
-            invite_status: str
-            inviter_name: str
-            role: str
-
-            def to_json(self):
-                return {
-                    "user": {
-                        "id": self.id,
-                        "email": self.email,
-                        "timeJoined": self.timeJoined,
-                        "tenantIds": self.tenantIds,
-                        "firstName": self.firstName,
-                        "lastName": self.lastName,
-                        "organizationId": self.organizationId,
-                        "invited": self.invited,
-                        "invite_status": self.invite_status,
-                        "inviter_name": self.inviter_name,
-                        "role": self.role,
-                    }
-                }
-
-        @dataclasses.dataclass
-        class FakeResponse:
-            users: list[FakeUser]
-
-        return FakeResponse(users=[FakeUser(**user) for user in users])
-
-    session_mocker.patch.object(
-        supertokens_python.asyncio,
-        "get_users_newest_first",
-        fake_get_users_newest_first,
-    )
-
-
-@pytest.fixture
-def mock_get_roles_for_user(session_mocker):
-    @dataclasses.dataclass
-    class FakeUser:
-        roles: list[str]
-
-    async def fake_get_roles_for_user(tenant_id: str, user_id: str):
-        return FakeUser(roles=[])
-
-    session_mocker.patch.object(
-        supertokens_python.recipe.userroles.asyncio,
-        "get_roles_for_user",
-        fake_get_roles_for_user,
-    )
-
-
-@pytest.fixture
-def mock_get_user_metadata(session_mocker, users):
-    @dataclasses.dataclass
-    class FakeMetadata:
-        metadata: dict
-
-    async def fake_get_user_metadata(user_id: str):
-        for user in users:
-            if user["id"] == user_id:
-                metadata = {
-                    "first_name": user["firstName"],
-                    "last_name": user["lastName"],
-                    "organization_id": f"org-{user_id}",
-                    "invited": False,
-                    "invite_status": InviteStatus.ACCEPTED.value,
-                    "inviter_name": "",
-                    "role": Role.MEMBER.value,
-                }
-                return FakeMetadata(metadata=metadata)
-
-    session_mocker.patch.object(
-        supertokens_python.recipe.usermetadata.asyncio,
-        "get_user_metadata",
-        fake_get_user_metadata,
-    )
-
-
-@pytest.fixture
-def mock_get_users(session_mocker, users):
-    async def fake_get_users(filters: UserFilters = None, sort_by: UserSort = None):
-        filtered_users = [
-            GraphQLUser(
-                id=user["id"],
-                email=user["email"],
-                time_joined=datetime.fromtimestamp(user["timeJoined"] / 1000),
-                first_name=user["firstName"],
-                last_name=user["lastName"],
-                organization_id=user["organizationId"],
-                invited=user.get("invited", False),
-                invite_status=InviteStatus(user.get("invite_status", InviteStatus.NONE.value)),
-                inviter_name=user.get("inviter_name", ""),
-                role=Role(user.get("role", Role.MEMBER.value)),
-            )
-            for user in users
-            if not filters or (filters.id and filters.id.equal == user["id"])
-        ]
-
-        return filtered_users
-
-    session_mocker.patch.object(
-        logic,
-        "get_users",
-        fake_get_users,
-    )
-
-
-@pytest.fixture
-async def app_unauthenticated(mock_supertokens, mock_get_session) -> FastAPI:
+async def app_unauthenticated(supertokens) -> FastAPI:
     from main import app
 
     async with LifespanManager(app):
@@ -341,12 +385,24 @@ def mock_get_session(session_mocker):
     )
 
 
+@pytest.fixture(scope="session")
+def mock_create_roles(session_mocker):
+    async def fake_create_roles():
+        return None
+
+    session_mocker.patch.object(
+        logic.roles,
+        "create_roles",
+        fake_create_roles,
+    )
+
+
 @pytest.fixture()
-async def client_unauthenticated(app_unauthenticated: FastAPI) -> Iterator[AsyncClient]:
+async def client_unauthenticated(app: FastAPI) -> Iterator[AsyncClient]:
     """Async server client that handles lifespan and teardown"""
 
     async with AsyncClient(
-        app=app_unauthenticated,
+        app=app,
         base_url=str(settings.SERVER_HOST),
     ) as _client:
         try:

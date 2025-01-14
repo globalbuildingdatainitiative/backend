@@ -1,13 +1,15 @@
 from datetime import datetime
-from typing import Self, Optional, List
+from typing import Self, List
 from uuid import UUID
 from enum import Enum
 
 import strawberry
 from pydantic import BaseModel
+from strawberry import UNSET
 from strawberry.federation.schema_directives import Shareable
 
 from core.auth import FAKE_PASSWORD
+from .scalers import EmailAddress
 from .sort_filter import BaseFilter, FilterOptions
 
 
@@ -88,16 +90,16 @@ class UserSort(BaseFilter):
 @strawberry.input
 class UpdateUserInput:
     id: UUID
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    email: Optional[str] = None
-    current_password: Optional[str] = None
-    new_password: Optional[str] = None
-    invited: Optional[bool] = None
-    invite_status: Optional[InviteStatus] = None
-    inviter_name: Optional[str] = None
-    role: Optional[Role] = None
-    organization_id: Optional[UUID] = None
+    first_name: str | None = UNSET
+    last_name: str | None = UNSET
+    email: EmailAddress | None = UNSET
+    current_password: str | None = UNSET
+    new_password: str | None = UNSET
+    invited: bool | None = UNSET
+    invite_status: InviteStatus | None = UNSET
+    inviter_name: str | None = UNSET
+    role: Role | None = UNSET
+    organization_id: UUID | None = UNSET
 
 
 @strawberry.input

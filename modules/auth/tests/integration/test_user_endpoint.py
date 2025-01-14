@@ -4,9 +4,7 @@ from core.config import settings
 
 
 @pytest.mark.asyncio
-async def test_users_query(
-    client: AsyncClient, mock_get_roles_for_user, mock_get_users_newest_first, mock_get_user_metadata
-):
+async def test_users_query(client: AsyncClient):
     query = """
         query {
             users {
@@ -53,12 +51,6 @@ async def test_users_query(
 async def test_update_user_mutation(
     client: AsyncClient,
     users,
-    mock_supertokens,
-    mock_get_users_newest_first,
-    mock_get_user_metadata,
-    mock_update_user_metadata,
-    mock_update_email_or_password,
-    mock_sign_in,
 ):
     mutation = """
         mutation($userInput: UpdateUserInput!) {
@@ -83,7 +75,7 @@ async def test_update_user_mutation(
             "id": user_id,
             "firstName": "UpdatedFirstName",
             "lastName": "UpdatedLastName",
-            "email": "updated@example.com",
+            "email": "updated@epfl.ch",
             "currentPassword": "currentPassword123",
             "newPassword": "newPassword123",
             "invited": True,

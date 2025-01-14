@@ -4,7 +4,7 @@ import strawberry
 from strawberry.permission import BasePermission
 
 from core.context import get_user
-from logic import check_is_admin
+from logic.roles import check_is_admin
 
 
 class IsAuthenticated(BasePermission):

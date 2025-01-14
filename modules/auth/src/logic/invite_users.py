@@ -3,14 +3,14 @@ from typing import List
 from uuid import UUID
 
 from starlette.requests import Request
+from supertokens_python.asyncio import get_user, list_users_by_account_info
 from supertokens_python.recipe.emailpassword.asyncio import (
     send_reset_password_email,
     sign_up,
-    get_user_by_email,
-    get_user_by_id,
 )
 from supertokens_python.recipe.emailpassword.interfaces import SignUpOkResult
 from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
+from supertokens_python.types import AccountInfo
 
 from core.auth import FAKE_PASSWORD
 from core.exceptions import UserHasNoOrganization, InvitationFailed
@@ -33,9 +33,9 @@ async def invite_users(emails: List[str], inviter_id: UUID, request: Request) ->
     results = []
     for email in emails:
         try:
-            existing_user = await get_user_by_email("public", email)
-            if existing_user:
-                user_id = existing_user.user_id
+            existing_users = await list_users_by_account_info("public", AccountInfo(email=email))
+            if existing_users:
+                user_id = existing_users[0].id
             else:
                 # Creating a user with fake password
                 sign_up_result = await sign_up("public", email, FAKE_PASSWORD)
@@ -43,7 +43,7 @@ async def invite_users(emails: List[str], inviter_id: UUID, request: Request) ->
                 if not isinstance(sign_up_result, SignUpOkResult):
                     raise InvitationFailed("Failed to sign up user", "Auth")
 
-                user_id = sign_up_result.user.user_id
+                user_id = sign_up_result.user.id
 
             # Updating the user-metadata with invitation details
             await update_user_metadata(
@@ -65,11 +65,11 @@ async def invite_users(emails: List[str], inviter_id: UUID, request: Request) ->
 
 
 async def resend_invitation(user_id: str, request: Request) -> InviteResult:
-    user = await get_user_by_id(user_id)
+    user = await get_user(user_id)
     if not user:
         raise InvitationFailed("User not found", "Auth")
 
-    user_email = user.email
+    user_email = user.emails[0]
 
     if not user_email:
         raise InvitationFailed("User not found or has no email", "Auth")

@@ -11,7 +11,7 @@ from schema.user import (
     accept_invitation_mutation,
     reject_invitation_mutation,
     resend_invitation_mutation,
-    impersonate_mutation
+    impersonate_mutation,
 )
 
 
