@@ -1,24 +1,11 @@
-import datetime
-from uuid import UUID, uuid4
+from uuid import UUID
+
 import strawberry
-from beanie import Document, Link
-from pydantic import BaseModel, Field
 from strawberry import UNSET
 
-from .openbdf import DBProject, GraphQLProject, GraphQLInputProject
+from .database.db_model import ContributionBase
+from .openbdf import GraphQLProject, GraphQLInputProject
 from .sort_filter import BaseFilter, FilterBy
-
-
-class ContributionBase(BaseModel):
-    id: UUID = Field(default_factory=uuid4)
-    uploaded_at: datetime.datetime = Field(default_factory=datetime.datetime.now, alias="uploadedAt")
-    user_id: UUID = Field(alias="userId")
-    organization_id: UUID = Field(alias="organizationId")
-    public: bool = Field(default=False)
-
-
-class DBContribution(ContributionBase, Document):
-    project: Link[DBProject]
 
 
 async def get_user_info(root: "GraphQLContribution") -> "GraphQLUser":

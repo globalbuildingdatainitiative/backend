@@ -5,8 +5,8 @@ from core.config import settings
 
 
 @pytest.mark.asyncio
-async def test_openbdf(client: AsyncClient, contributions):
-    response = await client.get(f"{settings.API_STR}/openbdf")
+async def test_openbdf(client_unauthenticated: AsyncClient):
+    response = await client_unauthenticated.get(f"{settings.API_STR}/openbdf")
 
     assert response.status_code == 200
 

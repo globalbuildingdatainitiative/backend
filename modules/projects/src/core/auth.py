@@ -2,7 +2,7 @@ import logging
 
 from supertokens_python import init, InputAppInfo, SupertokensConfig
 from supertokens_python.framework.request import BaseRequest
-from supertokens_python.recipe import session, userroles, usermetadata
+from supertokens_python.recipe import session, userroles, usermetadata, emailpassword
 
 from core.config import settings
 
@@ -41,6 +41,6 @@ def supertokens_init():
             connection_uri=str(settings.SUPERTOKENS_CONNECTION_URI), api_key=settings.SUPERTOKENS_API_KEY
         ),
         framework="fastapi",
-        recipe_list=[session.init(), userroles.init(), usermetadata.init()],
+        recipe_list=[session.init(), userroles.init(), usermetadata.init(), emailpassword.init()],
         mode="asgi",
     )

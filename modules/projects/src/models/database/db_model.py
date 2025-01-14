@@ -1,5 +1,6 @@
-from typing import Optional, Union, TYPE_CHECKING
-from uuid import UUID
+import datetime
+from typing import Optional, Union
+from uuid import UUID, uuid4
 
 from beanie import Document, Link, BackLink
 from lcax import Assembly as LCAxAssembly
@@ -7,10 +8,19 @@ from lcax import EPD as LCAxEPD
 from lcax import Product as LCAxProduct
 from lcax import Project as LCAxProject
 from lcax import TechFlow as LCAxTechFlow
-from pydantic import Field
+from pydantic import Field, BaseModel
 
-if TYPE_CHECKING:
-    from models import DBContribution
+
+class ContributionBase(BaseModel):
+    id: UUID = Field(default_factory=uuid4)
+    uploaded_at: datetime.datetime = Field(default_factory=datetime.datetime.now, alias="uploadedAt")
+    user_id: UUID = Field(alias="userId")
+    organization_id: UUID = Field(alias="organizationId")
+    public: bool = Field(default=False)
+
+
+class DBContribution(ContributionBase, Document):
+    project: Link["DBProject"]
 
 
 class DBEPD(LCAxEPD, Document):
@@ -19,11 +29,6 @@ class DBEPD(LCAxEPD, Document):
 
 class DBTechFlow(LCAxTechFlow, Document):
     id: UUID
-
-
-# class DBImpactData(Document):
-#     epd: Optional[Link[DBEPD]] = Field(default=None, alias="EPD")
-#     tech_flow: Optional[Link[DBTechFlow]] = Field(default=None, alias="techFlow")
 
 
 class DBProduct(LCAxProduct, Document):
@@ -39,4 +44,4 @@ class DBAssembly(LCAxAssembly, Document):
 class DBProject(LCAxProject, Document):
     id: UUID
     assemblies: list[Link[DBAssembly]]
-    contribution: BackLink["DBContribution"] = Field(original_field="project")
+    contribution: BackLink[DBContribution] = Field(original_field="project")
