@@ -21,6 +21,7 @@ from supertokens_python.recipe.emailpassword.interfaces import (
     WrongCredentialsError,
 )
 from supertokens_python.recipe.emailpassword.types import FormField, PasswordResetEmailTemplateVars, SMTPOverrideInput
+from supertokens_python.recipe.session.interfaces import SessionContainer
 from supertokens_python.recipe.usermetadata.asyncio import get_user_metadata, update_user_metadata
 
 from core.config import settings
@@ -294,13 +295,24 @@ def custom_smtp_content_override(original_implementation: SMTPOverrideInput) -> 
 def override_email_password_apis(original_implementation: APIInterface):
     """Extends the sign-up process to include first name and last name"""
 
-
     original_sign_up_post = original_implementation.sign_up_post
 
     async def sign_up_post(
-        form_fields: List[FormField], tenant_id, api_options: APIOptions, user_context: Dict[str, Any]
+        form_fields: List[FormField],
+        tenant_id: str,
+        session: Union[SessionContainer, None],
+        should_try_linking_with_session_user: Union[bool, None],
+        api_options: APIOptions,
+        user_context: Dict[str, Any],
     ):
-        response = await original_sign_up_post(form_fields, tenant_id, api_options, user_context)
+        response = await original_sign_up_post(
+            form_fields,
+            tenant_id,
+            session,
+            should_try_linking_with_session_user,
+            api_options,
+            user_context,
+        )
 
         if isinstance(response, SignUpPostOkResult):
             first_name = next(f.value for f in form_fields if f.id == "firstName")
@@ -317,6 +329,7 @@ def override_email_password_apis(original_implementation: APIInterface):
 def functions_override(original_impl: RecipeInterface):
     og_emailpassword_sign_in = original_impl.sign_in
     og_update_email_or_password = original_impl.update_email_or_password
+
     # og_reset_password_using_token = original_impl.reset_password_using_token
 
     # Prevents using the fake password (Initially assigned to invited users)
@@ -364,11 +377,18 @@ def functions_override(original_impl: RecipeInterface):
 
     # Prevents signing in with Fake password (User must change the password before signing in)
     async def emailpassword_sign_in(
-        email: str, password: str, tenant_id: str, user_context: Dict[str, Any]
+        email: str,
+        password: str,
+        tenant_id: str,
+        session: SessionContainer | None,
+        should_try_linking_with_session_user: bool | None,
+        user_context: Dict[str, Any],
     ) -> Union[SignInOkResult, WrongCredentialsError]:
         if password == FAKE_PASSWORD:
             return WrongCredentialsError()
-        return await og_emailpassword_sign_in(email, password, tenant_id, user_context)
+        return await og_emailpassword_sign_in(
+            email, password, tenant_id, session, should_try_linking_with_session_user, user_context
+        )
 
     original_impl.update_email_or_password = update_email_or_password
     # original_impl.reset_password_using_token = reset_password_using_token

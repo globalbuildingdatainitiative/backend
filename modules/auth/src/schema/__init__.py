@@ -12,6 +12,7 @@ from schema.user import (
     reject_invitation_mutation,
     resend_invitation_mutation,
     impersonate_mutation,
+    make_admin_mutation,
 )
 
 
@@ -43,6 +44,9 @@ class Mutation:
     )
     impersonate: bool = strawberry.field(
         resolver=impersonate_mutation, description=getdoc(impersonate_mutation), permission_classes=[IsAdmin]
+    )
+    make_admin: bool = strawberry.field(
+        resolver=make_admin_mutation, description=getdoc(make_admin_mutation), permission_classes=[IsAdmin]
     )
 
 

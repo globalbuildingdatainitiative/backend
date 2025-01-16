@@ -2,6 +2,10 @@ from logging import getLogger
 from uuid import UUID
 
 from aiocache import cached
+from supertokens_python.recipe.userroles.asyncio import get_roles_for_user, add_role_to_user
+from supertokens_python.recipe.userroles.interfaces import UnknownRoleError
+
+from core.exceptions import EntityNotFound
 
 logger = getLogger("main")
 
@@ -19,10 +23,21 @@ async def create_roles():
             logger.info(f"Role: {role.get('name')} with permissions: {role.get('permissions')} created")
 
 
+async def assign_role(user_id: str, role: str):
+    response = await add_role_to_user("public", user_id, role)
+
+    if isinstance(response, UnknownRoleError):
+        logger.warning(f"Role: {role} does not exist")
+        raise EntityNotFound(f"Role: {role} does not exist", "Auth")
+    elif response.did_user_already_have_role:
+        logger.info(f"User: {user_id} have already been assigned role of {role}.")
+    else:
+        logger.info(f"Successfully assigned role of {role} to user: {user_id}.")
+
+
 @cached(ttl=60)
 async def check_is_admin(user_id: str | UUID) -> bool:
     """Check if the user is an admin"""
-    from supertokens_python.recipe.userroles.asyncio import get_roles_for_user
 
     if isinstance(user_id, UUID):
         user_id = str(user_id)

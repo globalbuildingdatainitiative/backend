@@ -30,9 +30,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title=settings.SERVER_NAME, openapi_url=f"{settings.API_STR}/openapi.json", lifespan=lifespan)
+app.add_middleware(get_middleware())
+# if "test" not in settings.SERVER_NAME.lower():
 
-if "test" not in settings.SERVER_NAME.lower():
-    app.add_middleware(get_middleware())
 
 supertokens_init()
 

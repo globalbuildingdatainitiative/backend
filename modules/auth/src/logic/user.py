@@ -8,7 +8,8 @@ from strawberry import UNSET
 from supertokens_python.asyncio import get_user, get_users_newest_first
 from supertokens_python.recipe.emailpassword.asyncio import update_email_or_password, verify_credentials
 from supertokens_python.recipe.emailpassword.interfaces import WrongCredentialsError
-from supertokens_python.recipe.session.asyncio import create_new_session, get_session
+from supertokens_python.recipe.session.asyncio import create_new_session
+from supertokens_python.recipe.session.interfaces import SessionContainer
 from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
 from fastapi.requests import Request
 from core import exceptions
@@ -63,9 +64,8 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
     return gql_users
 
 
-async def update_user(request: Request, user_input: UpdateUserInput) -> GraphQLUser:
+async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     """Update user details & metadata"""
-    session = await get_session(request)
 
     metadata_update = strawberry.asdict(user_input)
     user_id = str(metadata_update.pop("id"))
@@ -98,9 +98,9 @@ async def update_user(request: Request, user_input: UpdateUserInput) -> GraphQLU
             raise exceptions.WrongCredentialsError("Current password is incorrect")
 
         await update_email_or_password(
-            recipe_user_id=session.get_recipe_user_id(),
+            recipe_user_id=user.login_methods[0].recipe_user_id,
             password=user_input.new_password,
-            tenant_id_for_password_policy=session.get_tenant_id(),
+            tenant_id_for_password_policy=user.tenant_ids[0],
         )
 
     user_data = await get_users(UserFilters(id=FilterOptions(equal=user_id)))
@@ -247,20 +247,15 @@ def sort_users(users: list[GraphQLUser], sort_by: UserSort | None = None) -> lis
     return sorted_users
 
 
-async def impersonate_user(request, session, user_id: str) -> bool:
+async def impersonate_user(request: Request, user_id: str) -> SessionContainer:
     user = await get_user(user_id)
-    # import pydevd_pycharm
-    # pydevd_pycharm.settrace('host.minikube.internal', port=5476, stdoutToServer=True, stderrToServer=True)
-    if not user:
-        raise EntityNotFound("No user found with the provided ID", "Auth")
 
-    # TODO - this doesn't work
-    await create_new_session(
+    if not user:
+        raise EntityNotFound(f"No user found with the provided ID: {user_id}", "Auth")
+
+    return await create_new_session(
         request,
         "public",
-        user_id,
+        user.login_methods[0].recipe_user_id,
         {"isImpersonation": True},
     )
-
-    # session.sync_update_session_data_in_database(res)
-    return True

@@ -15,12 +15,12 @@ cors:
 headers:
   all:
     request:
-    - propagate:
-        matching: origin
-    - propagate:
-        named: cookie
-    - propagate:
-        matching: authorization
+      - propagate:
+          matching: origin
+      - propagate:
+          named: cookie
+      - propagate:
+          matching: authorization
 include_subgraph_errors:
   all: true
 override_subgraph_url:
@@ -31,3 +31,6 @@ limits:
   # Network-based limits
   http_max_request_bytes: 20000000
 
+rhai:
+  scripts: "/app/rhai"
+  main: "main.rhai"

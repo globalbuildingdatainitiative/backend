@@ -11,7 +11,7 @@ from logic import (
     resend_invitation,
     impersonate_user,
 )
-from logic.roles import check_is_admin
+from logic.roles import check_is_admin, assign_role
 from models import (
     GraphQLUser,
     UserFilters,
@@ -40,10 +40,10 @@ async def users_query(
         return await get_users(filters, sort_by)
 
 
-async def update_user_mutation(info: Info, user_input: UpdateUserInput) -> GraphQLUser:
+async def update_user_mutation(user_input: UpdateUserInput) -> GraphQLUser:
     """Update user details"""
 
-    return await update_user(info.context.get("request"), user_input)
+    return await update_user(user_input)
 
 
 async def invite_users_mutation(info: Info, input: InviteUsersInput) -> list[InviteResult]:
@@ -53,9 +53,9 @@ async def invite_users_mutation(info: Info, input: InviteUsersInput) -> list[Inv
     return results
 
 
-async def accept_invitation_mutation(user: AcceptInvitationInput) -> bool:
+async def accept_invitation_mutation(info: Info, user: AcceptInvitationInput) -> bool:
     """Accept an invitation"""
-    result = await accept_invitation(user)
+    result = await accept_invitation(info.context.get("request"), user)
     return result
 
 
@@ -75,4 +75,18 @@ async def resend_invitation_mutation(info: Info, user_id: str) -> InviteResult:
 async def impersonate_mutation(info: Info, user_id: str) -> bool:
     """Impersonate a different user"""
 
-    return await impersonate_user(info.context.get("request"), None, user_id)
+    session = await impersonate_user(info.context.get("request"), user_id)
+
+    logger.info(f"User {user_id} impersonated by {get_user(info).id}")
+
+    return True if session else False
+
+
+async def make_admin_mutation(user_id: str) -> bool:
+    """Assign admin role to a user"""
+
+    await assign_role(user_id, "admin")
+
+    logger.info(f"User {user_id} became admin")
+
+    return True
