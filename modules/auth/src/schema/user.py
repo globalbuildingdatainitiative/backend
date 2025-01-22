@@ -1,6 +1,7 @@
 import logging
 
 from strawberry.types import Info
+
 from core.context import get_user
 from logic import (
     get_users,
@@ -11,7 +12,7 @@ from logic import (
     resend_invitation,
     impersonate_user,
 )
-from logic.roles import check_is_admin, assign_role
+from logic.roles import check_is_admin
 from models import (
     GraphQLUser,
     UserFilters,
@@ -33,11 +34,15 @@ async def users_query(
 
     is_admin = await check_is_admin(get_user(info).id)
     if is_admin:
-        return await get_users(filters, sort_by)
+        users = await get_users(filters, sort_by)
+        logger.info(f"Got {len(users)} users as admin")
+        return users
     else:
         filters = filters or UserFilters()
         filters.organization_id = FilterOptions(equal=get_user(info).organization_id)
-        return await get_users(filters, sort_by)
+        users = await get_users(filters, sort_by)
+        logger.info(f"Got {len(users)} users")
+        return users
 
 
 async def update_user_mutation(user_input: UpdateUserInput) -> GraphQLUser:
@@ -53,15 +58,21 @@ async def invite_users_mutation(info: Info, input: InviteUsersInput) -> list[Inv
     return results
 
 
-async def accept_invitation_mutation(info: Info, user: AcceptInvitationInput) -> bool:
+async def accept_invitation_mutation(user: AcceptInvitationInput) -> bool:
     """Accept an invitation"""
-    result = await accept_invitation(info.context.get("request"), user)
+
+    result = await accept_invitation(user)
+    logger.info(f"Invitation accepted by {user.id}")
+
     return result
 
 
 async def reject_invitation_mutation(user_id: str) -> bool:
     """Reject an invitation"""
+
     result = await reject_invitation(user_id)
+    logger.info(f"Invitation rejected by {user_id}")
+
     return result
 
 
@@ -80,13 +91,3 @@ async def impersonate_mutation(info: Info, user_id: str) -> bool:
     logger.info(f"User {user_id} impersonated by {get_user(info).id}")
 
     return True if session else False
-
-
-async def make_admin_mutation(user_id: str) -> bool:
-    """Assign admin role to a user"""
-
-    await assign_role(user_id, "admin")
-
-    logger.info(f"User {user_id} became admin")
-
-    return True

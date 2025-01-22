@@ -53,8 +53,8 @@ async def mongo(docker_client):
 async def supertokens(docker_client):
     container = docker_client.containers.run(
         image="registry.supertokens.io/supertokens/supertokens-postgresql",
-        ports={"3567": "3567"},
-        name="supertokens",
+        ports={"3567": "3566"},
+        name="supertokens_projects",
         detach=True,
         auto_remove=True,
     )

@@ -8,8 +8,8 @@ from .user import (
     InviteUsersInput,
     InviteResult,
     InviteStatus,
-    Role,
 )
+from .roles import Role, Permission, RolePermission
 from .scalers import EmailAddress
 
 __all__ = [
@@ -23,5 +23,7 @@ __all__ = [
     InviteResult,
     InviteStatus,
     Role,
+    Permission,
+    RolePermission,
     EmailAddress,
 ]

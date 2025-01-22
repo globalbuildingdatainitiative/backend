@@ -12,10 +12,12 @@ from supertokens_python.recipe.session.asyncio import create_new_session
 from supertokens_python.recipe.session.interfaces import SessionContainer
 from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
 from fastapi.requests import Request
+from supertokens_python.recipe.userroles.asyncio import get_roles_for_user
 from supertokens_python.types import AccountInfo
 
 from core import exceptions
 from core.exceptions import EntityNotFound
+from logic.roles import assign_role, remove_role
 from models import GraphQLUser, UserFilters, UserSort, UpdateUserInput, InviteStatus, Role, AcceptInvitationInput
 from models.sort_filter import FilterOptions
 
@@ -26,6 +28,8 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
     """Returns all Users & their metadata"""
     users = []
 
+    logger.debug(f"Fetching users with filters: {filters} and sort_by: {sort_by}")
+
     if filters:
         if filters.id and filters.id.equal:
             users = [await get_user(str(filters.id.equal))]
@@ -35,8 +39,7 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
     users = (await get_users_newest_first("public")).users if not users else users
 
     gql_users = [
-        await GraphQLUser.from_supertokens(user, (await get_user_metadata(user.id)).metadata)
-        for user in users
+        await GraphQLUser.from_supertokens(user, (await get_user_metadata(user.id)).metadata) for user in users
     ]
 
     if filters:
@@ -60,7 +63,11 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     del metadata_update["current_password"]
     del metadata_update["new_password"]
     if metadata_update["organization_id"] is UNSET or metadata_update["organization_id"] is None:
-        metadata_update["role"] = metadata_update["organization_id"]
+        roles = await get_roles_for_user("public", user_id)
+        for role in roles.roles:
+            if role == "admin":
+                continue
+            await remove_role(user_id, Role(role))
 
     def custom_serializer(obj):
         if isinstance(obj, InviteStatus):
@@ -101,8 +108,8 @@ async def accept_invitation(user: AcceptInvitationInput) -> bool:
         "invite_status": InviteStatus.ACCEPTED.value,
         "invited": None,
         "pending_org_id": None,
-        "role": Role.MEMBER.value,
     }
+    await assign_role(user.id, Role.MEMBER)
 
     if "pending_org_id" in current_metadata.metadata:
         update_data["organization_id"] = current_metadata.metadata["pending_org_id"]
@@ -157,20 +164,20 @@ def filter_users(users: list[GraphQLUser], filters: UserFilters) -> list[GraphQL
                 user
                 for user in filtered_users
                 if (model_field == "role" and user.role and user.role.value.lower() == str(filter_value.equal).lower())
-                   or (
-                           model_field != "role"
-                           and str(getattr(user, model_field, None)).lower() == str(filter_value.equal).lower()
-                   )
+                or (
+                    model_field != "role"
+                    and str(getattr(user, model_field, None)).lower() == str(filter_value.equal).lower()
+                )
             ]
         elif filter_value.contains is not None:
             filtered_users = [
                 user
                 for user in filtered_users
                 if (model_field == "role" and user.role and filter_value.contains.lower() in user.role.value.lower())
-                   or (
-                           model_field != "role"
-                           and filter_value.contains.lower() in str(getattr(user, model_field, "")).lower()
-                   )
+                or (
+                    model_field != "role"
+                    and filter_value.contains.lower() in str(getattr(user, model_field, "")).lower()
+                )
             ]
         elif filter_value.is_true is not None:
             filtered_users = [

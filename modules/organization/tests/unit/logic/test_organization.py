@@ -28,7 +28,7 @@ async def test_get_organizations(organizations):
 
 
 @pytest.mark.asyncio
-async def test_create_organizations(app, user, mock_update_user_metadata):
+async def test_create_organizations(create_user):
     """Tests creating a new organization"""
 
     name = "New Organization"
@@ -45,7 +45,9 @@ async def test_create_organizations(app, user, mock_update_user_metadata):
         meta_data=InputOrganizationMetaData(stakeholders=stakeholders),
     )
 
-    created_organization = await create_organizations_mutation(organizations=[organization_data], current_user=user)
+    created_organization = await create_organizations_mutation(
+        organizations=[organization_data], current_user=create_user
+    )
 
     assert created_organization[0].name == name
     assert created_organization[0].address == address

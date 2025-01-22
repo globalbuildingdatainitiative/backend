@@ -12,6 +12,7 @@ from supertokens_python.recipe.session.exceptions import UnauthorisedError, TryR
 
 from core.auth import supertokens_init
 from core.config import settings
+from logic.roles import create_roles
 from routes import graphql_app
 
 log_config = yaml.safe_load((Path(__file__).parent / "logging.yaml").read_text())
@@ -23,7 +24,7 @@ logger = logging.getLogger("main")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    from logic.roles import create_roles
+    logger.info("Running lifespan")
 
     await create_roles()
     yield

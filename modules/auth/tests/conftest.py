@@ -7,18 +7,22 @@ import docker
 import httpx
 import pytest
 from asgi_lifespan import LifespanManager
+from docker.errors import NotFound
 from fastapi import FastAPI
 from fastapi.requests import Request
 from httpx import AsyncClient
 from supertokens_python import RecipeUserId
+from supertokens_python.asyncio import delete_user
 from supertokens_python.recipe.emailpassword.asyncio import sign_up
 from supertokens_python.recipe.session.asyncio import create_new_session
 from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
 from supertokens_python.recipe.userroles.asyncio import add_role_to_user
+from tenacity import stop_after_attempt, wait_fixed, retry_if_exception, retry
 from time import sleep
 
 from core.config import settings
-from models import SuperTokensUser
+from logic.roles import assign_role
+from models import SuperTokensUser, Role
 
 
 @pytest.fixture(scope="session")
@@ -28,21 +32,34 @@ def docker_client():
 
 @pytest.fixture(scope="session")
 async def supertokens(docker_client):
+    try:
+        _container = docker_client.containers.get("supertokens")
+        _container.kill()
+        sleep(0.2)
+    except NotFound:
+        pass
+
     container = docker_client.containers.run(
         image="registry.supertokens.io/supertokens/supertokens-postgresql",
-        ports={"3567": "3567"},
-        name="supertokens",
+        ports={"3567": "3568"},
+        name="supertokens_auth",
         detach=True,
         auto_remove=True,
     )
+
+    @retry(
+        stop=stop_after_attempt(10),
+        wait=wait_fixed(0.2),
+        retry=retry_if_exception(lambda e: isinstance(e, httpx.HTTPError)),
+    )
+    def wait_for_container():
+        response = httpx.get(f"{settings.CONNECTION_URI}/hello")
+        if response.status_code == 200 and response.text.strip() == "Hello":
+            return True
+
     while True:
-        sleep(0.1)
-        try:
-            response = httpx.get(f"{settings.CONNECTION_URI}/hello")
-            if response.status_code == 200 and response.text.strip() == "Hello":
-                break
-        except httpx.HTTPError:
-            pass
+        if wait_for_container():
+            break
     try:
         yield container
     finally:
@@ -68,6 +85,28 @@ async def create_user(app) -> SuperTokensUser:
     yield SuperTokensUser(id=UUID(response.user.id), organization_id=uuid4())
 
 
+@pytest.fixture
+async def create_admin_user(app) -> SuperTokensUser:
+    response = await sign_up("public", "admin@email.com", "currentPassword123")
+    _user = SuperTokensUser(id=UUID(response.user.id), organization_id=uuid4())
+    await assign_role(_user.id, Role.ADMIN)
+
+    yield _user
+
+    await delete_user(str(_user.id))
+
+
+@pytest.fixture()
+async def client_admin(app: FastAPI, client_unauthenticated, create_admin_user) -> Iterator[AsyncClient]:
+    """Async server client that handles lifespan and teardown"""
+
+    response = await client_unauthenticated.get(f"/login/{create_admin_user.id}")
+    response.raise_for_status()
+
+    client_unauthenticated.headers["Authorization"] = f"Bearer {response.json()['token']}"
+    yield client_unauthenticated
+
+
 @pytest.fixture()
 async def client(app: FastAPI, client_unauthenticated, create_user) -> Iterator[AsyncClient]:
     """Async server client that handles lifespan and teardown"""
@@ -85,14 +124,17 @@ async def users(app):
     for user in users:
         response = await sign_up("public", user.get("email"), "currentPassword123")
         user_id = response.user.id
-        await update_user_metadata(user_id, {
-            "firstName": user.get("firstName"),
-            "lastName": user.get("lastName"),
-            "organization_id": user.get("organization_id"),
-            "invited": user.get("invited"),
-            "invite_status": user.get("invite_status"),
-            "inviter_name": user.get("inviter_name"),
-        })
+        await update_user_metadata(
+            user_id,
+            {
+                "firstName": user.get("firstName"),
+                "lastName": user.get("lastName"),
+                "organization_id": user.get("organization_id"),
+                "invited": user.get("invited"),
+                "invite_status": user.get("invite_status"),
+                "inviter_name": user.get("inviter_name"),
+            },
+        )
         for role in user.get("roles", []):
             await add_role_to_user("public", user_id, role)
         user.update({"id": user_id})
@@ -104,8 +146,8 @@ async def client_unauthenticated(app: FastAPI) -> Iterator[AsyncClient]:
     """Async server client that handles lifespan and teardown"""
 
     async with AsyncClient(
-            app=app,
-            base_url=str(settings.SERVER_HOST),
+        app=app,
+        base_url=str(settings.SERVER_HOST),
     ) as _client:
         try:
             yield _client

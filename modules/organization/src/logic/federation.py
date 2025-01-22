@@ -5,7 +5,7 @@ from supertokens_python.recipe.jwt import asyncio
 from supertokens_python.recipe.jwt.interfaces import CreateJwtOkResult
 
 from core.config import settings
-from exceptions.exceptions import MicroServiceConnectionError, MicroServiceResponseError
+from core.exceptions import MicroServiceConnectionError, MicroServiceResponseError
 
 
 async def create_jwt() -> str:

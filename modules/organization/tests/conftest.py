@@ -1,16 +1,22 @@
+from time import sleep
 from typing import Iterator
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 import docker
+import httpx
 import pytest
 from asgi_lifespan import LifespanManager
+from docker.errors import NotFound
 from fastapi import FastAPI
-from httpx import AsyncClient
-import supertokens_python.recipe.session.asyncio
 from fastapi.requests import Request
+from httpx import AsyncClient
+from supertokens_python import RecipeUserId
+from supertokens_python.asyncio import delete_user
+from supertokens_python.recipe.emailpassword.asyncio import sign_up
+from supertokens_python.recipe.session.asyncio import create_new_session
+from supertokens_python.recipe.userroles.asyncio import create_new_role_or_add_permissions
+from tenacity import stop_after_attempt, wait_fixed, retry, retry_if_exception
 
-import core.auth
-import core.context
 from core.config import settings
 from core.connection import health_check_mongo, create_mongo_client
 from models import SuperTokensUser
@@ -23,6 +29,12 @@ def docker_client():
 
 @pytest.fixture(scope="session")
 async def mongo(docker_client):
+    try:
+        _container = docker_client.containers.get("mongo_database")
+        _container.kill()
+    except NotFound:
+        pass
+
     container = docker_client.containers.run(
         "mongo:7",
         ports={"27017": settings.MONGO_PORT},
@@ -44,45 +56,39 @@ async def mongo(docker_client):
 
 
 @pytest.fixture(scope="session")
-def user() -> SuperTokensUser:
-    _user = SuperTokensUser(id=uuid4(), organization_id=uuid4())
-    yield _user
-
-
-@pytest.fixture(scope="session")
-def mock_supertokens(session_mocker):
-    def fake_supertokens():
+async def supertokens(docker_client):
+    try:
+        _container = docker_client.containers.get("supertokens")
+        _container.kill()
+        sleep(0.2)
+    except NotFound:
         pass
 
-    session_mocker.patch.object(
-        core.auth,
-        "supertokens_init",
-        fake_supertokens,
+    container = docker_client.containers.run(
+        image="registry.supertokens.io/supertokens/supertokens-postgresql",
+        ports={"3567": "3569"},
+        name="supertokens_organization",
+        detach=True,
+        auto_remove=True,
     )
 
-
-@pytest.fixture(scope="session")
-def mock_get_context(user, session_mocker):
-    async def fake_get_context():
-        return {"user": user}
-
-    session_mocker.patch.object(
-        core.context,
-        "get_context",
-        fake_get_context,
+    @retry(
+        stop=stop_after_attempt(10),
+        wait=wait_fixed(0.2),
+        retry=retry_if_exception(lambda e: isinstance(e, httpx.HTTPError)),
     )
+    def wait_for_container():
+        response = httpx.get(f"{settings.SUPERTOKENS_CONNECTION_URI}/hello")
+        if response.status_code == 200 and response.text.strip() == "Hello":
+            return True
 
-
-@pytest.fixture(scope="session")
-def mock_get_session(session_mocker):
-    async def fake_get_session(request: Request):
-        return {}
-
-    session_mocker.patch.object(
-        supertokens_python.recipe.session.asyncio,
-        "get_session",
-        fake_get_session,
-    )
+    while True:
+        if wait_for_container():
+            break
+    try:
+        yield container
+    finally:
+        container.stop()
 
 
 @pytest.fixture
@@ -93,41 +99,49 @@ def database(mongo):
 
 
 @pytest.fixture
-async def app(database, mock_supertokens, mock_get_context) -> FastAPI:
+async def app(supertokens, mongo) -> FastAPI:
     from main import app
+
+    @app.get("/login/{user_id}")
+    async def login(request: Request, user_id: str):  # type: ignore
+        res = await create_new_session(request, "public", RecipeUserId(user_id), {}, {})
+        return {"token": res.access_token}
 
     async with LifespanManager(app):
         yield app
 
 
 @pytest.fixture
-async def app_unauthenticated(database, mock_supertokens, mock_get_session) -> FastAPI:
-    from main import app
+async def create_owner():
+    await create_new_role_or_add_permissions("owner", [])
 
-    async with LifespanManager(app):
-        yield app
+
+@pytest.fixture
+async def create_user(app, create_owner) -> SuperTokensUser:
+    response = await sign_up("public", "my@email.com", "currentPassword123")
+    user_id = response.user.id
+    yield SuperTokensUser(id=UUID(user_id), organization_id=uuid4())
+
+    await delete_user(user_id)
 
 
 @pytest.fixture()
-async def client(app: FastAPI) -> Iterator[AsyncClient]:
+async def client(app: FastAPI, client_unauthenticated, create_user) -> Iterator[AsyncClient]:
+    """Async server client that handles lifespan and teardown"""
+
+    response = await client_unauthenticated.get(f"/login/{create_user.id}")
+    response.raise_for_status()
+
+    client_unauthenticated.headers["Authorization"] = f"Bearer {response.json()['token']}"
+    yield client_unauthenticated
+
+
+@pytest.fixture()
+async def client_unauthenticated(app: FastAPI, database) -> Iterator[AsyncClient]:
     """Async server client that handles lifespan and teardown"""
 
     async with AsyncClient(
         app=app,
-        base_url=str(settings.SERVER_HOST),
-    ) as _client:
-        try:
-            yield _client
-        except Exception as exc:
-            print(exc)
-
-
-@pytest.fixture()
-async def client_unauthenticated(app_unauthenticated: FastAPI) -> Iterator[AsyncClient]:
-    """Async server client that handles lifespan and teardown"""
-
-    async with AsyncClient(
-        app=app_unauthenticated,
         base_url=str(settings.SERVER_HOST),
     ) as _client:
         try:

@@ -1,7 +1,7 @@
 from datetime import datetime
+from enum import Enum
 from typing import Self, List
 from uuid import UUID
-from enum import Enum
 
 import strawberry
 from pydantic import BaseModel
@@ -11,6 +11,7 @@ from supertokens_python.recipe.userroles.asyncio import get_roles_for_user
 from supertokens_python.types import User
 
 from core.auth import FAKE_PASSWORD
+from models.roles import Role
 from .scalers import EmailAddress
 from .sort_filter import BaseFilter, FilterOptions
 
@@ -21,13 +22,6 @@ class InviteStatus(Enum):
     PENDING = "pending"
     REJECTED = "rejected"
     NONE = "none"
-
-
-@strawberry.enum
-class Role(Enum):
-    OWNER = "owner"
-    MEMBER = "member"
-    ADMIN = "admin"
 
 
 class SuperTokensUser(BaseModel):
@@ -57,13 +51,13 @@ class GraphQLUser:
             id=UUID(user.id),
             email=user.emails[0],
             time_joined=datetime.fromtimestamp(round(user.time_joined / 1000)),
-            first_name=metadata.get("firstName"),
-            last_name=metadata.get("lastName"),
+            first_name=metadata.get("first_name"),
+            last_name=metadata.get("last_name"),
             organization_id=effective_org_id,
             invited=invited,
             invite_status=InviteStatus(metadata.get("invite_status", InviteStatus.NONE)),
             inviter_name=metadata.get("inviter_name"),
-            roles=[Role(role) for role in (await get_roles_for_user("public", user.id)).roles]
+            roles=[Role(role) for role in (await get_roles_for_user("public", user.id)).roles],
         )
 
     @classmethod

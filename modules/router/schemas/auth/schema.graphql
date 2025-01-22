@@ -66,17 +66,41 @@ type Mutation {
   makeAdmin(userId: String!): Boolean!
 }
 
+enum Permission {
+  CONTRIBUTIONS_READ
+  CONTRIBUTIONS_CREATE
+  CONTRIBUTIONS_UPDATE
+  CONTRIBUTIONS_DELETE
+  MEMBERS_READ
+  MEMBERS_CREATE
+  MEMBERS_UPDATE
+  MEMBERS_DELETE
+  ORGANIZATIONS_CREATE
+  ORGANIZATIONS_READ
+  ORGANIZATIONS_UPDATE
+  ORGANIZATIONS_DELETE
+}
+
 type Query {
   _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
 
   """Returns all Users"""
   users(filters: UserFilters = null, sortBy: UserSort = null): [User!]!
+
+  """Returns all Roles and their permissions"""
+  roles: [RolePermission!]!
 }
 
 enum Role {
   OWNER
   MEMBER
+  ADMIN
+}
+
+type RolePermission {
+  name: Role!
+  permissions: [Permission!]!
 }
 
 scalar UUID
@@ -105,7 +129,7 @@ type User @key(fields: "id") {
   invited: Boolean!
   inviteStatus: InviteStatus!
   inviterName: String
-  role: Role
+  roles: [Role!]
 }
 
 input UserFilters {
@@ -117,7 +141,6 @@ input UserFilters {
   invited: FilterOptions = null
   inviteStatus: FilterOptions = null
   inviterName: FilterOptions = null
-  role: FilterOptions = null
   timeJoined: FilterOptions = null
 }
 

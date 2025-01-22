@@ -29,9 +29,7 @@ async def invite_users(emails: List[str], inviter_id: UUID, request: Request) ->
 
     if not inviter_org_id:
         raise UserHasNoOrganization("User doesn't belong to an organization", "Auth")
-    import pydevd_pycharm
 
-    pydevd_pycharm.settrace("host.minikube.internal", port=5476, stdoutToServer=True, stderrToServer=True)
     results = []
     for email in emails:
         try:

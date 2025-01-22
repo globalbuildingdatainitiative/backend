@@ -14,7 +14,7 @@ logger = getLogger("main")
 async def test_get_all_users(users):
     _users = await get_users()
     assert isinstance(_users, list)
-    assert len(_users) == len(users)
+    assert len(_users) == len(users) + 1
 
 
 @pytest.mark.asyncio
