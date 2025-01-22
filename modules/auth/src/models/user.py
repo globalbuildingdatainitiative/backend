@@ -7,6 +7,8 @@ import strawberry
 from pydantic import BaseModel
 from strawberry import UNSET
 from strawberry.federation.schema_directives import Shareable
+from supertokens_python.recipe.userroles.asyncio import get_roles_for_user
+from supertokens_python.types import User
 
 from core.auth import FAKE_PASSWORD
 from .scalers import EmailAddress
@@ -25,6 +27,7 @@ class InviteStatus(Enum):
 class Role(Enum):
     OWNER = "owner"
     MEMBER = "member"
+    ADMIN = "admin"
 
 
 class SuperTokensUser(BaseModel):
@@ -43,21 +46,24 @@ class GraphQLUser:
     invited: bool = False
     invite_status: InviteStatus = InviteStatus.NONE
     inviter_name: str | None = None
-    role: Role | None
+    roles: list[Role] | None
 
     @classmethod
-    def from_supertokens(cls, supertokens_user: dict) -> Self:
+    async def from_supertokens(cls, user: User, metadata: dict) -> Self:
+        invited = metadata.get("invited", False)
+        effective_org_id = metadata.get("organization_id") if not invited else metadata.get("pending_org_id")
+
         return cls(
-            id=supertokens_user["id"],
-            email=supertokens_user["email"],
-            time_joined=datetime.fromtimestamp(round(supertokens_user["timeJoined"] / 1000)),
-            first_name=supertokens_user.get("firstName"),
-            last_name=supertokens_user.get("lastName"),
-            organization_id=supertokens_user.get("organization_id"),
-            invited=supertokens_user.get("invited", False),
-            invite_status=InviteStatus(supertokens_user.get("invite_status", InviteStatus.NONE)),
-            inviter_name=supertokens_user.get("inviter_name"),
-            role=Role(supertokens_user.get("role", Role.MEMBER)),
+            id=UUID(user.id),
+            email=user.emails[0],
+            time_joined=datetime.fromtimestamp(round(user.time_joined / 1000)),
+            first_name=metadata.get("firstName"),
+            last_name=metadata.get("lastName"),
+            organization_id=effective_org_id,
+            invited=invited,
+            invite_status=InviteStatus(metadata.get("invite_status", InviteStatus.NONE)),
+            inviter_name=metadata.get("inviter_name"),
+            roles=[Role(role) for role in (await get_roles_for_user("public", user.id)).roles]
         )
 
     @classmethod
@@ -77,7 +83,6 @@ class UserFilters(BaseFilter):
     invited: FilterOptions | None = None
     invite_status: FilterOptions | None = None
     inviter_name: FilterOptions | None = None
-    role: FilterOptions | None = None
     time_joined: FilterOptions | None = None
 
 

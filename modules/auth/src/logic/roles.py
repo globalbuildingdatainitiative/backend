@@ -13,7 +13,17 @@ logger = getLogger("main")
 async def create_roles():
     from supertokens_python.recipe.userroles.asyncio import create_new_role_or_add_permissions
 
-    roles = [{"name": "admin", "permissions": ["all"]}]
+    roles = [
+        {"name": "admin", "permissions": ["all"]},
+        {"name": "owner", "permissions": [
+            "contributions::read", "contributions::write", "contributions::update", "contributions::delete",
+            "members::read", "members::write", "members::update", "members::delete",
+        ]},
+        {"name": "member", "permissions": [
+            "contributions::read", "contributions::write", "contributions::update", "contributions::delete",
+            "members::read", "members::write", "members::update",
+        ]},
+    ]
 
     for role in roles:
         response = await create_new_role_or_add_permissions(role.get("name"), role.get("permissions"))

@@ -13,6 +13,8 @@ from httpx import AsyncClient
 from supertokens_python import RecipeUserId
 from supertokens_python.recipe.emailpassword.asyncio import sign_up
 from supertokens_python.recipe.session.asyncio import create_new_session
+from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
+from supertokens_python.recipe.userroles.asyncio import add_role_to_user
 from time import sleep
 
 from core.config import settings
@@ -82,7 +84,18 @@ async def users(app):
     users = json.loads((Path(__file__).parent / "datafixtures" / "users.json").read_text())
     for user in users:
         response = await sign_up("public", user.get("email"), "currentPassword123")
-        user.update({"id": response.user.id})
+        user_id = response.user.id
+        await update_user_metadata(user_id, {
+            "firstName": user.get("firstName"),
+            "lastName": user.get("lastName"),
+            "organization_id": user.get("organization_id"),
+            "invited": user.get("invited"),
+            "invite_status": user.get("invite_status"),
+            "inviter_name": user.get("inviter_name"),
+        })
+        for role in user.get("roles", []):
+            await add_role_to_user("public", user_id, role)
+        user.update({"id": user_id})
     yield users
 
 
@@ -91,8 +104,8 @@ async def client_unauthenticated(app: FastAPI) -> Iterator[AsyncClient]:
     """Async server client that handles lifespan and teardown"""
 
     async with AsyncClient(
-        app=app,
-        base_url=str(settings.SERVER_HOST),
+            app=app,
+            base_url=str(settings.SERVER_HOST),
     ) as _client:
         try:
             yield _client

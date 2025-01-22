@@ -5,13 +5,15 @@ from uuid import UUID
 
 import strawberry
 from strawberry import UNSET
-from supertokens_python.asyncio import get_user, get_users_newest_first
+from supertokens_python.asyncio import get_user, get_users_newest_first, list_users_by_account_info
 from supertokens_python.recipe.emailpassword.asyncio import update_email_or_password, verify_credentials
 from supertokens_python.recipe.emailpassword.interfaces import WrongCredentialsError
 from supertokens_python.recipe.session.asyncio import create_new_session
 from supertokens_python.recipe.session.interfaces import SessionContainer
 from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
 from fastapi.requests import Request
+from supertokens_python.types import AccountInfo
+
 from core import exceptions
 from core.exceptions import EntityNotFound
 from models import GraphQLUser, UserFilters, UserSort, UpdateUserInput, InviteStatus, Role, AcceptInvitationInput
@@ -22,39 +24,20 @@ logger = getLogger("main")
 
 async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None = None) -> list[GraphQLUser]:
     """Returns all Users & their metadata"""
+    users = []
 
-    users = await get_users_newest_first("public")
+    if filters:
+        if filters.id and filters.id.equal:
+            users = [await get_user(str(filters.id.equal))]
+        elif filters.email and filters.email.equal:
+            users = await list_users_by_account_info("public", AccountInfo(email=filters.email.equal))
 
-    gql_users = []
+    users = (await get_users_newest_first("public")).users if not users else users
 
-    for user in users.users:
-        # Fetch metadata for each user
-        metadata_response = await get_user_metadata(user.id)
-        first_name = metadata_response.metadata.get("first_name")
-        last_name = metadata_response.metadata.get("last_name")
-        organization_id = metadata_response.metadata.get("organization_id")
-        pending_org_id = metadata_response.metadata.get("pending_org_id")
-        invited = metadata_response.metadata.get("invited", False)
-        invite_status = metadata_response.metadata.get("invite_status", InviteStatus.NONE.value)
-        inviter_name = metadata_response.metadata.get("inviter_name", "")
-        role = metadata_response.metadata.get("role", Role.MEMBER.value)
-
-        effective_org_id = organization_id if not invited else pending_org_id
-
-        user = GraphQLUser(
-            id=user.id,
-            email=user.emails[0],
-            time_joined=datetime.fromtimestamp(round(user.time_joined / 1000)),
-            first_name=first_name,
-            last_name=last_name,
-            organization_id=effective_org_id,
-            invited=invited,
-            invite_status=InviteStatus(invite_status.lower()),
-            inviter_name=inviter_name,
-            role=Role(role.lower()) if role else Role.MEMBER,
-        )
-
-        gql_users.append(user)
+    gql_users = [
+        await GraphQLUser.from_supertokens(user, (await get_user_metadata(user.id)).metadata)
+        for user in users
+    ]
 
     if filters:
         gql_users = filter_users(gql_users, filters)
@@ -174,20 +157,20 @@ def filter_users(users: list[GraphQLUser], filters: UserFilters) -> list[GraphQL
                 user
                 for user in filtered_users
                 if (model_field == "role" and user.role and user.role.value.lower() == str(filter_value.equal).lower())
-                or (
-                    model_field != "role"
-                    and str(getattr(user, model_field, None)).lower() == str(filter_value.equal).lower()
-                )
+                   or (
+                           model_field != "role"
+                           and str(getattr(user, model_field, None)).lower() == str(filter_value.equal).lower()
+                   )
             ]
         elif filter_value.contains is not None:
             filtered_users = [
                 user
                 for user in filtered_users
                 if (model_field == "role" and user.role and filter_value.contains.lower() in user.role.value.lower())
-                or (
-                    model_field != "role"
-                    and filter_value.contains.lower() in str(getattr(user, model_field, "")).lower()
-                )
+                   or (
+                           model_field != "role"
+                           and filter_value.contains.lower() in str(getattr(user, model_field, "")).lower()
+                   )
             ]
         elif filter_value.is_true is not None:
             filtered_users = [

@@ -2,6 +2,7 @@ import pytest
 from httpx import AsyncClient
 from core.config import settings
 
+# TODO - make test as admin
 
 @pytest.mark.asyncio
 async def test_users_query(client: AsyncClient):
@@ -17,7 +18,7 @@ async def test_users_query(client: AsyncClient):
                 invited
                 inviteStatus
                 inviterName
-                role
+                roles
             }
         }
     """
@@ -64,7 +65,7 @@ async def test_update_user_mutation(
                 invited
                 inviteStatus
                 inviterName
-                role
+                roles
             }
         }
     """
