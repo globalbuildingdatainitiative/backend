@@ -9,7 +9,7 @@ from models import DBProject
 
 
 @pytest.fixture()
-async def projects(app, datafix_dir) -> list[DBProject]:
+async def projects(datafix_dir) -> list[DBProject]:
     projects = []
 
     for i in range(3):
@@ -22,11 +22,13 @@ async def projects(app, datafix_dir) -> list[DBProject]:
 
 
 @pytest.fixture()
-async def contributions(projects, user) -> list[DBContribution]:
+async def contributions(projects, create_user) -> list[DBContribution]:
     _contributions = []
 
     for i in range(3):
-        contribution = DBContribution(user_id=user.id, organization_id=user.organization_id, project=projects[i])
+        contribution = DBContribution(
+            user_id=create_user.id, organization_id=create_user.organization_id, project=projects[i]
+        )
         await contribution.insert(link_rule=WriteRules.WRITE)
         _contributions.append(contribution)
 

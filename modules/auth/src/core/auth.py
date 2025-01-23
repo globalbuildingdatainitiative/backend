@@ -2,7 +2,7 @@ import logging
 from typing import List, Dict, Any, Union
 from uuid import UUID
 
-from supertokens_python import init, InputAppInfo, SupertokensConfig
+from supertokens_python import init, InputAppInfo, SupertokensConfig, RecipeUserId
 from supertokens_python.framework.request import BaseRequest
 from supertokens_python.ingredients.emaildelivery.types import (
     EmailDeliveryConfig,
@@ -12,18 +12,16 @@ from supertokens_python.ingredients.emaildelivery.types import (
 )
 from supertokens_python.recipe import session, userroles, usermetadata, emailpassword, dashboard, jwt, emailverification
 from supertokens_python.recipe.emailpassword import InputFormField
-from supertokens_python.recipe.emailpassword.asyncio import get_user_by_id
 from supertokens_python.recipe.emailpassword.interfaces import (
     APIInterface,
     APIOptions,
     SignUpPostOkResult,
     RecipeInterface,
     SignInOkResult,
-    SignInWrongCredentialsError,
-    ResetPasswordUsingTokenOkResult,
-    ResetPasswordUsingTokenInvalidTokenError,
+    WrongCredentialsError,
 )
 from supertokens_python.recipe.emailpassword.types import FormField, PasswordResetEmailTemplateVars, SMTPOverrideInput
+from supertokens_python.recipe.session.interfaces import SessionContainer
 from supertokens_python.recipe.usermetadata.asyncio import get_user_metadata, update_user_metadata
 
 from core.config import settings
@@ -256,7 +254,6 @@ def custom_smtp_content_override(original_implementation: SMTPOverrideInput) -> 
     """Overrides email content for password reset emails"""
 
     async def get_content(template_vars: PasswordResetEmailTemplateVars, user_context: Dict[str, Any]) -> EmailContent:
-        from supertokens_python.recipe.usermetadata.asyncio import get_user_metadata
         from logic import get_organization_name
 
         user_id = template_vars.user.id
@@ -296,22 +293,32 @@ def custom_smtp_content_override(original_implementation: SMTPOverrideInput) -> 
 
 
 def override_email_password_apis(original_implementation: APIInterface):
-    """Extends the sign-up process to include first name and last name'"""
-
-    from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
+    """Extends the sign-up process to include first name and last name"""
 
     original_sign_up_post = original_implementation.sign_up_post
 
     async def sign_up_post(
-        form_fields: List[FormField], tenant_id, api_options: APIOptions, user_context: Dict[str, Any]
+        form_fields: List[FormField],
+        tenant_id: str,
+        session: Union[SessionContainer, None],
+        should_try_linking_with_session_user: Union[bool, None],
+        api_options: APIOptions,
+        user_context: Dict[str, Any],
     ):
-        response = await original_sign_up_post(form_fields, tenant_id, api_options, user_context)
+        response = await original_sign_up_post(
+            form_fields,
+            tenant_id,
+            session,
+            should_try_linking_with_session_user,
+            api_options,
+            user_context,
+        )
 
         if isinstance(response, SignUpPostOkResult):
             first_name = next(f.value for f in form_fields if f.id == "firstName")
             last_name = next(f.value for f in form_fields if f.id == "lastName")
 
-            await update_user_metadata(response.user.user_id, {"first_name": first_name, "last_name": last_name})
+            await update_user_metadata(response.user.id, {"first_name": first_name, "last_name": last_name})
 
         return response
 
@@ -322,11 +329,12 @@ def override_email_password_apis(original_implementation: APIInterface):
 def functions_override(original_impl: RecipeInterface):
     og_emailpassword_sign_in = original_impl.sign_in
     og_update_email_or_password = original_impl.update_email_or_password
-    og_reset_password_using_token = original_impl.reset_password_using_token
+
+    # og_reset_password_using_token = original_impl.reset_password_using_token
 
     # Prevents using the fake password (Initially assigned to invited users)
     async def update_email_or_password(
-        user_id: str,
+        user_id: RecipeUserId,
         email: Union[str, None],
         password: Union[str, None],
         apply_password_policy: Union[bool, None],
@@ -341,42 +349,49 @@ def functions_override(original_impl: RecipeInterface):
         )
 
     # Handles password reset and assigns users to organizations
-    async def reset_password_using_token(
-        token: str, new_password: str, tenant_id: str, user_context: Dict[str, Any]
-    ) -> Union[ResetPasswordUsingTokenOkResult, ResetPasswordUsingTokenInvalidTokenError]:
-        if new_password == FAKE_PASSWORD:
-            return ResetPasswordUsingTokenInvalidTokenError()
-
-        result = await og_reset_password_using_token(token, new_password, tenant_id, user_context)
-
-        if isinstance(result, ResetPasswordUsingTokenOkResult):
-            user_id = user_context.get("user_id")
-            if not user_id:
-                user = await get_user_by_id(result.user_id)
-                if user:
-                    user_id = user.user_id
-            if user_id:
-                user_metadata = await get_user_metadata(user_id)
-                pending_org_id = user_metadata.metadata.get("pending_org_id")
-                if pending_org_id:
-                    await update_user_metadata(
-                        user_id,
-                        {
-                            "organization_id": pending_org_id,
-                        },
-                    )
-        return result
+    # async def reset_password_using_token(
+    #     token: str, new_password: str, tenant_id: str, user_context: Dict[str, Any]
+    # ) -> Union[ResetPasswordUsingTokenOkResult, ResetPasswordUsingTokenInvalidTokenError]:
+    #     if new_password == FAKE_PASSWORD:
+    #         return ResetPasswordUsingTokenInvalidTokenError()
+    #
+    #     result = await og_reset_password_using_token(token, new_password, tenant_id, user_context)
+    #
+    #     if isinstance(result, ResetPasswordUsingTokenOkResult):
+    #         user_id = user_context.get("user_id")
+    #         if not user_id:
+    #             user = await get_user(result.user_id)
+    #             if user:
+    #                 user_id = user.id
+    #         if user_id:
+    #             user_metadata = await get_user_metadata(user_id)
+    #             pending_org_id = user_metadata.metadata.get("pending_org_id")
+    #             if pending_org_id:
+    #                 await update_user_metadata(
+    #                     user_id,
+    #                     {
+    #                         "organization_id": pending_org_id,
+    #                     },
+    #                 )
+    #     return result
 
     # Prevents signing in with Fake password (User must change the password before signing in)
     async def emailpassword_sign_in(
-        email: str, password: str, tenant_id: str, user_context: Dict[str, Any]
-    ) -> Union[SignInOkResult, SignInWrongCredentialsError]:
+        email: str,
+        password: str,
+        tenant_id: str,
+        session: SessionContainer | None,
+        should_try_linking_with_session_user: bool | None,
+        user_context: Dict[str, Any],
+    ) -> Union[SignInOkResult, WrongCredentialsError]:
         if password == FAKE_PASSWORD:
-            return SignInWrongCredentialsError()
-        return await og_emailpassword_sign_in(email, password, tenant_id, user_context)
+            return WrongCredentialsError()
+        return await og_emailpassword_sign_in(
+            email, password, tenant_id, session, should_try_linking_with_session_user, user_context
+        )
 
     original_impl.update_email_or_password = update_email_or_password
-    original_impl.reset_password_using_token = reset_password_using_token
+    # original_impl.reset_password_using_token = reset_password_using_token
     original_impl.sign_in = emailpassword_sign_in
     return original_impl
 

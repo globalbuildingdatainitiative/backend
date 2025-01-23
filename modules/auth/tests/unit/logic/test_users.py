@@ -1,39 +1,47 @@
+from logging import getLogger
+from uuid import UUID
+
 import pytest
-from logic import get_users, update_user
-from models import UpdateUserInput, InviteStatus, Role
+
+from logic import get_users
+from models import UserFilters
+from models.sort_filter import FilterOptions
+
+logger = getLogger("main")
 
 
 @pytest.mark.asyncio
-async def test_get_users(mock_get_users_newest_first, mock_get_user_metadata):
-    users = await get_users()
-    assert isinstance(users, list)
+async def test_get_all_users(users):
+    _users = await get_users()
+    assert isinstance(_users, list)
+    assert len(_users) == len(users) + 1
 
 
 @pytest.mark.asyncio
-async def test_update_user(
-    users,
-    mock_supertokens,
-    mock_get_users,
-    mock_get_users_newest_first,
-    mock_get_user_metadata,
-    mock_update_user_metadata,
-    mock_update_email_or_password,
-    mock_sign_in,
-):
-    user_id = users[0].get("id")
-    user_input = {
-        "id": user_id,
-        "first_name": "UpdatedFirstName",
-        "last_name": "UpdatedLastName",
-        "email": "updated@example.com",
-        "current_password": "currentPassword123",
-        "new_password": "newPassword123",
-        "invited": True,
-        "invite_status": InviteStatus.ACCEPTED,  # Use the correct enum
-        "inviter_name": "John Doe",
-        "role": Role.MEMBER,
-    }
+async def test_filter_users_by_id(users):
+    filters = UserFilters(id=FilterOptions(equal=users[0].get("id")))
 
-    user = await update_user(UpdateUserInput(**user_input))
+    _users = await get_users(filters)
 
-    assert user
+    assert len(_users) == 1
+    assert _users[0].id == UUID(filters.id.equal)
+
+
+@pytest.mark.asyncio
+async def test_filter_users_by_organisation_id(users):
+    filters = UserFilters(organization_id=FilterOptions(equal=users[1].get("organization_id")))
+
+    _users = await get_users(filters)
+
+    assert len(_users) == 1
+    assert _users[0].organization_id == filters.organization_id.equal
+
+
+@pytest.mark.asyncio
+async def test_filter_users_by_email(users):
+    filters = UserFilters(email=FilterOptions(equal=users[0].get("email")))
+
+    _users = await get_users(filters)
+
+    assert len(_users) == 1
+    assert _users[0].email == filters.email.equal

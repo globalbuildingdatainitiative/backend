@@ -1,28 +1,28 @@
 [
   {
-    "email": "christian@kongsgaard.eu",
+    "email": "christian@epfl.ch",
     "id": "5c650110-2224-4bc7-8cd9-45617e97e712",
     "tenantIds": ["public"],
     "timeJoined": 1715606572589,
     "firstName": "Christian",
     "lastName": "Kongsgaard",
-    "organizationId": "55363466436",
+    "organization_id": "55363466436",
     "invited": true,
     "invite_status": "accepted",
     "inviter_name": "John Doe",
-    "role": "owner"
+    "roles": ["owner"]
   },
   {
-    "email": "hassan.shahzad@epfl.ch",
+    "email": "hassan@epfl.ch",
     "id": "b57fc236-ebfc-4db2-8491-1c7136e5acc2",
     "tenantIds": ["public"],
     "timeJoined": 1715606573589,
     "firstName": "Hassan",
     "lastName": "Shahzad",
-    "organizationId": "55363436436456",
+    "organization_id": "55363436436456",
     "invited": false,
     "invite_status": "none",
     "inviter_name": "",
-    "role": "member"
+    "roles": ["member"]
   }
 ]

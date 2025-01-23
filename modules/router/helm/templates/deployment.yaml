@@ -18,7 +18,7 @@ spec:
       volumes:
         - name: router-config
           emptyDir:
-            sizeLimit: "64k"
+            sizeLimit: "128k"
       {{- if eq .Values.deployType "PROD" }}
         - name: secrets-store01-inline
           csi:

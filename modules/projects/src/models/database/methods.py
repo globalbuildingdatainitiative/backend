@@ -49,7 +49,7 @@ async def group_projects(organization_id: UUID, group_by: str, limit: int, items
         for _input in aggregation_args.get("apply"):
             field = _input.get("field")
             method = _input.get("method").lower()
-            key = f"{method}_{field.replace(".", "_")}"
+            key = f"{method}_{field.replace('.', '_')}"
             if method == "pct25":
                 aggregation[key] = {"$percentile": {"input": f"${field}", "p": [0.25], "method": "approximate"}}
                 aggregation_projection.append({"method": method, "value": {"$first": f"${key}"}, "field": field})

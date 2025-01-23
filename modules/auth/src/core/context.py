@@ -1,11 +1,14 @@
+import logging
 import uuid
 
 from fastapi.requests import Request
 from strawberry.types import Info
 from supertokens_python.recipe.usermetadata.asyncio import get_user_metadata
-
+from jwt.exceptions import PyJWTError
 from core.verify_jwt import verify_jwt
 from models import SuperTokensUser
+
+logger = logging.getLogger("main")
 
 
 async def get_context(request: Request):
@@ -17,7 +20,12 @@ async def get_context(request: Request):
         if jwt is None:
             return {"user": None}
         else:
-            token = await verify_jwt(jwt.split("Bearer ")[1])
+            try:
+                token = await verify_jwt(jwt.split("Bearer ")[1])
+            except PyJWTError as error:
+                logger.error(f"Error verifying JWT: {error}")
+                raise
+
             return {
                 "user": SuperTokensUser(id=uuid.uuid5(uuid.NAMESPACE_URL, token.get("source")), organization_id=None)
             }

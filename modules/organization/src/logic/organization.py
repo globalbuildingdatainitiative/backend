@@ -1,4 +1,6 @@
 from uuid import UUID
+
+from logic.roles import assign_role, Role
 from models import (
     DBOrganization,
     OrganizationFilter,
@@ -6,7 +8,7 @@ from models import (
     SuperTokensUser,
     OrganizationMetaDataModel,
 )
-from exceptions.exceptions import EntityNotFound
+from core.exceptions import EntityNotFound
 
 
 async def get_organizations(filters: OrganizationFilter | None = None) -> list[DBOrganization]:
@@ -41,7 +43,8 @@ async def create_organizations_mutation(
         )
         await new_organization.insert()
         new_organizations.append(new_organization)
-    await update_user_metadata(str(current_user.id), {"organization_id": str(new_organizations[0].id), "role": "owner"})
+    await update_user_metadata(str(current_user.id), {"organization_id": str(new_organizations[0].id)})
+    await assign_role(current_user.id, Role.OWNER)
 
     return new_organizations
 

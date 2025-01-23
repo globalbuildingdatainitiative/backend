@@ -14,7 +14,7 @@ from core.auth import supertokens_init
 from core.config import settings
 from core.connection import get_database
 from core.exceptions import MicroServiceConnectionError
-from models import DBAssembly, DBProduct, DBEPD, DBTechFlow
+from models import DBAssembly, DBProduct, DBEPD, DBTechFlow, DBProject, DBContribution
 from routes import graphql_app
 from routes.openbdf import openbdf_router
 
@@ -26,12 +26,10 @@ logger = logging.getLogger("main")
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    from models import DBProject, DBContribution
-
+async def lifespan(*args):
     db = get_database()
     await init_beanie(
-        database=db, document_models=[DBProject, DBAssembly, DBProduct, DBEPD, DBTechFlow, DBContribution]
+        database=db, document_models=[DBAssembly, DBProduct, DBEPD, DBTechFlow, DBProject, DBContribution]
     )
     yield
 

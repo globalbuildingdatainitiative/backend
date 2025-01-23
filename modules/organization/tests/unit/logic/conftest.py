@@ -1,27 +1,10 @@
-from typing import Any
-
 import pytest
-import supertokens_python.recipe.usermetadata.asyncio
 
 from models import DBOrganization, CountryCodes, StakeholderEnum, OrganizationMetaDataModel
 
 
-@pytest.fixture(scope="session")
-def mock_update_user_metadata(session_mocker):
-    async def fake_update_user_metadata(
-        user_id: str, metadata_update: dict[str, Any], user_context: dict[str, Any] | None = None
-    ):
-        pass
-
-    session_mocker.patch.object(
-        supertokens_python.recipe.usermetadata.asyncio,
-        "update_user_metadata",
-        fake_update_user_metadata,
-    )
-
-
 @pytest.fixture()
-async def organizations(app) -> list[DBOrganization]:
+async def organizations(client) -> list[DBOrganization]:
     organizations = []
 
     for i in range(3):

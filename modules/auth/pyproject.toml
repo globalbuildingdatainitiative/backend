@@ -4,11 +4,11 @@ testpaths = ["tests/"]
 asyncio_mode = "auto"
 
 env = [
-    "SERVER_NAME=Projects Test",
-    "SERVER_HOST=http://test.gbdi.io",
-    "ROUTER_URL=http://test.gbdi.io",
-    "CONNECTION_URI=http://test.gbdi.io",
-    "API_KEY=DHALFKJDHALFJHDAJF",
+    "SERVER_NAME=Auth Test",
+    "SERVER_HOST=http://localhost:6000",
+    "ROUTER_URL=http://localhost:7000",
+    "CONNECTION_URI=http://localhost:3568",
+    "API_KEY=",
     "SMTP_HOST=email-smtp.eu-central-2.amazonaws.com",
     "SMTP_PORT=5897",
     "SMTP_EMAIL=noreply@noreply.io",

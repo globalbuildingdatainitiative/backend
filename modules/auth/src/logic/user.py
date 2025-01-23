@@ -1,16 +1,23 @@
+import json
 from datetime import datetime
 from logging import getLogger
 from uuid import UUID
 
 import strawberry
-from aiocache import cached
 from strawberry import UNSET
-from supertokens_python.asyncio import get_users_newest_first
-from supertokens_python.recipe.emailpassword.asyncio import update_email_or_password, sign_in
+from supertokens_python.asyncio import get_user, get_users_newest_first, list_users_by_account_info
+from supertokens_python.recipe.emailpassword.asyncio import update_email_or_password, verify_credentials
+from supertokens_python.recipe.emailpassword.interfaces import WrongCredentialsError
+from supertokens_python.recipe.session.asyncio import create_new_session
+from supertokens_python.recipe.session.interfaces import SessionContainer
 from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
+from fastapi.requests import Request
+from supertokens_python.recipe.userroles.asyncio import get_roles_for_user
+from supertokens_python.types import AccountInfo
 
-
+from core import exceptions
 from core.exceptions import EntityNotFound
+from logic.roles import assign_role, remove_role
 from models import GraphQLUser, UserFilters, UserSort, UpdateUserInput, InviteStatus, Role, AcceptInvitationInput
 from models.sort_filter import FilterOptions
 
@@ -19,42 +26,21 @@ logger = getLogger("main")
 
 async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None = None) -> list[GraphQLUser]:
     """Returns all Users & their metadata"""
+    users = []
 
-    users = await get_users_newest_first("public")
+    logger.debug(f"Fetching users with filters: {filters} and sort_by: {sort_by}")
 
-    gql_users = []
+    if filters:
+        if filters.id and filters.id.equal:
+            users = [await get_user(str(filters.id.equal))]
+        elif filters.email and filters.email.equal:
+            users = await list_users_by_account_info("public", AccountInfo(email=filters.email.equal))
 
-    for user in users.users:
-        user_data = user.to_json().get("user")
-        user_id = user_data["id"]
+    users = (await get_users_newest_first("public")).users if not users else users
 
-        # Fetch metadata for each user
-        metadata_response = await get_user_metadata(user_id)
-        first_name = metadata_response.metadata.get("first_name")
-        last_name = metadata_response.metadata.get("last_name")
-        organization_id = metadata_response.metadata.get("organization_id")
-        pending_org_id = metadata_response.metadata.get("pending_org_id")
-        invited = metadata_response.metadata.get("invited", False)
-        invite_status = metadata_response.metadata.get("invite_status", InviteStatus.NONE.value)
-        inviter_name = metadata_response.metadata.get("inviter_name", "")
-        role = metadata_response.metadata.get("role", Role.MEMBER.value)
-
-        effective_org_id = organization_id if not invited else pending_org_id
-
-        user = GraphQLUser(
-            id=user_id,
-            email=user_data.get("email"),
-            time_joined=datetime.fromtimestamp(round(user_data.get("timeJoined", 0) / 1000)),
-            first_name=first_name,
-            last_name=last_name,
-            organization_id=effective_org_id,
-            invited=invited,
-            invite_status=InviteStatus(invite_status.lower()),
-            inviter_name=inviter_name,
-            role=Role(role.lower()) if role else Role.MEMBER,
-        )
-
-        gql_users.append(user)
+    gql_users = [
+        await GraphQLUser.from_supertokens(user, (await get_user_metadata(user.id)).metadata) for user in users
+    ]
 
     if filters:
         gql_users = filter_users(gql_users, filters)
@@ -67,43 +53,47 @@ async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None
 async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     """Update user details & metadata"""
 
-    metadata_update = {}
-    if user_input.first_name is not None:
-        metadata_update["first_name"] = user_input.first_name
-    if user_input.last_name is not None:
-        metadata_update["last_name"] = user_input.last_name
-    if user_input.email is not None:
-        metadata_update["email"] = user_input.email
-    if user_input.invited is not None:
-        metadata_update["invited"] = user_input.invited
-    if user_input.invite_status is not None:
-        metadata_update["invite_status"] = user_input.invite_status.value
-    if user_input.inviter_name is not None:
-        metadata_update["inviter_name"] = user_input.inviter_name
-    if user_input.role is not None:
-        metadata_update["role"] = user_input.role.value
-    if user_input.organization_id is not UNSET:
-        metadata_update["organization_id"] = user_input.organization_id
-        if user_input.organization_id is None:
-            metadata_update["role"] = None
+    metadata_update = strawberry.asdict(user_input)
+    user_id = str(metadata_update.pop("id"))
+
+    user = await get_user(user_id)
+    if not user:
+        raise EntityNotFound(f"No user found with the provided ID: {user_input.id}", "Auth")
+
+    del metadata_update["current_password"]
+    del metadata_update["new_password"]
+    if metadata_update["organization_id"] is UNSET or metadata_update["organization_id"] is None:
+        roles = await get_roles_for_user("public", user_id)
+        for role in roles.roles:
+            if role == "admin":
+                continue
+            await remove_role(user_id, Role(role))
+
+    def custom_serializer(obj):
+        if isinstance(obj, InviteStatus):
+            return obj.value
+
+    metadata_update = json.dumps(
+        {key: value for key, value in metadata_update.items() if value is not UNSET}, default=custom_serializer
+    )
+
     if metadata_update:
-        await update_user_metadata(str(user_input.id), metadata_update)
+        await update_user_metadata(user_id, json.loads(metadata_update))
 
     # Update password if current password and new password are provided
 
     if user_input.current_password and user_input.new_password:
-        user_email = (await get_users(UserFilters(id=FilterOptions(equal=str(user_input.id)))))[0].email
-        await sign_in("public", str(user_email), str(user_input.current_password))
+        is_password_valid = await verify_credentials("public", str(user.emails[0]), str(user_input.current_password))
+        if isinstance(is_password_valid, WrongCredentialsError):
+            raise exceptions.WrongCredentialsError("Current password is incorrect")
+
         await update_email_or_password(
-            user_id=str(user_input.id),
-            email=user_email,
+            recipe_user_id=user.login_methods[0].recipe_user_id,
             password=user_input.new_password,
+            tenant_id_for_password_policy=user.tenant_ids[0],
         )
 
-    user_data = await get_users(UserFilters(id=FilterOptions(equal=str(user_input.id))))
-
-    if not user_data:
-        raise EntityNotFound("No user found with the provided ID", "Auth")
+    user_data = await get_users(UserFilters(id=FilterOptions(equal=user_id)))
 
     return user_data[0]
 
@@ -118,8 +108,8 @@ async def accept_invitation(user: AcceptInvitationInput) -> bool:
         "invite_status": InviteStatus.ACCEPTED.value,
         "invited": None,
         "pending_org_id": None,
-        "role": Role.MEMBER.value,
     }
+    await assign_role(user.id, Role.MEMBER)
 
     if "pending_org_id" in current_metadata.metadata:
         update_data["organization_id"] = current_metadata.metadata["pending_org_id"]
@@ -247,13 +237,15 @@ def sort_users(users: list[GraphQLUser], sort_by: UserSort | None = None) -> lis
     return sorted_users
 
 
-@cached(ttl=60)
-async def check_is_admin(user_id: str) -> bool:
-    """Check if the user is an admin"""
-    from supertokens_python.recipe.userroles.asyncio import get_roles_for_user
+async def impersonate_user(request: Request, user_id: str) -> SessionContainer:
+    user = await get_user(user_id)
 
-    _user = await get_roles_for_user("public", user_id)
-    if "admin" in _user.roles:
-        return True
+    if not user:
+        raise EntityNotFound(f"No user found with the provided ID: {user_id}", "Auth")
 
-    return False
+    return await create_new_session(
+        request,
+        "public",
+        user.login_methods[0].recipe_user_id,
+        {"isImpersonation": True},
+    )

@@ -10,7 +10,9 @@ from logic import (
     accept_invitation,
     reject_invitation,
     resend_invitation,
+    impersonate_user,
 )
+from logic.roles import check_is_admin
 from models import (
     GraphQLUser,
     UserFilters,
@@ -20,6 +22,7 @@ from models import (
     InviteResult,
     AcceptInvitationInput,
 )
+from models.sort_filter import FilterOptions
 
 logger = logging.getLogger("main")
 
@@ -29,18 +32,22 @@ async def users_query(
 ) -> list[GraphQLUser]:
     """Returns all Users"""
 
-    return await get_users(filters, sort_by)
-    # is_admin = await check_is_admin(str(get_user(info).id))
-    # if is_admin:
-    #     return await get_users(filters, sort_by)
-    # else:
-    #     filters = filters or UserFilters()
-    #     filters.organization_id = FilterOptions(equal=get_user(info).organization_id)
-    #     return await get_users(filters, sort_by)
+    is_admin = await check_is_admin(get_user(info).id)
+    if is_admin:
+        users = await get_users(filters, sort_by)
+        logger.info(f"Got {len(users)} users as admin")
+        return users
+    else:
+        filters = filters or UserFilters()
+        filters.organization_id = FilterOptions(equal=get_user(info).organization_id)
+        users = await get_users(filters, sort_by)
+        logger.info(f"Got {len(users)} users")
+        return users
 
 
 async def update_user_mutation(user_input: UpdateUserInput) -> GraphQLUser:
     """Update user details"""
+
     return await update_user(user_input)
 
 
@@ -53,13 +60,19 @@ async def invite_users_mutation(info: Info, input: InviteUsersInput) -> list[Inv
 
 async def accept_invitation_mutation(user: AcceptInvitationInput) -> bool:
     """Accept an invitation"""
+
     result = await accept_invitation(user)
+    logger.info(f"Invitation accepted by {user.id}")
+
     return result
 
 
 async def reject_invitation_mutation(user_id: str) -> bool:
     """Reject an invitation"""
+
     result = await reject_invitation(user_id)
+    logger.info(f"Invitation rejected by {user_id}")
+
     return result
 
 
@@ -68,3 +81,13 @@ async def resend_invitation_mutation(info: Info, user_id: str) -> InviteResult:
 
     result = await resend_invitation(user_id=user_id, request=info.context.get("request"))
     return result
+
+
+async def impersonate_mutation(info: Info, user_id: str) -> bool:
+    """Impersonate a different user"""
+
+    session = await impersonate_user(info.context.get("request"), user_id)
+
+    logger.info(f"User {user_id} impersonated by {get_user(info).id}")
+
+    return True if session else False
