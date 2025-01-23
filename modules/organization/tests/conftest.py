@@ -73,7 +73,7 @@ async def supertokens(docker_client):
     )
 
     @retry(
-        stop=stop_after_attempt(10),
+        stop=stop_after_attempt(20),
         wait=wait_fixed(0.2),
         retry=retry_if_exception(lambda e: isinstance(e, httpx.HTTPError)),
     )
