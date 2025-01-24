@@ -2,6 +2,7 @@ import logging
 from typing import List, Dict, Any, Union
 from uuid import UUID
 
+import httpx
 from supertokens_python import init, InputAppInfo, SupertokensConfig, RecipeUserId
 from supertokens_python.framework.request import BaseRequest
 from supertokens_python.ingredients.emaildelivery.types import (
@@ -23,6 +24,7 @@ from supertokens_python.recipe.emailpassword.interfaces import (
 from supertokens_python.recipe.emailpassword.types import FormField, PasswordResetEmailTemplateVars, SMTPOverrideInput
 from supertokens_python.recipe.session.interfaces import SessionContainer
 from supertokens_python.recipe.usermetadata.asyncio import get_user_metadata, update_user_metadata
+from tenacity import stop_after_attempt, wait_fixed, before_log, after_log, retry
 
 from core.config import settings
 
@@ -436,3 +438,15 @@ def supertokens_init():
         ],
         mode="asgi",
     )
+
+
+@retry(
+    stop=stop_after_attempt(60 * 5),
+    wait=wait_fixed(1),
+    before=before_log(logger, logging.INFO),
+    after=after_log(logger, logging.WARN),
+)
+async def health_check_supertokens():
+    response = httpx.get(f"{settings.CONNECTION_URI}/hello")
+    if response.status_code == 200 and response.text.strip() == "Hello":
+        return True
