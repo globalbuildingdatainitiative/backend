@@ -5,14 +5,15 @@ name = "pypi"
 
 [packages]
 fastapi = { extras = ["all"], version = "*" }
-uvicorn = {extras = ["standard"], version = "*"}
-strawberry-graphql = {extras = ["fastapi", "cli"], version = ">=0.134.0"}
+uvicorn = { extras = ["standard"], version = "*" }
+strawberry-graphql = { extras = ["fastapi", "cli"], version = ">=0.134.0" }
 supertokens-python = ">=0.25.0"
 pyyaml = "*"
 aiocache = "*"
+tenacity = "*"
 
 [dev-packages]
-asgi-lifespan="*"
+asgi-lifespan = "*"
 pydevd-pycharm = "==243.22562.220"
 docker = "*"
 pytest = "*"
@@ -20,7 +21,6 @@ pytest-asyncio = "*"
 pytest-env = "*"
 pytest-datafixtures = "*"
 pytest-mock = "*"
-tenacity = "*"
 ruff = "*"
 
 [requires]
