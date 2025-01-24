@@ -20,7 +20,7 @@ db:
   databaseName: auth
   configmap: db-config
   replicas: 1
-  dockerImageTag: 13.1-alpine
+  dockerImageTag: 15-alpine
   port: 5432
   secret:
     name: postgres-secret
@@ -60,4 +60,4 @@ smtp:
 supertokens:
   accessTokenValidity: 3600
   image:
-    tag: '9.3'
+    tag: '10.0'
