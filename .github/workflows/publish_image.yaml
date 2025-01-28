@@ -40,4 +40,4 @@ jobs:
       - name: Push Image
         if: github.event_name != 'pull_request'
         working-directory: modules/${{ inputs.name }}
-        run: docker push ghcr.io/${{ inputs.registry }}/${{ inputs.name }}:${{ github.run_number }} ghcr.io/${{ inputs.registry }}/${{ inputs.name }}:${{ github.ref_name }}
+        run: docker push --all-tags ghcr.io/${{ inputs.registry }}/${{ inputs.name }}
