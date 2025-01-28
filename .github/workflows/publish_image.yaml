@@ -3,9 +3,6 @@ name: Build Container Image
 on:
   workflow_call:
     inputs:
-      tag:
-        required: true
-        type: string
       registry:
         required: true
         type: string
@@ -24,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Log into registry ${{ env.REGISTRY }}
+      - name: Log into registry ${{ inputs.registry }}
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
@@ -34,9 +31,12 @@ jobs:
 
       - name: Build Image
         working-directory: modules/${{ inputs.name }}
-        run: docker build -t ghcr.io/${{ inputs.registry }}/${{ inputs.name }}:${{ inputs.tag }} .
+        run: docker build -t ghcr.io/${{ inputs.registry }}/${{ inputs.name }}:${{ github.run_number }} .
+
+      - name: Tag Image
+        run: docker tag ghcr.io/${{ inputs.registry }}/${{ inputs.name }}:${{ github.run_number }} ghcr.io/${{ inputs.registry }}/${{ inputs.name }}:${{ github.ref_name }}
 
       - name: Push Image
         if: github.event_name != 'pull_request'
         working-directory: modules/${{ inputs.name }}
-        run: docker push ghcr.io/${{ inputs.registry }}/${{ inputs.name }}:${{ inputs.tag }}
+        run: docker push ghcr.io/${{ inputs.registry }}/${{ inputs.name }}:${{ github.run_number }} ghcr.io/${{ inputs.registry }}/${{ inputs.name }}:${{ github.ref_name }}
