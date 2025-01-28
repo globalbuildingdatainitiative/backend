@@ -1,5 +1,19 @@
-from pydantic import AnyHttpUrl, field_validator
-from pydantic_settings import BaseSettings
+from typing import Any, Type, Tuple
+
+from pydantic import AnyHttpUrl
+from pydantic.fields import FieldInfo
+from pydantic_settings import (
+    BaseSettings,
+    EnvSettingsSource,
+    PydanticBaseSettingsSource,
+)
+
+
+class ParsingValues(EnvSettingsSource):
+    def prepare_field_value(self, field_name: str, field: FieldInfo, value: Any, value_is_complex: bool) -> Any:
+        if field_name == "BACKEND_CORS_ORIGINS" and value:
+            return [x for x in value.split(",")]
+        return super().prepare_field_value(field_name, field, value, value_is_complex)
 
 
 class Settings(BaseSettings):
@@ -9,7 +23,7 @@ class Settings(BaseSettings):
     ROUTER_URL: AnyHttpUrl
     CONNECTION_URI: AnyHttpUrl
     API_KEY: str
-    BACKEND_CORS_ORIGINS: list[str] = [
+    BACKEND_CORS_ORIGINS: list[AnyHttpUrl] = [
         "http://localhost:8000",
         "http://localhost:7000",
     ]
@@ -22,14 +36,16 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str
     SMTP_USERNAME: str
 
-    @field_validator("BACKEND_CORS_ORIGINS")
     @classmethod
-    def assemble_cors_origins(cls, v: str | list[str]) -> list[str] | str:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
-            return v
-        raise ValueError(v)
+    def settings_customise_sources(
+        cls,
+        settings_cls: Type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> Tuple[PydanticBaseSettingsSource, ...]:
+        return (ParsingValues(settings_cls),)
 
     class Config:
         case_sensitive = True

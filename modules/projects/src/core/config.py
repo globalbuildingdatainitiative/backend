@@ -1,6 +1,20 @@
+from typing import Any, Tuple, Type
+
 from pydantic import AnyHttpUrl, MongoDsn, field_validator
+from pydantic.fields import FieldInfo
 from pydantic_core.core_schema import ValidationInfo
-from pydantic_settings import BaseSettings
+from pydantic_settings import (
+    BaseSettings,
+    EnvSettingsSource,
+    PydanticBaseSettingsSource,
+)
+
+
+class ParsingValues(EnvSettingsSource):
+    def prepare_field_value(self, field_name: str, field: FieldInfo, value: Any, value_is_complex: bool) -> Any:
+        if field_name == "BACKEND_CORS_ORIGINS" and value:
+            return [x for x in value.split(",")]
+        return super().prepare_field_value(field_name, field, value, value_is_complex)
 
 
 class Settings(BaseSettings):
@@ -35,14 +49,16 @@ class Settings(BaseSettings):
             port=info.data.get("MONGO_PORT"),
         )
 
-    @field_validator("BACKEND_CORS_ORIGINS")
     @classmethod
-    def assemble_cors_origins(cls, v: str | list[str]) -> list[str] | str:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
-            return v
-        raise ValueError(v)
+    def settings_customise_sources(
+        cls,
+        settings_cls: Type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> Tuple[PydanticBaseSettingsSource, ...]:
+        return (ParsingValues(settings_cls),)
 
     class Config:
         case_sensitive = True
