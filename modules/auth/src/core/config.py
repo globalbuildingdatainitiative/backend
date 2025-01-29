@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     ROUTER_URL: AnyHttpUrl
     CONNECTION_URI: AnyHttpUrl
     API_KEY: str
-    BACKEND_CORS_ORIGINS: list[AnyHttpUrl] = [
+    BACKEND_CORS_ORIGINS: list[str] = [
         "http://localhost:8000",
         "http://localhost:7000",
     ]
