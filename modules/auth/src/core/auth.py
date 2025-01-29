@@ -49,7 +49,7 @@ def get_origin(request: BaseRequest | None, user_context) -> str:
             elif origin.startswith("http://localhost"):
                 return origin
 
-    logger.debug("Origin not found in request. Using default origin {settings.BACKEND_CORS_ORIGINS[0]}")
+    logger.debug(f"Origin not found in request. Using default origin {settings.BACKEND_CORS_ORIGINS[0]}")
     return settings.BACKEND_CORS_ORIGINS[0]
 
 
