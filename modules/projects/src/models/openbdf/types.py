@@ -350,7 +350,7 @@ class GraphQLProductMetaData:
 class GraphQLProduct:
     description: strawberry.auto
     id: UUID
-    impact_data: Union[GraphQLEPD, GraphQLTechFlow]
+    impact_data: GraphQLEPD | GraphQLTechFlow
     meta_data: GraphQLProductMetaData | None = None
     name: strawberry.auto
     quantity: strawberry.auto

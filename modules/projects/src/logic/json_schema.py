@@ -125,7 +125,7 @@ class _GetSchema:
                 type_ = type_.of_type
             elif isinstance(type_, StrawberryAnnotation):
                 type_ = type_.raw_annotation
-            _property = self.get_field_schema(type_, field.default, SchemaAnnotation())
+            _property = self.get_field_schema(type_ if not isinstance(type_, ScalarWrapper) else type_.wrap, field.default, SchemaAnnotation())
             if _property is None:
                 continue
             schema["properties"][self.get_field_name(field)] = _property
@@ -180,7 +180,7 @@ class _GetSchema:
             return self.get_bool_schema(default, annotation)
         elif type_ is int:
             return self.get_int_schema(default, annotation)
-        elif type_.__name__ == "Base64":
+        elif type_.__name__ == "Base64" or type_.__name__ == "JSON":
             return self.get_str_schema(default, annotation)
         elif issubclass(type_, numbers.Number):
             return self.get_number_schema(default, annotation)
@@ -205,7 +205,7 @@ class _GetSchema:
             return dc.name
 
     def get_union_schema(self, type_, default, annotation):
-        args = t.get_args(type_)
+        args = t.get_args(type_) or type_.types
         if default is _MISSING:
             return {
                 "anyOf": [
