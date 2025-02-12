@@ -1,6 +1,3 @@
-import json
-from pathlib import Path
-
 import pytest
 from httpx import AsyncClient
 
@@ -16,5 +13,4 @@ async def test_openbdf(client_unauthenticated: AsyncClient):
     data = response.json()
     assert data
 
-    Path('openbdf.json').write_text(json.dumps(data, indent=2))
     assert data.get("title") == "Project"

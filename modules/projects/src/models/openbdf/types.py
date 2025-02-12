@@ -1,6 +1,5 @@
 import logging
 import datetime
-from typing import Union
 from uuid import UUID
 
 import strawberry
