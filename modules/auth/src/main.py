@@ -26,7 +26,10 @@ logger = logging.getLogger("main")
 async def lifespan(app: FastAPI):
     logger.info("Running lifespan")
 
-    await create_roles()
+    try:
+        await create_roles()
+    except Exception as e:
+        logger.error(e)
     yield
 
 

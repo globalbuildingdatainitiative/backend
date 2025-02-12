@@ -15,4 +15,4 @@ metadata:
   name: {{ .Values.backend.configmap }}
   namespace: {{ .Values.namespace }}
 data:
-  BACKEND_CORS_ORIGINS: '["{{ .Values.appProtocol}}://{{ .Values.appDomain }}"]'
+  BACKEND_CORS_ORIGINS: "{{ .Values.appProtocol}}://{{ .Values.appDomain }}"
