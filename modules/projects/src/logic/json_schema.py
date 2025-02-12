@@ -121,8 +121,6 @@ class _GetSchema:
             if isinstance(type_, EnumDefinition):
                 type_ = type_.wrapped_cls
 
-            # if isinstance(type_, StrawberryOptional):
-            #     type_ = type_.of_type
             elif isinstance(type_, StrawberryAnnotation):
                 type_ = type_.raw_annotation
             _property = self.get_field_schema(
