@@ -83,7 +83,9 @@ async def resend_invitation(user_id: str, request: Request) -> InviteResult:
         raise InvitationFailed("User's invitation is not in pending state", "Auth")
 
     try:
-        await send_reset_password_email("public", user_id, user_context={"user_id": user_id, "request": request})
+        await send_reset_password_email(
+            "public", user_id, user_email, user_context={"user_id": user_id, "request": request}
+        )
         return InviteResult(email=user_email, status="resent", message="Invitation resent successfully")
     except Exception as e:
         logger.error(f"Failed to resend invitation to user {user_email}: {str(e)}")
