@@ -23,6 +23,7 @@ COPY --from=builder /tmp /tmp
 
 # Make sure we have the latest version of pip
 RUN python -m pip install --upgrade pip
+RUN apt update && apt install -y curl
 
 # Set environment
 ARG BUILD_VERSION
