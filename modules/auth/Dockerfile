@@ -36,6 +36,7 @@ USER fastapi
 WORKDIR /app
 
 RUN ls /tmp/wheels
+RUN apt update && apt install -y curl
 
 # Install pip packages
 RUN pip install --no-cache-dir --no-index --find-links /tmp/wheels $(ls /tmp/wheels -1 | awk -F - '{ gsub("_", "-", $1); print $1 }' | uniq)
