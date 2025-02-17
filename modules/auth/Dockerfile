@@ -23,6 +23,7 @@ COPY --from=builder /tmp /tmp
 
 # Make sure we have the latest version of pip
 RUN python -m pip install --upgrade pip
+RUN apt update && apt install -y curl
 
 # Set environment
 ARG BUILD_VERSION
@@ -36,7 +37,6 @@ USER fastapi
 WORKDIR /app
 
 RUN ls /tmp/wheels
-RUN apt update && apt install -y curl
 
 # Install pip packages
 RUN pip install --no-cache-dir --no-index --find-links /tmp/wheels $(ls /tmp/wheels -1 | awk -F - '{ gsub("_", "-", $1); print $1 }' | uniq)
