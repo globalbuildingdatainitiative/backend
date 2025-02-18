@@ -58,10 +58,11 @@ async def delete_contributions(contributions: list[UUID], user: SuperTokensUser)
     _contributions = DBContribution.find(In(DBContribution.id, contributions)).find(
         DBContribution.organization_id == user.organization_id
     )
-    logger.debug(f"Deleting {len(contributions)} contributions for organization {user.organization_id}")
+    logger.debug(f"Deleting {await _contributions.count()} contributions for organization {user.organization_id}")
+    contribution_ids = [contribution.id for contribution in (await _contributions.to_list())]
     await _contributions.delete()
 
-    return contributions
+    return contribution_ids
 
 
 async def update_contributions(contributions: list[UpdateContribution], user: SuperTokensUser) -> list[DBContribution]:
