@@ -4,6 +4,7 @@ from enum import Enum
 from uuid import UUID
 
 from beanie import WriteRules
+from beanie.odm.operators.find.logical import Or
 from beanie.operators import In
 from strawberry import Info, UNSET
 
@@ -21,7 +22,7 @@ async def get_contributions(
     offset: int,
     fetch_links: bool = False,
 ) -> list[DBContribution]:
-    query = DBContribution.find(DBContribution.organization_id == organization_id)
+    query = DBContribution.find(Or(DBContribution.organization_id == organization_id, DBContribution.public == True))  # noqa: E712
 
     query = filter_model_query(DBContribution, filter_by, query)
     query = sort_model_query(DBContribution, sort_by, query)
