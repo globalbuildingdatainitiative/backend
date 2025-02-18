@@ -2,6 +2,7 @@ import logging
 from uuid import UUID
 
 from beanie.exceptions import DocumentNotFound, CollectionWasNotInitialized, RevisionIdWasChanged
+from beanie.odm.operators.find.logical import Or
 
 from core.exceptions import (
     EntityNotFound,
@@ -22,7 +23,9 @@ async def get_projects(
 ):
     try:
         # Initialize base query with organization filter
-        base_query = DBProject.find({"contribution.organizationId": organization_id})
+        base_query = DBProject.find(
+            Or(DBProject.contribution.organizationId == organization_id, DBProject.contribution.public == True)  # noqa: E712
+        )
 
         # Apply filters if any
         if filter_by:

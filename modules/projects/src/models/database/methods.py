@@ -5,6 +5,7 @@ from uuid import UUID
 
 import httpx
 from async_lru import alru_cache
+from beanie.odm.operators.find.logical import Or
 from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
@@ -65,7 +66,10 @@ async def group_projects(organization_id: UUID, group_by: str, limit: int, items
         projection["$project"]["aggregation"] = aggregation_projection
 
     groups = (
-        await DBProject.find(DBProject.contribution.organizationId == organization_id, fetch_links=True)
+        await DBProject.find(
+            Or(DBProject.contribution.organizationId == organization_id, DBProject.contribution.public == True),  # noqa: E712
+            fetch_links=True,
+        )
         .aggregate(
             [
                 {"$group": {"_id": f"${group_by}", "items": items, "count": {"$sum": 1}, **aggregation}},
@@ -81,7 +85,10 @@ async def group_projects(organization_id: UUID, group_by: str, limit: int, items
 
 async def aggregate_projects(organization_id: UUID, apply: list[dict]):
     groups = (
-        await DBProject.find(DBProject.contribution.organizationId == organization_id, fetch_links=True)
+        await DBProject.find(
+            Or(DBProject.contribution.organizationId == organization_id, DBProject.contribution.public == True),  # noqa: E712
+            fetch_links=True,
+        )
         .aggregate(apply)
         .to_list()
     )

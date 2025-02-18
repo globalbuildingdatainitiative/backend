@@ -4,6 +4,7 @@ from enum import Enum
 from uuid import UUID
 
 from beanie import WriteRules
+from beanie.odm.operators.find.logical import Or
 from beanie.operators import In
 from strawberry import Info, UNSET
 
@@ -21,7 +22,7 @@ async def get_contributions(
     offset: int,
     fetch_links: bool = False,
 ) -> list[DBContribution]:
-    query = DBContribution.find(DBContribution.organization_id == organization_id)
+    query = DBContribution.find(Or(DBContribution.organization_id == organization_id, DBContribution.public == True))  # noqa: E712
 
     query = filter_model_query(DBContribution, filter_by, query)
     query = sort_model_query(DBContribution, sort_by, query)
@@ -57,10 +58,11 @@ async def delete_contributions(contributions: list[UUID], user: SuperTokensUser)
     _contributions = DBContribution.find(In(DBContribution.id, contributions)).find(
         DBContribution.organization_id == user.organization_id
     )
-    logger.debug(f"Deleting {len(contributions)} contributions for organization {user.organization_id}")
+    logger.debug(f"Deleting {await _contributions.count()} contributions for organization {user.organization_id}")
+    contribution_ids = [contribution.id for contribution in (await _contributions.to_list())]
     await _contributions.delete()
 
-    return contributions
+    return contribution_ids
 
 
 async def update_contributions(contributions: list[UpdateContribution], user: SuperTokensUser) -> list[DBContribution]:
