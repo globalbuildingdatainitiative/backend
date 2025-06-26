@@ -10,6 +10,7 @@ from core.exceptions import MicroServiceConnectionError, MicroServiceResponseErr
 
 logger = logging.getLogger("main")
 
+
 async def create_jwt() -> str:
     jwt_response = await asyncio.create_jwt(
         {
