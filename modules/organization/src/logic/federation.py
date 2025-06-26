@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 import httpx
@@ -7,6 +8,7 @@ from supertokens_python.recipe.jwt.interfaces import CreateJwtOkResult
 from core.config import settings
 from core.exceptions import MicroServiceConnectionError, MicroServiceResponseError
 
+logger = logging.getLogger("main")
 
 async def create_jwt() -> str:
     jwt_response = await asyncio.create_jwt(
@@ -30,6 +32,8 @@ async def get_auth_user(uid: UUID) -> dict[str, str]:
         }
     }
     """
+    logger.debug(f"Getting user {uid} from auth service")
+
     async with httpx.AsyncClient(
         headers={"authorization": f"Bearer {await create_jwt()}"},
     ) as client:
@@ -42,6 +46,7 @@ async def get_auth_user(uid: UUID) -> dict[str, str]:
                 },
             )
         except httpx.RequestError as e:
+            logger.error(f"Error in get_auth_user: {e}")
             raise MicroServiceConnectionError(f"Could not connect to {settings.ROUTER_URL}. Got {e}") from e
         if response.is_error:
             raise MicroServiceConnectionError(f"Could not receive data from {settings.ROUTER_URL}. Got {response.text}")
