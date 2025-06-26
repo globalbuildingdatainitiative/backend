@@ -13,6 +13,7 @@ from supertokens_python.recipe.session.exceptions import UnauthorisedError, TryR
 from core.auth import supertokens_init
 from core.config import settings
 from core.connection import get_database
+from core.exceptions import MicroServiceConnectionError
 from routes import graphql_app
 
 log_config = yaml.safe_load((Path(__file__).parent / "logging.yaml").read_text())
@@ -85,4 +86,14 @@ async def exception_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=500,
         content={"data": exc},
+    )
+
+
+@app.exception_handler(MicroServiceConnectionError)
+async def microservice_exception_handler(request: Request, exc: MicroServiceConnectionError):
+    logger.error(exc)
+
+    return JSONResponse(
+        status_code=501,
+        content={"data": exc.message},
     )
