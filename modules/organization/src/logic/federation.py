@@ -47,8 +47,8 @@ async def get_auth_user(uid: UUID) -> dict[str, str]:
                 },
             )
         except httpx.RequestError as e:
-            logger.error(f"Error in get_auth_user: {e}")
-            raise MicroServiceConnectionError(f"Could not connect to {settings.ROUTER_URL}. Got {e}") from e
+            logger.error(f"Error in get_auth_user: {e.request} for user: {uid}")
+            raise MicroServiceConnectionError(f"Could not connect to {e.request.url}") from e
         if response.is_error:
             raise MicroServiceConnectionError(f"Could not receive data from {settings.ROUTER_URL}. Got {response.text}")
         data = response.json()
