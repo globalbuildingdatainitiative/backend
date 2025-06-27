@@ -27,9 +27,11 @@ async def create_jwt() -> str:
 async def get_auth_user(uid: UUID) -> dict[str, str]:
     query = """
     query($id: String!) {
-        users(filters: {id: {equal: $id}}) {
-            id
-            organizationId
+        users {
+            items(filterBy: {equal: {id: $id}}, limit: 1) {
+                id
+                organizationId
+            }
         }
     }
     """
@@ -54,6 +56,7 @@ async def get_auth_user(uid: UUID) -> dict[str, str]:
         data = response.json()
         if errors := data.get("errors"):
             raise MicroServiceResponseError(f"Got error from {settings.ROUTER_URL}: {errors}")
-    user = data["data"]["users"][0]
+
+    user = data["data"]["users"]["items"][0]
 
     return user

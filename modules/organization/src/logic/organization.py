@@ -1,29 +1,41 @@
+import logging
 from uuid import UUID
 
+from core.exceptions import EntityNotFound
 from logic.roles import assign_role, Role
 from models import (
     DBOrganization,
-    OrganizationFilter,
     InputOrganization,
     SuperTokensUser,
     OrganizationMetaDataModel,
 )
-from core.exceptions import EntityNotFound
+from models.sort_filter import filter_model_query, FilterBy, SortBy, sort_model_query
+
+logger = logging.getLogger("main")
 
 
-async def get_organizations(filters: OrganizationFilter | None = None) -> list[DBOrganization]:
+async def get_organizations(
+    filter_by: FilterBy | None = None,
+    sort_by: SortBy | None = None,
+    limit: int | None = None,
+    offset: int = 0,
+) -> list[DBOrganization]:
     query = DBOrganization.find()
-    if filters:
-        if filters.id:
-            if filters.id.equal:
-                if isinstance(filters.id.equal, UUID):
-                    query = query.find(DBOrganization.id == filters.id.equal)
-                else:
-                    query = query.find(DBOrganization.id == UUID(filters.id.equal))
-        if filters.name:
-            if filters.name.equal:
-                query = query.find(DBOrganization.name == filters.name.equal)
+    if filter_by:
+        query = filter_model_query(DBOrganization, filter_by, query)
+
+    if sort_by:
+        query = sort_model_query(DBOrganization, sort_by, query)
+
+    if limit is not None:
+        query = query.limit(limit)
+
+    if offset:
+        query = query.skip(offset)
+
     organizations = await query.to_list()
+    logger.debug(f"Found {len(organizations)} organizations")
+
     return organizations
 
 

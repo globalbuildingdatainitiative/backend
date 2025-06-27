@@ -18,12 +18,18 @@ scalar DateTime
 
 scalar EmailAddress
 
-input FilterOptions {
-  equal: String = null
-  contains: String = null
-  startsWith: String = null
-  endsWith: String = null
-  isTrue: Boolean = null
+input FilterBy {
+  equal: JSON
+  contains: JSON
+  startsWith: JSON
+  endsWith: JSON
+  gt: JSON
+  gte: JSON
+  lt: JSON
+  lte: JSON
+  notEqual: JSON
+  isTrue: Boolean
+  in: JSON
 }
 
 type InviteResult {
@@ -42,6 +48,11 @@ enum InviteStatus {
 input InviteUsersInput {
   emails: [String!]!
 }
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).
+"""
+scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
 
 type Mutation {
   """Update user details"""
@@ -85,11 +96,11 @@ type Query {
   _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
 
-  """Returns all Users"""
-  users(filters: UserFilters = null, sortBy: UserSort = null): [User!]!
-
   """Returns all Roles and their permissions"""
   roles: [RolePermission!]!
+
+  """Returns all Users"""
+  users: UserGraphQLResponse!
 }
 
 enum Role {
@@ -101,6 +112,11 @@ enum Role {
 type RolePermission {
   name: Role!
   permissions: [Permission!]!
+}
+
+input SortBy @oneOf {
+  asc: String
+  dsc: String
 }
 
 scalar UUID
@@ -132,21 +148,12 @@ type User @key(fields: "id") {
   roles: [Role!]
 }
 
-input UserFilters {
-  id: FilterOptions = null
-  firstName: FilterOptions = null
-  lastName: FilterOptions = null
-  email: FilterOptions = null
-  organizationId: FilterOptions = null
-  invited: FilterOptions = null
-  inviteStatus: FilterOptions = null
-  inviterName: FilterOptions = null
-  timeJoined: FilterOptions = null
-}
+type UserGraphQLResponse {
+  """The list of items in this pagination window."""
+  items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int): [User!]
 
-input UserSort @oneOf {
-  asc: String
-  dsc: String
+  """Total number of items in the filtered dataset."""
+  count(filterBy: FilterBy = null): Int!
 }
 
 scalar _Any

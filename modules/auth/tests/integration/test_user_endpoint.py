@@ -9,16 +9,19 @@ async def test_users_query(client: AsyncClient):
     query = """
         query {
             users {
-                id
-                email
-                timeJoined
-                firstName
-                lastName
-                organizationId
-                invited
-                inviteStatus
-                inviterName
-                roles
+                items {
+                    id
+                    email
+                    timeJoined
+                    firstName
+                    lastName
+                    organizationId
+                    invited
+                    inviteStatus
+                    inviterName
+                    roles
+                }
+                count
             }
         }
     """
@@ -32,10 +35,10 @@ async def test_users_query(client: AsyncClient):
     data = response.json()
 
     assert not data.get("errors")
-    users = data.get("data", {}).get("users")
-    assert users is not None
+    _users = data.get("data", {}).get("users", {}).get("items")
+    assert _users is not None
 
-    for user in users:
+    for user in _users:
         assert "id" in user
         assert "email" in user
         assert "timeJoined" in user
@@ -53,7 +56,9 @@ async def test_admin_get_users_query(client_admin: AsyncClient):
     query = """
         query {
             users {
-                id
+                items {
+                    id
+                }
             }
         }
     """
@@ -67,10 +72,10 @@ async def test_admin_get_users_query(client_admin: AsyncClient):
     data = response.json()
 
     assert not data.get("errors")
-    users = data.get("data", {}).get("users")
+    _users = data.get("data", {}).get("users", {}).get("items")
 
-    assert users
-    assert len(users) > 1
+    assert _users
+    assert len(_users) > 1
 
 
 @pytest.mark.asyncio

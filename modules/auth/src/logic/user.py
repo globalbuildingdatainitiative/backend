@@ -4,6 +4,8 @@ from logging import getLogger
 from uuid import UUID
 
 import strawberry
+from aiocache import cached
+from fastapi.requests import Request
 from strawberry import UNSET
 from supertokens_python.asyncio import get_user, get_users_newest_first, list_users_by_account_info
 from supertokens_python.recipe.emailpassword.asyncio import update_email_or_password, verify_credentials
@@ -11,41 +13,45 @@ from supertokens_python.recipe.emailpassword.interfaces import WrongCredentialsE
 from supertokens_python.recipe.session.asyncio import create_new_session
 from supertokens_python.recipe.session.interfaces import SessionContainer
 from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
-from fastapi.requests import Request
 from supertokens_python.recipe.userroles.asyncio import get_roles_for_user
-from supertokens_python.types import AccountInfo
+from supertokens_python.types import AccountInfo, User
 
 from core import exceptions
 from core.exceptions import EntityNotFound
 from logic.roles import assign_role, remove_role
-from models import GraphQLUser, UserFilters, UserSort, UpdateUserInput, InviteStatus, Role, AcceptInvitationInput
-from models.sort_filter import FilterOptions
+from models import GraphQLUser, UpdateUserInput, InviteStatus, Role, AcceptInvitationInput
+from models.sort_filter import FilterBy, SortBy
 
 logger = getLogger("main")
 
 
-async def get_users(filters: UserFilters | None = None, sort_by: UserSort | None = None) -> list[GraphQLUser]:
+async def get_users(
+    filter_by: FilterBy | None = None, sort_by: SortBy | None = None, limit: int | None = None, offset: int = 0
+) -> list[GraphQLUser]:
     """Returns all Users & their metadata"""
-    users = []
 
-    logger.debug(f"Fetching users with filters: {filters} and sort_by: {sort_by}")
+    logger.debug(f"Fetching users with filters: {filter_by} and sort_by: {sort_by}")
 
-    if filters:
-        if filters.id and filters.id.equal:
-            users = [await get_user(str(filters.id.equal))]
-        elif filters.email and filters.email.equal:
-            users = await list_users_by_account_info("public", AccountInfo(email=filters.email.equal))
+    if filter_by:
+        if filter_by.equal and filter_by.equal.get("id"):
+            _user = await get_user_by_id(str(filter_by.equal.get("id")))
+            return [await construct_graphql_user(_user)]
+        elif filter_by.equal and filter_by.equal.get("email"):
+            users = await list_users_by_account_info("public", AccountInfo(email=filter_by.equal.get("email")))
+            return [await construct_graphql_user(_user) for _user in users]
 
-    users = (await get_users_newest_first("public")).users if not users else users
+    gql_users = [await construct_graphql_user(_user) for _user in await get_all_users()]
 
-    gql_users = [
-        await GraphQLUser.from_supertokens(user, (await get_user_metadata(user.id)).metadata) for user in users
-    ]
+    if filter_by:
+        gql_users = filter_users(gql_users, filter_by)
 
-    if filters:
-        gql_users = filter_users(gql_users, filters)
     if sort_by:
         gql_users = sort_users(gql_users, sort_by)
+
+    if limit is not None:
+        gql_users = gql_users[offset : offset + limit]
+    else:
+        gql_users = gql_users[offset:]
 
     return gql_users
 
@@ -93,7 +99,7 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
             tenant_id_for_password_policy=user.tenant_ids[0],
         )
 
-    user_data = await get_users(UserFilters(id=FilterOptions(equal=user_id)))
+    user_data = await get_users(FilterBy(equal={"id": user_id}))
 
     return user_data[0]
 
@@ -140,11 +146,11 @@ async def reject_invitation(user_id: str) -> bool:
     return True
 
 
-def filter_users(users: list[GraphQLUser], filters: UserFilters) -> list[GraphQLUser]:
+def filter_users(users: list[GraphQLUser], filters: FilterBy) -> list[GraphQLUser]:
     filtered_users = users.copy()
 
-    for field_name, filter_value in filters.__dict__.items():
-        if not filter_value:
+    for _filter, fields in filters.items():
+        if not fields:
             continue
 
         # Map frontend field names to model attributes
@@ -157,37 +163,33 @@ def filter_users(users: list[GraphQLUser], filters: UserFilters) -> list[GraphQL
             "inviterName": "inviter_name",
         }
 
-        model_field = field_mapping.get(field_name, field_name)
+        for _field, value in fields.items():
+            if not _field or value is UNSET:
+                continue
 
-        if filter_value.equal is not None:
-            filtered_users = [
-                user
-                for user in filtered_users
-                if (model_field == "role" and user.role and user.role.value.lower() == str(filter_value.equal).lower())
-                or (
-                    model_field != "role"
-                    and str(getattr(user, model_field, None)).lower() == str(filter_value.equal).lower()
-                )
-            ]
-        elif filter_value.contains is not None:
-            filtered_users = [
-                user
-                for user in filtered_users
-                if (model_field == "role" and user.role and filter_value.contains.lower() in user.role.value.lower())
-                or (
-                    model_field != "role"
-                    and filter_value.contains.lower() in str(getattr(user, model_field, "")).lower()
-                )
-            ]
-        elif filter_value.is_true is not None:
-            filtered_users = [
-                user for user in filtered_users if bool(getattr(user, model_field, False)) == filter_value.is_true
-            ]
+            model_field = field_mapping.get(_field, _field)
+
+            if _filter == "equal":
+                filtered_users = [
+                    user
+                    for user in filtered_users
+                    if (model_field == "role" and user.role and user.role.value.lower() == str(value).lower())
+                    or (model_field != "role" and str(getattr(user, model_field, None)).lower() == str(value).lower())
+                ]
+            elif _filter == "contains":
+                filtered_users = [
+                    user
+                    for user in filtered_users
+                    if (model_field == "role" and user.role and value.lower() in user.role.value.lower())
+                    or (model_field != "role" and value.lower() in str(getattr(user, model_field, "")).lower())
+                ]
+            elif _filter == "is_true":
+                filtered_users = [user for user in filtered_users if bool(getattr(user, model_field, False)) == value]
 
     return filtered_users
 
 
-def sort_users(users: list[GraphQLUser], sort_by: UserSort | None = None) -> list[GraphQLUser]:
+def sort_users(users: list[GraphQLUser], sort_by: SortBy | None = None) -> list[GraphQLUser]:
     if not sort_by:
         return users
 
@@ -249,3 +251,18 @@ async def impersonate_user(request: Request, user_id: str) -> SessionContainer:
         user.login_methods[0].recipe_user_id,
         {"isImpersonation": True},
     )
+
+
+@cached(ttl=60)
+async def get_user_by_id(user_id: str) -> User:
+    return await get_user(user_id)
+
+
+@cached(ttl=60)
+async def construct_graphql_user(user: User) -> GraphQLUser:
+    return await GraphQLUser.from_supertokens(user, (await get_user_metadata(user.id)).metadata)
+
+
+@cached(ttl=60)
+async def get_all_users() -> list[User]:
+    return (await get_users_newest_first("public")).users

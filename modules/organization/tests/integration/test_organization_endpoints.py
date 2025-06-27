@@ -10,10 +10,12 @@ async def test_organizations_query(client: AsyncClient, organizations):
     query = """
         query {
             organizations {
-                id
-                name
-                metaData {
-                    stakeholders
+                items {
+                    id
+                    name
+                    metaData {
+                        stakeholders
+                    }
                 }
             }
         }
@@ -30,8 +32,9 @@ async def test_organizations_query(client: AsyncClient, organizations):
     data = response.json()
 
     assert not data.get("errors")
-    assert data.get("data", {}).get("organizations")
-    assert all("metaData" in org and "stakeholders" in org["metaData"] for org in data["data"]["organizations"])
+    _organizations = data.get("data", {}).get("organizations", {}).get("items")
+    assert _organizations
+    assert all("metaData" in org and "stakeholders" in org["metaData"] for org in _organizations)
 
 
 @pytest.mark.asyncio

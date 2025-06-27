@@ -4,8 +4,7 @@ from uuid import UUID
 import pytest
 
 from logic import get_users
-from models import UserFilters
-from models.sort_filter import FilterOptions
+from models import FilterBy
 
 logger = getLogger("main")
 
@@ -19,29 +18,29 @@ async def test_get_all_users(users):
 
 @pytest.mark.asyncio
 async def test_filter_users_by_id(users):
-    filters = UserFilters(id=FilterOptions(equal=users[0].get("id")))
+    filters = FilterBy(equal={"id": users[0].get("id")})
 
     _users = await get_users(filters)
 
     assert len(_users) == 1
-    assert _users[0].id == UUID(filters.id.equal)
+    assert _users[0].id == UUID(filters.equal.get("id"))
 
 
 @pytest.mark.asyncio
 async def test_filter_users_by_organisation_id(users):
-    filters = UserFilters(organization_id=FilterOptions(equal=users[1].get("organization_id")))
+    filters = FilterBy(equal={"organization_id": users[1].get("organization_id")})
 
     _users = await get_users(filters)
 
     assert len(_users) == 1
-    assert _users[0].organization_id == filters.organization_id.equal
+    assert _users[0].organization_id == filters.equal.get("organization_id")
 
 
 @pytest.mark.asyncio
 async def test_filter_users_by_email(users):
-    filters = UserFilters(email=FilterOptions(equal=users[0].get("email")))
+    filters = FilterBy(equal={"email": users[0].get("email")})
 
     _users = await get_users(filters)
 
     assert len(_users) == 1
-    assert _users[0].email == filters.email.equal
+    assert _users[0].email == filters.equal.get("email")

@@ -1,23 +1,22 @@
+from .roles import Role, Permission, RolePermission
+from .scalers import EmailAddress
+from .sort_filter import SortBy, FilterBy
 from .user import (
     GraphQLUser,
     SuperTokensUser,
     AcceptInvitationInput,
-    UserFilters,
-    UserSort,
     UpdateUserInput,
     InviteUsersInput,
     InviteResult,
     InviteStatus,
 )
-from .roles import Role, Permission, RolePermission
-from .scalers import EmailAddress
 
 __all__ = [
+    SortBy,
+    FilterBy,
     GraphQLUser,
     SuperTokensUser,
     AcceptInvitationInput,
-    UserFilters,
-    UserSort,
     UpdateUserInput,
     InviteUsersInput,
     InviteResult,
