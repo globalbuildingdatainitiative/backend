@@ -11,6 +11,8 @@ from models import (
     CountryCodes,
     StakeholderEnum,
     InputOrganizationMetaData,
+    FilterBy,
+    SortBy,
 )
 
 
@@ -18,13 +20,46 @@ from models import (
 async def test_get_organizations(organizations):
     """Tests retrieving all organizations"""
 
-    fetched_organizations = await get_organizations()  # Assuming get_organization exists
+    fetched_organizations = await get_organizations()
 
     assert len(fetched_organizations) == len(organizations)
     for i, organization in enumerate(fetched_organizations):
         assert organization.id == organizations[i].id
         assert organization.name == organizations[i].name
         assert organization.meta_data.stakeholders == organizations[i].meta_data.stakeholders
+
+
+@pytest.mark.asyncio
+async def test_get_organizations_with_filters(organizations):
+    """Test get_organizations with a filter applied."""
+
+    organization = organizations[0]
+    filter_by = FilterBy(equal={"name": organization.name})
+    _organizations = await get_organizations(filter_by=filter_by)
+
+    assert len(_organizations) == 1
+    assert _organizations[0].id == organization.id
+
+
+@pytest.mark.asyncio
+async def test_get_organizations_with_sorting(organizations):
+    """Test get_organizations with sorting applied."""
+
+    sort_by = SortBy(dsc="city")
+    _organizations = await get_organizations(sort_by=sort_by)
+
+    assert _organizations[0].city == organizations[2].city
+
+
+@pytest.mark.asyncio
+async def test_get_organizations_with_limit_and_offset(organizations):
+    """
+    Test get_organizations with limit and offset applied.
+    """
+
+    organizations = await get_organizations(limit=5, offset=2)
+
+    assert len(organizations) == 1
 
 
 @pytest.mark.asyncio

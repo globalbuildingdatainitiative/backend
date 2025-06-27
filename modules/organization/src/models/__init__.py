@@ -2,28 +2,27 @@ from .organization import (
     DBOrganization,
     GraphQLOrganization,
     InputOrganization,
-    OrganizationFilter,
     OrganizationBase,
     OrganizationMetaData,
     OrganizationMetaDataModel,
-    OrganizationMetaDataFilter,
     InputOrganizationMetaData,
 )
 from .user import GraphQLUser
 from .country_codes import CountryCodes
 from .stakeholder import StakeholderEnum
 from .supertokens import SuperTokensUser
+from .sort_filter import FilterBy, SortBy
 
 __all__ = [
     DBOrganization,
     GraphQLOrganization,
     InputOrganization,
     InputOrganizationMetaData,
-    OrganizationFilter,
+    FilterBy,
+    SortBy,
     OrganizationBase,
     OrganizationMetaData,
     OrganizationMetaDataModel,
-    OrganizationMetaDataFilter,
     StakeholderEnum,
     SuperTokensUser,
     CountryCodes,

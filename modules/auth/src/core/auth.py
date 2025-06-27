@@ -351,33 +351,6 @@ def functions_override(original_impl: RecipeInterface):
             user_id, email, password, apply_password_policy, tenant_id_for_password_policy, user_context
         )
 
-    # Handles password reset and assigns users to organizations
-    # async def reset_password_using_token(
-    #     token: str, new_password: str, tenant_id: str, user_context: Dict[str, Any]
-    # ) -> Union[ResetPasswordUsingTokenOkResult, ResetPasswordUsingTokenInvalidTokenError]:
-    #     if new_password == FAKE_PASSWORD:
-    #         return ResetPasswordUsingTokenInvalidTokenError()
-    #
-    #     result = await og_reset_password_using_token(token, new_password, tenant_id, user_context)
-    #
-    #     if isinstance(result, ResetPasswordUsingTokenOkResult):
-    #         user_id = user_context.get("user_id")
-    #         if not user_id:
-    #             user = await get_user(result.user_id)
-    #             if user:
-    #                 user_id = user.id
-    #         if user_id:
-    #             user_metadata = await get_user_metadata(user_id)
-    #             pending_org_id = user_metadata.metadata.get("pending_org_id")
-    #             if pending_org_id:
-    #                 await update_user_metadata(
-    #                     user_id,
-    #                     {
-    #                         "organization_id": pending_org_id,
-    #                     },
-    #                 )
-    #     return result
-
     # Prevents signing in with Fake password (User must change the password before signing in)
     async def emailpassword_sign_in(
         email: str,

@@ -4,7 +4,6 @@ from strawberry.types import Info
 
 from core.context import get_user
 from logic import (
-    get_users,
     update_user,
     invite_users,
     accept_invitation,
@@ -12,37 +11,33 @@ from logic import (
     resend_invitation,
     impersonate_user,
 )
-from logic.roles import check_is_admin
 from models import (
     GraphQLUser,
-    UserFilters,
-    UserSort,
     UpdateUserInput,
     InviteUsersInput,
     InviteResult,
     AcceptInvitationInput,
 )
-from models.sort_filter import FilterOptions
 
 logger = logging.getLogger("main")
 
 
-async def users_query(
-    info: Info, filters: UserFilters | None = None, sort_by: UserSort | None = None
-) -> list[GraphQLUser]:
-    """Returns all Users"""
-
-    is_admin = await check_is_admin(get_user(info).id)
-    if is_admin:
-        users = await get_users(filters, sort_by)
-        logger.info(f"Got {len(users)} users as admin")
-        return users
-    else:
-        filters = filters or UserFilters()
-        filters.organization_id = FilterOptions(equal=get_user(info).organization_id)
-        users = await get_users(filters, sort_by)
-        logger.info(f"Got {len(users)} users")
-        return users
+# async def users_query(
+#     info: Info, filters: UserFilters | None = None, sort_by: UserSort | None = None
+# ) -> list[GraphQLUser]:
+#     """Returns all Users"""
+#
+#     is_admin = await check_is_admin(get_user(info).id)
+#     if is_admin:
+#         users = await get_users(filters, sort_by)
+#         logger.info(f"Got {len(users)} users as admin")
+#         return users
+#     else:
+#         filters = filters or UserFilters()
+#         filters.organization_id = FilterOptions(equal=get_user(info).organization_id)
+#         users = await get_users(filters, sort_by)
+#         logger.info(f"Got {len(users)} users")
+#         return users
 
 
 async def update_user_mutation(user_input: UpdateUserInput) -> GraphQLUser:

@@ -26,9 +26,11 @@ async def create_jwt() -> str:
 
 async def get_organization_name(organization_id: UUID) -> str:
     query = """
-    query($id: String!) {
-        organizations(filters: {id: {equal: $id}}) {
-            name
+    query($id: UUID!) {
+        organizations {
+            items(filterBy: {equal: {id: $id}}) {
+                name
+            }
         }
     }
     """
@@ -59,7 +61,7 @@ async def get_organization_name(organization_id: UUID) -> str:
             if "errors" in data:
                 raise MicroServiceResponseError(f"Got error from {settings.ROUTER_URL}: {data['errors']}")
 
-            organizations = data.get("data", {}).get("organizations", [])
+            organizations = data.get("data", {}).get("organizations", {}).get("items", [])
             if organizations:
                 return organizations[0]["name"]
 

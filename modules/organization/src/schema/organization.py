@@ -1,27 +1,25 @@
+import logging
 from uuid import UUID
 
 from strawberry.types import Info
 
 from logic import (
-    get_organizations,
     create_organizations_mutation,
     update_organizations_mutation,
     delete_organizations_mutation,
 )
-from models import OrganizationFilter, InputOrganization, DBOrganization
+from models import InputOrganization, DBOrganization
 
-
-async def organizations_query(info: Info, filters: OrganizationFilter | None = None) -> list[DBOrganization]:
-    """Returns all Organizations"""
-
-    organizations = await get_organizations(filters)
-    return organizations
+logger = logging.getLogger("main")
 
 
 async def add_organizations_mutation(info: Info, organizations: list[InputOrganization]) -> list[DBOrganization]:
     """Creates multiple organizations and associates them with the current user"""
+
     current_user = info.context.get("user")
     new_organization = await create_organizations_mutation(organizations, current_user)
+
+    logger.info(f"Created organization: {new_organization} for user: {current_user.id}")
     return new_organization
 
 

@@ -1,13 +1,16 @@
+import logging
+from typing import List
 from uuid import UUID, uuid4
-from typing import List, Optional
 
 import strawberry
 from beanie import Document
 from pydantic import BaseModel, Field
 
 from .country_codes import CountryCodes
+from .sort_filter import FilterBy
 from .stakeholder import StakeholderEnum
-from .sort_filter import BaseFilter, FilterOptions
+
+logger = logging.getLogger("main")
 
 
 @strawberry.type
@@ -45,7 +48,8 @@ class GraphQLOrganization:
     async def resolve_reference(cls, id: UUID) -> "GraphQLOrganization":
         from logic import get_organizations
 
-        return (await get_organizations(filters=OrganizationFilter(id=FilterOptions(equal=id))))[0]
+        logger.debug(f"Resolving organization reference: {id}")
+        return (await get_organizations(filter_by=FilterBy(equal={"id": id})))[0]
 
 
 @strawberry.input
@@ -61,18 +65,3 @@ class InputOrganization:
     city: str
     country: CountryCodes
     meta_data: InputOrganizationMetaData = strawberry.field(default_factory=InputOrganizationMetaData)
-
-
-@strawberry.input
-class OrganizationMetaDataFilter:
-    stakeholders: Optional[FilterOptions] = None
-
-
-@strawberry.input
-class OrganizationFilter(BaseFilter):
-    id: FilterOptions | None = None
-    name: FilterOptions | None = None
-    address: FilterOptions | None = None
-    city: FilterOptions | None = None
-    country: FilterOptions | None = None
-    meta_data: Optional[OrganizationMetaDataFilter] = None

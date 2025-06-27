@@ -13,7 +13,7 @@ from supertokens_python.types import User
 from core.auth import FAKE_PASSWORD
 from models.roles import Role
 from .scalers import EmailAddress
-from .sort_filter import BaseFilter, FilterOptions
+from .sort_filter import FilterBy
 
 
 @strawberry.enum
@@ -64,26 +64,7 @@ class GraphQLUser:
     async def resolve_reference(cls, id: UUID) -> "GraphQLUser":
         from logic import get_users
 
-        return (await get_users(filters=UserFilters(id=FilterOptions(equal=id))))[0]
-
-
-@strawberry.input
-class UserFilters(BaseFilter):
-    id: FilterOptions | None = None
-    first_name: FilterOptions | None = None
-    last_name: FilterOptions | None = None
-    email: FilterOptions | None = None
-    organization_id: FilterOptions | None = None
-    invited: FilterOptions | None = None
-    invite_status: FilterOptions | None = None
-    inviter_name: FilterOptions | None = None
-    time_joined: FilterOptions | None = None
-
-
-@strawberry.input(one_of=True)
-class UserSort(BaseFilter):
-    asc: str | None = strawberry.UNSET
-    dsc: str | None = strawberry.UNSET
+        return (await get_users(filter_by=FilterBy(equal={"id": id})))[0]
 
 
 @strawberry.input

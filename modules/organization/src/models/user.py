@@ -1,22 +1,29 @@
+import logging
 from typing import Self
 from uuid import UUID
 
 import strawberry
 from strawberry.federation.schema_directives import Shareable
 
-from models import GraphQLOrganization, OrganizationFilter
+from models import GraphQLOrganization
+
+logger = logging.getLogger("main")
 
 
 async def get_user_organization(root: "GraphQLUser") -> GraphQLOrganization | None:
     from logic import get_organizations
-    from models.sort_filter import FilterOptions
+    from models import FilterBy
 
     if root.organizationId is None:
         return None
 
-    organizations = await get_organizations(
-        filters=OrganizationFilter(id=FilterOptions(equal=UUID(root.organizationId)))
-    )
+    logger.debug(f"Resolving user organization reference: {root.organizationId}")
+
+    org_id = root.organizationId if isinstance(root.organizationId, UUID) else UUID(root.organizationId)
+    organizations = await get_organizations(filter_by=FilterBy(equal={"id": org_id}))
+
+    logger.debug(f"Found {len(organizations)} organizations for user {root.id}")
+
     return organizations[0] if organizations else None
 
 

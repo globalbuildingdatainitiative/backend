@@ -4,8 +4,8 @@ from uuid import UUID
 import strawberry
 
 from models import GraphQLOrganization, GraphQLUser
+from models.response import GraphQLResponse
 from .organization import (
-    organizations_query,
     add_organizations_mutation,
     edit_organizations_mutation,
     remove_organizations_mutation,
@@ -15,9 +15,9 @@ from .permisions import IsAuthenticated
 
 @strawberry.type
 class Query:
-    organizations: list[GraphQLOrganization] = strawberry.field(
-        resolver=organizations_query, description=getdoc(organizations_query), permission_classes=[IsAuthenticated]
-    )
+    @strawberry.field(permission_classes=[IsAuthenticated], description="Returns all Organizations")
+    async def organizations(self) -> GraphQLResponse[GraphQLOrganization]:
+        return GraphQLResponse(GraphQLOrganization)
 
 
 @strawberry.type

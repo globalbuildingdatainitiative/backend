@@ -1,3 +1,5 @@
+directive @oneOf on INPUT_OBJECT
+
 schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key", "@shareable"]) {
   query: Query
   mutation: Mutation
@@ -254,12 +256,18 @@ enum CountryCodes {
   ZWE
 }
 
-input FilterOptions {
-  equal: String = null
-  contains: String = null
-  startsWith: String = null
-  endsWith: String = null
-  isTrue: Boolean = null
+input FilterBy {
+  equal: JSON
+  contains: JSON
+  startsWith: JSON
+  endsWith: JSON
+  gt: JSON
+  gte: JSON
+  lt: JSON
+  lte: JSON
+  notEqual: JSON
+  isTrue: Boolean
+  in: JSON
 }
 
 input InputOrganization {
@@ -274,6 +282,11 @@ input InputOrganization {
 input InputOrganizationMetaData {
   stakeholders: [StakeholderEnum!]! = []
 }
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).
+"""
+scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
 
 type Mutation {
   """
@@ -299,21 +312,16 @@ type Organization @key(fields: "id") {
   metaData: OrganizationMetaData!
 }
 
-input OrganizationFilter {
-  id: FilterOptions = null
-  name: FilterOptions = null
-  address: FilterOptions = null
-  city: FilterOptions = null
-  country: FilterOptions = null
-  metaData: OrganizationMetaDataFilter = null
+type OrganizationGraphQLResponse {
+  """The list of items in this pagination window."""
+  items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int): [Organization!]
+
+  """Total number of items in the filtered dataset."""
+  count(filterBy: FilterBy = null): Int!
 }
 
 type OrganizationMetaData {
   stakeholders: [StakeholderEnum!]!
-}
-
-input OrganizationMetaDataFilter {
-  stakeholders: FilterOptions = null
 }
 
 type Query {
@@ -321,7 +329,12 @@ type Query {
   _service: _Service!
 
   """Returns all Organizations"""
-  organizations(filters: OrganizationFilter = null): [Organization!]!
+  organizations: OrganizationGraphQLResponse!
+}
+
+input SortBy @oneOf {
+  asc: String
+  dsc: String
 }
 
 enum StakeholderEnum {

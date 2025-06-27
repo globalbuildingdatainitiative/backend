@@ -3,10 +3,10 @@ from inspect import getdoc
 import strawberry
 
 from models import GraphQLUser, InviteResult, RolePermission
+from models.response import GraphQLResponse
 from schema.permissions import IsAuthenticated, IsAdmin
 from schema.roles import make_admin_mutation, roles_query
 from schema.user import (
-    users_query,
     update_user_mutation,
     invite_users_mutation,
     accept_invitation_mutation,
@@ -18,9 +18,10 @@ from schema.user import (
 
 @strawberry.type
 class Query:
-    users: list[GraphQLUser] = strawberry.field(
-        resolver=users_query, description=getdoc(users_query), permission_classes=[IsAuthenticated]
-    )
+    @strawberry.field(permission_classes=[IsAuthenticated], description="Returns all Users")
+    async def users(self) -> GraphQLResponse[GraphQLUser]:
+        return GraphQLResponse(GraphQLUser)
+
     roles: list[RolePermission] = strawberry.field(
         resolver=roles_query, description=getdoc(roles_query), permission_classes=[IsAuthenticated]
     )
