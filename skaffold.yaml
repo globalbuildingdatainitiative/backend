@@ -198,6 +198,11 @@ portForward:
     port: 3567
 
   - resourceType: service
+    resourceName: database-service
+    namespace: auth
+    port: 5432
+
+  - resourceType: service
     resourceName: backend-service
     namespace: organization
     port: 7002

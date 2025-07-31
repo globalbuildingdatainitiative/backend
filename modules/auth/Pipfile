@@ -7,7 +7,9 @@ name = "pypi"
 fastapi = { extras = ["all"], version = "*" }
 uvicorn = { extras = ["standard"], version = "*" }
 strawberry-graphql = { extras = ["fastapi", "cli"], version = ">=0.134.0" }
-supertokens-python = ">=0.25.0"
+sqlmodel = "*"
+asyncpg = "*"
+supertokens-python = "==0.27.0"
 pyyaml = "*"
 aiocache = "*"
 tenacity = "*"
@@ -22,6 +24,7 @@ pytest-env = "*"
 pytest-datafixtures = "*"
 pytest-mock = "*"
 ruff = "*"
+psycopg2-binary = "*"
 
 [requires]
 python_version = "3.12"

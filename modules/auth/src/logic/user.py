@@ -39,7 +39,9 @@ async def get_users(
         elif filter_by.equal and filter_by.equal.get("email"):
             users = await list_users_by_account_info("public", AccountInfo(email=filter_by.equal.get("email")))
             return [await construct_graphql_user(_user) for _user in users]
-
+    #     else:
+    #         gql_users = filter_users(await get_all_users(), filter_by)
+    # else:
     gql_users = [await construct_graphql_user(_user) for _user in await get_all_users()]
 
     if filter_by:
@@ -265,4 +267,4 @@ async def construct_graphql_user(user: User) -> GraphQLUser:
 
 @cached(ttl=60)
 async def get_all_users() -> list[User]:
-    return (await get_users_newest_first("public")).users
+    return (await get_users_newest_first("public", limit=1000)).users

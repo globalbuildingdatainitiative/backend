@@ -9,7 +9,7 @@ uvicorn = {extras = ["standard"], version = "*"}
 strawberry-graphql = {extras = ["fastapi", "cli"], version = ">=0.134.0"}
 tenacity = "*"
 beanie = "*"
-supertokens-python = ">0.25.0"
+supertokens-python = "==0.27.0"
 httpx = "*"
 pyyaml = "*"
 

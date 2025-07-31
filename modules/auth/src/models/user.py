@@ -2,14 +2,16 @@ from datetime import datetime
 from enum import Enum
 from typing import Self, List
 from uuid import UUID
+from sqlalchemy import Column
 
 import strawberry
 from pydantic import BaseModel
+from sqlmodel import SQLModel, Field
 from strawberry import UNSET
 from strawberry.federation.schema_directives import Shareable
 from supertokens_python.recipe.userroles.asyncio import get_roles_for_user
 from supertokens_python.types import User
-
+from sqlalchemy.dialects.postgresql import JSON
 from core.auth import FAKE_PASSWORD
 from models.roles import Role
 from .scalers import EmailAddress
@@ -101,3 +103,19 @@ class AcceptInvitationInput:
     last_name: str | None = None
     current_password: str = FAKE_PASSWORD
     new_password: str | None = None
+
+
+class EmailPasswordUser(SQLModel, table=True):
+    __tablename__ = "emailpassword_users"
+    app_id: str = Field(primary_key=True)
+    user_id: str = Field(primary_key=True)
+    email: str
+    password_hash: str
+    time_joined: int
+
+
+class UserMetadata(SQLModel, table=True):
+    __tablename__ = "user_metadata"
+    app_id: str = Field(primary_key=True)
+    user_id: str = Field(primary_key=True)
+    user_metadata: dict = Field(default=dict, sa_column=Column(JSON))
