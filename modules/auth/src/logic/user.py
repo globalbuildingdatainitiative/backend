@@ -265,4 +265,4 @@ async def construct_graphql_user(user: User) -> GraphQLUser:
 
 @cached(ttl=60)
 async def get_all_users() -> list[User]:
-    return (await get_users_newest_first("public", limit=1000)).users
+    return (await get_users_newest_first("public", limit=500)).users
