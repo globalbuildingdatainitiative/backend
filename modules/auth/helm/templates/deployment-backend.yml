@@ -127,6 +127,43 @@ spec:
       labels:
         app: supertokens
     spec:
+      initContainers:
+        - name: wait-for-postgres
+          image: postgres:15-alpine
+          command: ['sh', '-c']
+          args:
+            - |
+              until pg_isready -h ${POSTGRESQL_HOST} -p ${POSTGRESQL_PORT} -U ${POSTGRESQL_USER} -d ${POSTGRESQL_DATABASE_NAME}; do
+                echo "Waiting for PostgreSQL to be ready..."
+                sleep 2
+              done
+              echo "PostgreSQL is ready!"
+          env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secret.name }}
+                  key: password
+            - name: POSTGRESQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secret.name }}
+                  key: username
+            - name: POSTGRESQL_DATABASE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.db.configmap }}
+                  key: POSTGRES_DB
+            - name: POSTGRESQL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.db.configmap }}
+                  key: POSTGRES_HOST
+            - name: POSTGRESQL_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.db.configmap }}
+                  key: POSTGRES_PORT
       containers:
         - name: supertokens
           image: 'registry.supertokens.io/supertokens/supertokens-postgresql:{{ .Values.supertokens.image.tag }}'
@@ -165,6 +202,14 @@ spec:
 
             - name: ACCESS_TOKEN_VALIDITY
               value: "{{ .Values.supertokens.accessTokenValidity }}"
+
+          readinessProbe:
+            httpGet:
+              port: 3567
+              path: '/hello'
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 3
 
           startupProbe:
             httpGet:
