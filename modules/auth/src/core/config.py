@@ -14,16 +14,16 @@ class ParsingValues(EnvSettingsSource):
     def prepare_field_value(self, field_name: str, field: FieldInfo, value: Any, value_is_complex: bool) -> Any:
         if field_name == "BACKEND_CORS_ORIGINS" and value:
             # Check if the value is a JSON array string
-            if isinstance(value, str) and value.startswith('[') and value.endswith(']'):
+            if isinstance(value, str) and value.startswith("[") and value.endswith("]"):
                 try:
                     # Parse the JSON array
                     return json.loads(value)
                 except json.JSONDecodeError:
                     # If JSON parsing fails, fall back to comma splitting
-                    return [x.strip().strip('"\'') for x in value.split(",")]
+                    return [x.strip().strip("\"'") for x in value.split(",")]
             else:
                 # For non-JSON values, use comma splitting
-                return [x.strip().strip('"\'') for x in value.split(",")]
+                return [x.strip().strip("\"'") for x in value.split(",")]
         return super().prepare_field_value(field_name, field, value, value_is_complex)
 
 
