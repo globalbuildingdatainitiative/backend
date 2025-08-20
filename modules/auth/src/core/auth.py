@@ -46,6 +46,8 @@ def get_origin(request: BaseRequest | None, user_context) -> str:
         else:
             if origin.endswith("gbdi.io"):
                 return origin
+            elif origin.endswith("epfl.ch"):
+                return origin
             elif origin.startswith("http://localhost"):
                 return origin
 
