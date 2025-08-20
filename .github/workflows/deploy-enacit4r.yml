@@ -17,6 +17,6 @@ jobs:
     secrets:
       token: ${{ secrets.CD_TOKEN }}
     with:
-      org: gbdi
-      repo: app
+      org: epfl-lmc
+      repo: gbdi
       build_context: '["./modules/auth", "./modules/organization", "./modules/projects"]'
