@@ -66,6 +66,10 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     if not user:
         raise EntityNotFound(f"No user found with the provided ID: {user_input.id}", "Auth")
 
+    # Store email before removing it from metadata_update
+    new_email = metadata_update.get("email")
+    current_email = str(user.emails[0]) if user.emails else None
+    
     del metadata_update["current_password"]
     del metadata_update["new_password"]
     if metadata_update["organization_id"] is UNSET or metadata_update["organization_id"] is None:
@@ -86,8 +90,15 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     if metadata_update:
         await update_user_metadata(user_id, json.loads(metadata_update))
 
-    # Update password if current password and new password are provided
+    # Update email if provided and different from current
+    if new_email is not UNSET and new_email != current_email:
+        await update_email_or_password(
+            recipe_user_id=user.login_methods[0].recipe_user_id,
+            email=str(new_email),
+            tenant_id_for_password_policy=user.tenant_ids[0],
+        )
 
+    # Update password if current password and new password are provided
     if user_input.current_password and user_input.new_password:
         is_password_valid = await verify_credentials("public", str(user.emails[0]), str(user_input.current_password))
         if isinstance(is_password_valid, WrongCredentialsError):
@@ -99,9 +110,15 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
             tenant_id_for_password_policy=user.tenant_ids[0],
         )
 
-    user_data = await get_users(FilterBy(equal={"id": user_id}))
+    # Invalidate cache for this user to ensure fresh data for subsequent requests
+    await invalidate_user_cache(user_id)
+    
+    # Return fresh data
+    _user = await get_user(user_id)
+    user_metadata = await get_user_metadata(user_id)
+    updated_user = await GraphQLUser.from_supertokens(_user, user_metadata.metadata)
 
-    return user_data[0]
+    return updated_user
 
 
 async def accept_invitation(user: AcceptInvitationInput) -> bool:
@@ -124,6 +141,9 @@ async def accept_invitation(user: AcceptInvitationInput) -> bool:
         update_data["inviter_name"] = current_metadata.metadata["inviter_name"]
 
     await update_user_metadata(str(user.id), update_data)
+    
+    # Invalidate cache for this user
+    await invalidate_user_cache(str(user.id))
     return True
 
 
@@ -143,6 +163,9 @@ async def reject_invitation(user_id: str) -> bool:
         update_data["inviter_name"] = current_metadata.metadata["inviter_name"]
 
     await update_user_metadata(user_id, update_data)
+    
+    # Invalidate cache for this user
+    await invalidate_user_cache(user_id)
     return True
 
 
@@ -258,7 +281,7 @@ async def get_user_by_id(user_id: str) -> User:
     return await get_user(user_id)
 
 
-@cached(ttl=60)
+@cached(ttl=60, key_builder=lambda f, user, **kwargs: f"construct_graphql_user:{user.id}")
 async def construct_graphql_user(user: User) -> GraphQLUser:
     return await GraphQLUser.from_supertokens(user, (await get_user_metadata(user.id)).metadata)
 
@@ -266,3 +289,18 @@ async def construct_graphql_user(user: User) -> GraphQLUser:
 @cached(ttl=60)
 async def get_all_users() -> list[User]:
     return (await get_users_newest_first("public", limit=500)).users
+
+
+async def invalidate_user_cache(user_id: str) -> None:
+    """Invalidate cache entries for a specific user"""
+    try:
+        # Access the cache instance for construct_graphql_user
+        cache = construct_graphql_user.cache
+        # Clear the specific user's cache entry
+        result = await cache.delete(f"construct_graphql_user:{user_id}")
+        if result > 0:
+            logger.debug(f"Cache entry for user {user_id} invalidated")
+        else:
+            logger.debug(f"No cache entry found for user {user_id}")
+    except Exception as e:
+        logger.warning(f"Failed to clear cache for user {user_id}: {e}")
