@@ -1,7 +1,7 @@
 from logging import getLogger
 from uuid import UUID
 
-from aiocache import cached
+# from aiocache import cached
 from supertokens_python.recipe.userroles.asyncio import (
     get_roles_for_user,
     add_role_to_user,
