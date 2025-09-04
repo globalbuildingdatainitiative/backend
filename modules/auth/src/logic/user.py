@@ -276,17 +276,17 @@ async def impersonate_user(request: Request, user_id: str) -> SessionContainer:
     )
 
 
-@cached(ttl=60)
+# @cached(ttl=60)
 async def get_user_by_id(user_id: str) -> User:
     return await get_user(user_id)
 
 
-@cached(ttl=60, key_builder=lambda f, user, **kwargs: f"construct_graphql_user:{user.id}")
+# @cached(ttl=60, key_builder=lambda f, user, **kwargs: f"construct_graphql_user:{user.id}")
 async def construct_graphql_user(user: User) -> GraphQLUser:
     return await GraphQLUser.from_supertokens(user, (await get_user_metadata(user.id)).metadata)
 
 
-@cached(ttl=60)
+@cached(ttl=5)
 async def get_all_users() -> list[User]:
     return (await get_users_newest_first("public", limit=500)).users
 
