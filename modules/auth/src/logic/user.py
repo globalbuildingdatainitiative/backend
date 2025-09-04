@@ -69,7 +69,7 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     # Store email before removing it from metadata_update
     new_email = metadata_update.get("email")
     current_email = str(user.emails[0]) if user.emails else None
-    
+
     del metadata_update["current_password"]
     del metadata_update["new_password"]
     if metadata_update["organization_id"] is UNSET or metadata_update["organization_id"] is None:
@@ -112,7 +112,7 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
 
     # Invalidate cache for this user to ensure fresh data for subsequent requests
     await invalidate_user_cache(user_id)
-    
+
     # Return fresh data
     _user = await get_user(user_id)
     user_metadata = await get_user_metadata(user_id)
@@ -141,7 +141,7 @@ async def accept_invitation(user: AcceptInvitationInput) -> bool:
         update_data["inviter_name"] = current_metadata.metadata["inviter_name"]
 
     await update_user_metadata(str(user.id), update_data)
-    
+
     # Invalidate cache for this user
     await invalidate_user_cache(str(user.id))
     return True
@@ -163,7 +163,7 @@ async def reject_invitation(user_id: str) -> bool:
         update_data["inviter_name"] = current_metadata.metadata["inviter_name"]
 
     await update_user_metadata(user_id, update_data)
-    
+
     # Invalidate cache for this user
     await invalidate_user_cache(user_id)
     return True
