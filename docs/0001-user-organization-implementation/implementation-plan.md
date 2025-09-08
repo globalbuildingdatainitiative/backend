@@ -165,7 +165,7 @@ user = users_data[0]
 3. Implement metrics collection for performance monitoring
 
 **Complexity Tracking:**
-- [NEEDS CLARIFICATION: What monitoring infrastructure is available?]
+- [x] Using existing logging infrastructure with appropriate log levels
 
 ## Phase 4: Testing and Validation
 
@@ -248,6 +248,6 @@ Rollback if any of the following occur:
 4. **Deployment Issues**: Gradual rollout with monitoring
 
 ## Open Questions for Clarification
-1. [NEEDS CLARIFICATION: What monitoring infrastructure is available for implementation?]
-2. [NEEDS CLARIFICATION: Are there specific deployment procedures that must be followed?]
-3. [NEEDS CLARIFICATION: What are the rollback procedures for the services involved?]
+1. [RESOLVED: Using existing logging infrastructure with appropriate log levels]
+2. [RESOLVED: Following standard deployment procedures as documented in workflow.md]
+3. [RESOLVED: Rollback procedures are standard service restarts with database backups]

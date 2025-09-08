@@ -271,7 +271,7 @@ input FilterBy {
 }
 
 input InputOrganization {
-  id: UUID! = "annotation=NoneType required=False default_factory=uuid4"
+  id: UUID! = "00000000-0000-0000-0000-000000000000"
   name: String!
   address: String!
   city: String!

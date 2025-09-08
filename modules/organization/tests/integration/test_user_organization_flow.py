@@ -42,7 +42,7 @@ async def test_end_to_end_user_organization_flow():
     ):
         # Mock the Role enum
         mock_role.OWNER.value = "owner"
-        
+
         # Mock the database operations
         mock_db_org_instance = AsyncMock()
         mock_db_org_instance.id = uuid4()
@@ -51,13 +51,13 @@ async def test_end_to_end_user_organization_flow():
         mock_db_org_instance.city = organization_data.city
         mock_db_org_instance.country = organization_data.country
         mock_db_org_instance.meta_data = organization_data.meta_data
-        
+
         # Mock the constructor to return our instance
         mock_db_org_class.return_value = mock_db_org_instance
-        
+
         # Mock the insert method to do nothing (successful insertion)
         mock_db_org_instance.insert = AsyncMock()
-        
+
         # Mock the get method to return our instance (verification step)
         mock_db_org_class.get = AsyncMock(return_value=mock_db_org_instance)
 

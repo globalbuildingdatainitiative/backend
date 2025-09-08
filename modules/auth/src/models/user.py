@@ -11,6 +11,7 @@ from supertokens_python.recipe.userroles.asyncio import get_roles_for_user
 from supertokens_python.types import User
 
 from core.auth import FAKE_PASSWORD
+from core.exceptions import EntityNotFound
 from models.roles import Role
 from .scalers import EmailAddress
 from .sort_filter import FilterBy
@@ -63,8 +64,16 @@ class GraphQLUser:
     @classmethod
     async def resolve_reference(cls, id: UUID) -> "GraphQLUser":
         from logic import get_users
+        from core.exceptions import EntityNotFound
 
-        return (await get_users(filter_by=FilterBy(equal={"id": id})))[0]
+        users = await get_users(filter_by=FilterBy(equal={"id": id}))
+
+        # Handle case where user is not found to prevent "list index out of range" error
+        if not users:
+            logger.warning(f"No user found with id {id}")
+            raise EntityNotFound("User Not Found", str(id))
+
+        return users[0]
 
 
 @strawberry.input

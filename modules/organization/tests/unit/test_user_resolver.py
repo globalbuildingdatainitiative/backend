@@ -35,7 +35,7 @@ async def test_missing_organization_resolution(caplog, mock_db):
     with caplog.at_level(logging.WARNING, logger="main"):
         with patch("logic.get_organizations", new_callable=AsyncMock) as mock_get_organizations:
             mock_get_organizations.return_value = []
-            
+
             # When
             result = await get_user_organization(user)
 

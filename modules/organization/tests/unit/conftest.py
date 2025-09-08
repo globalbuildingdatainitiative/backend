@@ -13,10 +13,10 @@ async def mock_db():
     # Use mongomock for unit tests to avoid needing a real database
     client = AsyncMongoMockClient()
     db = client[settings.MONGO_DB]
-    
+
     # Initialize Beanie with the mock database
     await init_beanie(database=db, document_models=[DBOrganization])
-    
+
     yield db
 
 
