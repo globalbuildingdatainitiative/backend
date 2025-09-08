@@ -40,6 +40,24 @@ and [Skaffold](https://skaffold.dev/).
 
 # Get Started
 
+## Environment Variables
+
+Before running the application locally, you need to set up the required environment variables:
+
+1. Copy the example environment file:
+   ```shell
+   cp .env.example .env
+   ```
+
+2. Edit the `.env` file and update the values according to your local setup.
+
+3. Run the application using the Makefile:
+   ```shell
+   make run
+   ```
+   
+   This will automatically load the `.env` file and start the application.
+
 ## Software Dependencies
 
 ### Windows

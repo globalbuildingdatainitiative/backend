@@ -1,8 +1,8 @@
-# Makefile for Organization module
+# Makefile for Auth module
 
 # Variables
 PYTHON := python3
-PIPENV := pipenv
+UV := uv
 PYTEST := pytest
 RUFF := ruff
 
@@ -14,46 +14,46 @@ help: ## Show this help message
 
 .PHONY: install
 install: ## Install dependencies
-	$(PIPENV) install --dev
+	$(UV) sync --dev
 
 .PHONY: install-prod
 install-prod: ## Install production dependencies only
-	$(PIPENV) install
+	$(UV) sync
 
 .PHONY: lint
 lint: ## Run linting with Ruff
-	$(PIPENV) run $(RUFF) check .
+	$(UV) run $(RUFF) check .
 
 .PHONY: lint-fix
 lint-fix: ## Run linting with Ruff and fix issues
-	$(PIPENV) run $(RUFF) check . --fix
+	$(UV) run $(RUFF) check . --fix
 
 .PHONY: format
 format: ## Format code with Ruff
-	$(PIPENV) run $(RUFF) format .
+	$(UV) run $(RUFF) format .
 
 .PHONY: check
 check: lint ## Run all checks (linting, etc.)
 
 .PHONY: test
 test: ## Run tests
-	$(PIPENV) run $(PYTEST) tests/
+	$(UV) run $(PYTEST) tests/
 
 .PHONY: test-cov
 test-cov: ## Run tests with coverage
-	$(PIPENV) run $(PYTEST) tests/ --cov=src --cov-report=html --cov-report=term
+	$(UV) run $(PYTEST) tests/ --cov=src --cov-report=html --cov-report=term
 
 .PHONY: run
 run: ## Run the application locally
-	$(PIPENV) run uvicorn src.main:app --host 0.0.0.0 --port 7001 --reload
+	$(UV) run --env-file=.env uvicorn main:app --host 0.0.0.0 --port 7001 --reload --app-dir ./src
 
 .PHONY: run-prod
 run-prod: ## Run the application in production mode
-	$(PIPENV) run uvicorn src.main:app --host 0.0.0.0 --port 7001
+	$(UV) run --env-file=.env uvicorn main:app --host 0.0.0.0 --port 7001 --app-dir ./src
 
 .PHONY: schema
 schema: ## Export GraphQL schema
-	$(PIPENV) run ./export_schema.sh
+	$(UV) run ./export_schema.sh
 
 .PHONY: clean
 clean: ## Clean up generated files

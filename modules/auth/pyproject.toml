@@ -37,12 +37,12 @@ env = [
     "CONNECTION_URI=http://localhost:3568",
     "BACKEND_CORS_ORIGINS=http://localhost:9000",
     "API_KEY=",
-    "SMTP_HOST=email-smtp.eu-central-2.amazonaws.com",
-    "SMTP_PORT=5897",
-    "SMTP_EMAIL=noreply@noreply.io",
-    "SMTP_NAME=Test",
-    "SMTP_PASSWORD=BEPr8mQV7A/jtUv/MGIGherhrye789hyr9ehabrgPMJF",
-    "SMTP_USERNAME=AKIAW3MEGUGUE7NP",
+    "SMTP_HOST=epfl.ch",
+    "SMTP_PORT=3131",
+    "SMTP_EMAIL=no-reply+gbdi@epfl.ch",
+    "SMTP_NAME=GBDI local dev",
+    "SMTP_PASSWORD=",
+    "SMTP_USERNAME=",
 ]
 
 [tool.ruff]

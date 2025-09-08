@@ -1,7 +1,53 @@
+[project]
+name = "projects"
+version = "0.1.0"
+description = ""
+requires-python = ">=3.12,<3.13"
+
+
+
+
+dependencies = [
+    "fastapi[all]",
+    "async_lru",
+    "lcax==2.6.0",
+    "iso3166",
+    "uvicorn[standard]",
+    "strawberry-graphql[fastapi,cli]>=0.134.0",
+    "supertokens-python==0.27.0",
+    "pyyaml",
+    "aiocache",
+    "tenacity",
+    "beanie==1.29.0",
+    "httpx",
+    "motor",
+]
+
+[project.optional-dependencies]
+dev = [
+    "asgi-lifespan",
+    "docker",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-env", 
+    "pytest-datafixtures",
+    "pytest-mock",
+    "pre-commit",
+    "jsonschema",
+    "ruff",
+    "mongomock-motor",
+]
+
+
 [tool.pytest.ini_options]
 pythonpath = "src"
 testpaths = ["tests/"]
 asyncio_mode = "auto"
+markers = [
+    "performance: marks tests as performance tests",
+    "integration: marks tests as integration tests"
+]
+
 
 env = [
     "SERVER_NAME=Projects Test",
@@ -18,3 +64,14 @@ env = [
 [tool.ruff]
 line-length = 120
 target-version = "py312"
+
+
+[dependency-groups]
+dev = [
+    "asgi-lifespan>=2.1.0",
+    "docker>=7.1.0",
+    "pytest-asyncio>=1.1.0",
+    "pytest-datafixtures>=1.1.0",
+    "pytest-env>=1.1.5",
+    "ruff>=0.12.10",
+]
