@@ -61,6 +61,35 @@ async def get_users(
         if filter_by:
             gql_users = filter_users(gql_users, filter_by)
 
+    # Apply additional filters handling for ID-based queries with multiple filters
+    gql_users = await _apply_additional_id_filters(gql_users, filter_by)
+
+    if sort_by:
+        gql_users = sort_users(gql_users, sort_by)
+
+    if limit is not None:
+        gql_users = gql_users[offset : offset + limit]
+    else:
+        gql_users = gql_users[offset:]
+
+    return gql_users
+
+
+async def _apply_additional_id_filters(gql_users: list[GraphQLUser], filter_by: FilterBy | None) -> list[GraphQLUser]:
+    """
+    Apply additional filtering logic for ID-based queries with multiple filters.
+
+    When querying by ID with additional filters, this function ensures that:
+    1. Additional filters are applied selectively to avoid losing the user
+    2. If additional filters contradict the ID filter, the original user is preserved
+
+    Args:
+        gql_users: List of GraphQLUser objects from initial filtering
+        filter_by: FilterBy object containing the filter criteria
+
+    Returns:
+        List of GraphQLUser objects after applying additional ID filter logic
+    """
     # Apply additional filters if there are more than just the ID filter
     # But only if we actually found a user with the ID filter
     if filter_by and filter_by.equal and filter_by.equal.get("id") and len(filter_by.equal) > 1 and gql_users:
@@ -78,14 +107,6 @@ async def get_users(
                 gql_users = [await construct_graphql_user(_user)]
             else:
                 gql_users = []
-
-    if sort_by:
-        gql_users = sort_users(gql_users, sort_by)
-
-    if limit is not None:
-        gql_users = gql_users[offset : offset + limit]
-    else:
-        gql_users = gql_users[offset:]
 
     return gql_users
 
