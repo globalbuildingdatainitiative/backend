@@ -719,7 +719,7 @@ dependencies = [
     { name = "uvicorn", extra = ["standard"] },
 ]
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
     { name = "asgi-lifespan" },
     { name = "docker" },
@@ -733,48 +733,31 @@ dev = [
     { name = "ruff" },
 ]
 
-[package.dev-dependencies]
-dev = [
-    { name = "asgi-lifespan" },
-    { name = "docker" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-datafixtures" },
-    { name = "pytest-env" },
-    { name = "ruff" },
-]
-
 [package.metadata]
 requires-dist = [
     { name = "aiocache" },
-    { name = "asgi-lifespan", marker = "extra == 'dev'" },
     { name = "beanie" },
-    { name = "docker", marker = "extra == 'dev'" },
     { name = "fastapi", extras = ["all"] },
     { name = "httpx" },
-    { name = "mongomock-motor", marker = "extra == 'dev'" },
     { name = "motor" },
-    { name = "pre-commit", marker = "extra == 'dev'" },
-    { name = "pytest", marker = "extra == 'dev'" },
-    { name = "pytest-asyncio", marker = "extra == 'dev'" },
-    { name = "pytest-datafixtures", marker = "extra == 'dev'" },
-    { name = "pytest-env", marker = "extra == 'dev'" },
-    { name = "pytest-mock", marker = "extra == 'dev'" },
     { name = "pyyaml" },
-    { name = "ruff", marker = "extra == 'dev'" },
     { name = "strawberry-graphql", extras = ["fastapi", "cli"], specifier = ">=0.134.0" },
     { name = "supertokens-python", specifier = "==0.27.0" },
     { name = "tenacity" },
     { name = "uvicorn", extras = ["standard"] },
 ]
-provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "asgi-lifespan", specifier = ">=2.1.0" },
     { name = "docker", specifier = ">=7.1.0" },
+    { name = "mongomock-motor" },
+    { name = "pre-commit", specifier = ">=3.6.0" },
+    { name = "pytest", specifier = ">=8.4.2" },
     { name = "pytest-asyncio", specifier = ">=1.1.0" },
     { name = "pytest-datafixtures", specifier = ">=1.1.0" },
     { name = "pytest-env", specifier = ">=1.1.5" },
+    { name = "pytest-mock", specifier = ">=3.14.0" },
     { name = "ruff", specifier = ">=0.12.10" },
 ]
 
