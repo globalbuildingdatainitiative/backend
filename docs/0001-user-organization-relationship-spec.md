@@ -7,7 +7,7 @@
 This specification defines how users and organizations are related in the Global Building Data Initiative system, including how organizations are created, linked to users, and retrieved through GraphQL queries. The system must handle the distributed nature of data across services while maintaining consistency and preventing race conditions.
 
 ## Problem Statement
-[NEEDS CLARIFICATION: Is the primary concern the "list index out of range" error, or is it the broader challenge of maintaining consistency in a federated GraphQL architecture?]
+The primary concern was the "list index out of range" error that occurred when users created organizations and immediately queried their profile with organization details. This was a symptom of the broader challenge of maintaining consistency in a federated GraphQL architecture, where timing inconsistencies between services could lead to data access errors.
 
 ## User Stories
 
