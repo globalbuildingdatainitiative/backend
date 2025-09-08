@@ -887,9 +887,14 @@ dev = [
 dev = [
     { name = "asgi-lifespan" },
     { name = "docker" },
+    { name = "jsonschema" },
+    { name = "mongomock-motor" },
+    { name = "pre-commit" },
+    { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-datafixtures" },
     { name = "pytest-env" },
+    { name = "pytest-mock" },
     { name = "ruff" },
 ]
 
@@ -926,9 +931,14 @@ provides-extras = ["dev"]
 dev = [
     { name = "asgi-lifespan", specifier = ">=2.1.0" },
     { name = "docker", specifier = ">=7.1.0" },
+    { name = "jsonschema", specifier = ">=4.20.0" },
+    { name = "mongomock-motor", specifier = ">=0.0.20" },
+    { name = "pre-commit", specifier = ">=3.6.0" },
+    { name = "pytest", specifier = ">=8.4.2" },
     { name = "pytest-asyncio", specifier = ">=1.1.0" },
     { name = "pytest-datafixtures", specifier = ">=1.1.0" },
     { name = "pytest-env", specifier = ">=1.1.5" },
+    { name = "pytest-mock", specifier = ">=3.14.0" },
     { name = "ruff", specifier = ">=0.12.10" },
 ]
 

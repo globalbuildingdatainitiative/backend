@@ -1,6 +1,5 @@
 import pytest
 from beanie import init_beanie
-from motor.motor_asyncio import AsyncIOMotorClient
 from mongomock_motor import AsyncMongoMockClient
 
 from core.config import settings

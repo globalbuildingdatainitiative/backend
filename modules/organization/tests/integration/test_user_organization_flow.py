@@ -1,4 +1,3 @@
-import logging
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
@@ -35,8 +34,8 @@ async def test_end_to_end_user_organization_flow():
 
     # When - Create organization
     with (
-        patch("supertokens_python.recipe.usermetadata.asyncio.update_user_metadata") as mock_update_user_metadata,
-        patch("logic.organization.assign_role") as mock_assign_role,
+        patch("supertokens_python.recipe.usermetadata.asyncio.update_user_metadata"),
+        patch("logic.organization.assign_role"),
         patch("logic.organization.Role") as mock_role,
         patch("logic.organization.DBOrganization") as mock_db_org_class,
     ):

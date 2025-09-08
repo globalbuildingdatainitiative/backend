@@ -1,19 +1,14 @@
 import logging
 from unittest.mock import AsyncMock, patch
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
-from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
-
-from core.exceptions import EntityNotFound
 from logic.organization import create_organizations_mutation
 from models import (
-    DBOrganization,
     InputOrganization,
     InputOrganizationMetaData,
     SuperTokensUser,
     CountryCodes,
-    OrganizationMetaDataModel,
     StakeholderEnum,
 )
 
@@ -45,7 +40,7 @@ async def test_valid_organization_creation(mock_db):
         assert result[0].address == "123 Test Street"
         assert result[0].city == "Test City"
         assert result[0].country == CountryCodes.CHE
-        assert isinstance(result[0].id, UUID)
+        assert isinstance(result[0].id, uuid4().__class__)
 
         # Verify that user metadata was updated
         mock_update_user_metadata.assert_called_once()
@@ -86,7 +81,7 @@ async def test_organization_creation_with_verification(caplog, mock_db):
             # Verify that the get method was called for verification
             mock_get.assert_called_once_with(result[0].id)
             # No warning should be logged for successful verification
-            assert f"was not immediately queryable after insertion" not in caplog.text
+            assert "was not immediately queryable after insertion" not in caplog.text
 
 
 @pytest.mark.asyncio
@@ -119,7 +114,7 @@ async def test_organization_creation_verification_warning(caplog, mock_db):
             # Then
             assert len(result) == 1
             # Verify that warning is logged for failed verification
-            assert f"was not immediately queryable after insertion" in caplog.text
+            assert "was not immediately queryable after insertion" in caplog.text
 
 
 @pytest.mark.asyncio
@@ -152,7 +147,7 @@ async def test_organization_creation_verification_exception(caplog, mock_db):
             # Then
             assert len(result) == 1
             # Verify that warning is logged for verification exception
-            assert f"Error verifying organization" in caplog.text
+            assert "Error verifying organization" in caplog.text
 
 
 @pytest.mark.asyncio

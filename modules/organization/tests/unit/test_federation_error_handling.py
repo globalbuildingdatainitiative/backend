@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 import httpx
-from httpx import Request, Response
+from httpx import Request
 from supertokens_python.recipe.jwt.interfaces import CreateJwtOkResult
 
 from core.exceptions import MicroServiceConnectionError, MicroServiceResponseError

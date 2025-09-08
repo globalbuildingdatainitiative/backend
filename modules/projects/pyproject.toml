@@ -70,8 +70,13 @@ target-version = "py312"
 dev = [
     "asgi-lifespan>=2.1.0",
     "docker>=7.1.0",
+    "pytest>=8.4.2",
     "pytest-asyncio>=1.1.0",
     "pytest-datafixtures>=1.1.0",
     "pytest-env>=1.1.5",
+    "pytest-mock>=3.14.0",
     "ruff>=0.12.10",
+    "jsonschema>=4.20.0",
+    "mongomock-motor>=0.0.20",
+    "pre-commit>=3.6.0",
 ]

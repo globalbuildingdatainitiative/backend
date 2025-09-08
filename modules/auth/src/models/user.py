@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Self, List
 from uuid import UUID
 
+import logging
 import strawberry
 from pydantic import BaseModel
 from strawberry import UNSET
@@ -11,10 +12,12 @@ from supertokens_python.recipe.userroles.asyncio import get_roles_for_user
 from supertokens_python.types import User
 
 from core.auth import FAKE_PASSWORD
-from core.exceptions import EntityNotFound
 from models.roles import Role
 from .scalers import EmailAddress
 from .sort_filter import FilterBy
+
+
+logger = logging.getLogger(__name__)
 
 
 @strawberry.enum
