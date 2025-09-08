@@ -34,11 +34,29 @@ and [Skaffold](https://skaffold.dev/).
 │   └── conftest.py    # Pytest configuration
 ├── Dockerfile         # Dockerfile for the application
 ├── export_schema.sh   # Export GraphQL Schema
-├── Pipfile            # Project dependencies
+├── pyproject.toml     # Project dependencies
 └── README.md          # Project documentation
 ```
 
 # Get Started
+
+## Environment Variables
+
+Before running the application locally, you need to set up the required environment variables:
+
+1. Copy the example environment file:
+   ```shell
+   cp .env.example .env
+   ```
+
+2. Edit the `.env` file and update the values according to your local setup.
+
+3. Run the application using the Makefile:
+   ```shell
+   make run
+   ```
+   
+   This will automatically load the `.env` file and start the application.
 
 ## Software Dependencies
 
@@ -49,7 +67,7 @@ and [Skaffold](https://skaffold.dev/).
 - [Minikube](https://minikube.sigs.k8s.io/docs/start/)
 - [Skaffold](https://skaffold.dev/docs/install/#standalone-binary)
 - Python 3.12
-- [pipenv](https://pipenv.pypa.io/en/latest/#install-pipenv-today)
+- [uv](https://github.com/astral-sh/uv)
 
 ### Linux/MacOS
 
@@ -57,13 +75,13 @@ and [Skaffold](https://skaffold.dev/).
 - [Minikube](https://minikube.sigs.k8s.io/docs/start/)
 - [Skaffold](https://skaffold.dev/docs/install/#standalone-binary)
 - Python 3.12
-- [pipenv](https://pipenv.pypa.io/en/latest/#install-pipenv-today)
+- [uv](https://github.com/astral-sh/uv)
 
 ### Install dependencies
 
 ```shell
 # Install packages
-pipenv install --dev
+uv sync --dev
 ```
 
 ## Local Development
@@ -71,7 +89,7 @@ pipenv install --dev
 ### Run Tests Locally
 
 ```shell
-pytest tests/
+uv run pytest tests/
 ```
 
 ### Export GraphQL schema

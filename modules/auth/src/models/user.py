@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Self, List
 from uuid import UUID
 
+import logging
 import strawberry
 from pydantic import BaseModel
 from strawberry import UNSET
@@ -14,6 +15,9 @@ from core.auth import FAKE_PASSWORD
 from models.roles import Role
 from .scalers import EmailAddress
 from .sort_filter import FilterBy
+
+
+logger = logging.getLogger(__name__)
 
 
 @strawberry.enum
@@ -63,8 +67,16 @@ class GraphQLUser:
     @classmethod
     async def resolve_reference(cls, id: UUID) -> "GraphQLUser":
         from logic import get_users
+        from core.exceptions import EntityNotFound
 
-        return (await get_users(filter_by=FilterBy(equal={"id": id})))[0]
+        users = await get_users(filter_by=FilterBy(equal={"id": id}))
+
+        # Handle case where user is not found to prevent "list index out of range" error
+        if not users:
+            logger.warning(f"No user found with id {id}")
+            raise EntityNotFound("User Not Found", str(id))
+
+        return users[0]
 
 
 @strawberry.input

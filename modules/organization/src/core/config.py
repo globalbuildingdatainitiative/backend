@@ -70,7 +70,7 @@ class Settings(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> Tuple[PydanticBaseSettingsSource, ...]:
-        return (ParsingValues(settings_cls),)
+        return (dotenv_settings, ParsingValues(settings_cls))
 
     class Config:
         case_sensitive = True

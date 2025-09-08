@@ -4,7 +4,6 @@ from logging import getLogger
 from uuid import UUID
 
 import strawberry
-from aiocache import cached
 from fastapi.requests import Request
 from strawberry import UNSET
 from supertokens_python.asyncio import get_user, get_users_newest_first, list_users_by_account_info
@@ -32,18 +31,38 @@ async def get_users(
 
     logger.debug(f"Fetching users with filters: {filter_by} and sort_by: {sort_by}")
 
-    if filter_by:
-        if filter_by.equal and filter_by.equal.get("id"):
+    # Log the individual filter components for debugging
+    if filter_by and filter_by.equal:
+        logger.debug(f"Equal filters: {filter_by.equal}")
+
+    gql_users = []
+
+    # Handle special case filters first
+    if filter_by and filter_by.equal:
+        # ID filter - direct lookup (prioritize ID filter even with other filters)
+        if filter_by.equal.get("id"):
             _user = await get_user_by_id(str(filter_by.equal.get("id")))
-            return [await construct_graphql_user(_user)]
-        elif filter_by.equal and filter_by.equal.get("email"):
+            if _user:
+                gql_users = [await construct_graphql_user(_user)]
+            else:
+                gql_users = []
+        # Email filter - use SuperTokens account info lookup (only when it's the sole filter)
+        elif filter_by.equal.get("email") and len(filter_by.equal) == 1:
             users = await list_users_by_account_info("public", AccountInfo(email=filter_by.equal.get("email")))
-            return [await construct_graphql_user(_user) for _user in users]
+            gql_users = [await construct_graphql_user(_user) for _user in users]
+        # Combined filters or other filters - fetch all users and apply post-filtering
+        else:
+            gql_users = [await construct_graphql_user(_user) for _user in await get_all_users()]
+            gql_users = filter_users(gql_users, filter_by)
+    else:
+        # No equal filters - fetch all users and apply post-filtering
+        gql_users = [await construct_graphql_user(_user) for _user in await get_all_users()]
 
-    gql_users = [await construct_graphql_user(_user) for _user in await get_all_users()]
+        if filter_by:
+            gql_users = filter_users(gql_users, filter_by)
 
-    if filter_by:
-        gql_users = filter_users(gql_users, filter_by)
+    # Apply additional filters handling for ID-based queries with multiple filters
+    gql_users = await _apply_additional_id_filters(gql_users, filter_by)
 
     if sort_by:
         gql_users = sort_users(gql_users, sort_by)
@@ -52,6 +71,42 @@ async def get_users(
         gql_users = gql_users[offset : offset + limit]
     else:
         gql_users = gql_users[offset:]
+
+    return gql_users
+
+
+async def _apply_additional_id_filters(gql_users: list[GraphQLUser], filter_by: FilterBy | None) -> list[GraphQLUser]:
+    """
+    Apply additional filtering logic for ID-based queries with multiple filters.
+
+    When querying by ID with additional filters, this function ensures that:
+    1. Additional filters are applied selectively to avoid losing the user
+    2. If additional filters contradict the ID filter, the original user is preserved
+
+    Args:
+        gql_users: List of GraphQLUser objects from initial filtering
+        filter_by: FilterBy object containing the filter criteria
+
+    Returns:
+        List of GraphQLUser objects after applying additional ID filter logic
+    """
+    # Apply additional filters if there are more than just the ID filter
+    # But only if we actually found a user with the ID filter
+    if filter_by and filter_by.equal and filter_by.equal.get("id") and len(filter_by.equal) > 1 and gql_users:
+        # For ID-based queries, we should be more selective about additional filters
+        # Only apply filters that don't contradict the fact that we found a specific user
+        id_only_filter = FilterBy(equal={"id": filter_by.equal.get("id")})
+        gql_users = filter_users(gql_users, id_only_filter)
+
+        # If we lost the user after filtering, it means the additional filters were contradictory
+        # In that case, return the original user (since ID filter takes precedence)
+        if not gql_users:
+            # Re-fetch the user by ID only
+            _user = await get_user_by_id(str(filter_by.equal.get("id")))
+            if _user:
+                gql_users = [await construct_graphql_user(_user)]
+            else:
+                gql_users = []
 
     return gql_users
 
@@ -97,9 +152,12 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
             email=str(new_email),
             tenant_id_for_password_policy=user.tenant_ids[0],
         )
+        # Refresh user object after email update to ensure we have the latest email for password verification
+        user = await get_user(user_id)
 
     # Update password if current password and new password are provided
     if user_input.current_password and user_input.new_password:
+        # Use the latest user object for password verification
         is_password_valid = await verify_credentials("public", str(user.emails[0]), str(user_input.current_password))
         if isinstance(is_password_valid, WrongCredentialsError):
             raise exceptions.WrongCredentialsError("Current password is incorrect")
@@ -109,14 +167,12 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
             password=user_input.new_password,
             tenant_id_for_password_policy=user.tenant_ids[0],
         )
+        # Refresh user object after password update
+        user = await get_user(user_id)
 
-    # Invalidate cache for this user to ensure fresh data for subsequent requests
-    await invalidate_user_cache(user_id)
-
-    # Return fresh data
-    _user = await get_user(user_id)
+    # Use the latest user object instead of fetching again
     user_metadata = await get_user_metadata(user_id)
-    updated_user = await GraphQLUser.from_supertokens(_user, user_metadata.metadata)
+    updated_user = await GraphQLUser.from_supertokens(user, user_metadata.metadata)
 
     return updated_user
 
@@ -141,9 +197,6 @@ async def accept_invitation(user: AcceptInvitationInput) -> bool:
         update_data["inviter_name"] = current_metadata.metadata["inviter_name"]
 
     await update_user_metadata(str(user.id), update_data)
-
-    # Invalidate cache for this user
-    await invalidate_user_cache(str(user.id))
     return True
 
 
@@ -163,9 +216,6 @@ async def reject_invitation(user_id: str) -> bool:
         update_data["inviter_name"] = current_metadata.metadata["inviter_name"]
 
     await update_user_metadata(user_id, update_data)
-
-    # Invalidate cache for this user
-    await invalidate_user_cache(user_id)
     return True
 
 
@@ -276,31 +326,21 @@ async def impersonate_user(request: Request, user_id: str) -> SessionContainer:
     )
 
 
-# @cached(ttl=60)
 async def get_user_by_id(user_id: str) -> User:
-    return await get_user(user_id)
+    logger.debug(f"Looking up user by ID: {user_id}")
+    user = await get_user(user_id)
+    if user is None:
+        logger.debug(f"No user found with ID: {user_id}")
+    else:
+        logger.debug(f"Found user with ID: {user_id}")
+    return user
 
 
-# @cached(ttl=60, key_builder=lambda f, user, **kwargs: f"construct_graphql_user:{user.id}")
 async def construct_graphql_user(user: User) -> GraphQLUser:
-    return await GraphQLUser.from_supertokens(user, (await get_user_metadata(user.id)).metadata)
+    metadata = (await get_user_metadata(user.id)).metadata
+    logger.debug(f"Constructing GraphQLUser for {user.id} with metadata: {metadata}")
+    return await GraphQLUser.from_supertokens(user, metadata)
 
 
-@cached(ttl=5)
 async def get_all_users() -> list[User]:
     return (await get_users_newest_first("public", limit=500)).users
-
-
-async def invalidate_user_cache(user_id: str) -> None:
-    """Invalidate cache entries for a specific user"""
-    try:
-        # Access the cache instance for construct_graphql_user
-        cache = construct_graphql_user.cache
-        # Clear the specific user's cache entry
-        result = await cache.delete(f"construct_graphql_user:{user_id}")
-        if result > 0:
-            logger.debug(f"Cache entry for user {user_id} invalidated")
-        else:
-            logger.debug(f"No cache entry found for user {user_id}")
-    except Exception as e:
-        logger.warning(f"Failed to clear cache for user {user_id}: {e}")

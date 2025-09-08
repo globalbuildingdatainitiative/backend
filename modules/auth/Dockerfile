@@ -1,55 +1,41 @@
-FROM python:3.12-slim as builder
+# Install uv
+FROM python:3.12-slim AS builder
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-ARG BUILD_STAGE
-RUN python -m pip install --upgrade pip
-RUN pip install pipenv
+# Set environment variables for uv
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
 
-RUN mkdir /tmp/pip
-WORKDIR /tmp/pip
+# Change the working directory to the `app` directory
+WORKDIR /app
 
-COPY ./Pipfile* /tmp/pip/
+# Copy project files
+COPY ./pyproject.toml ./uv.lock /app/
 
-RUN bash -c "if [ $BUILD_STAGE = 'DEV' ]; \
-    then pipenv requirements --dev > requirements.txt; \
-    else pipenv requirements > requirements.txt; \
-    fi"
+# Copy the project into the intermediate image
+COPY . /app
 
-RUN pip wheel -r requirements.txt -w /tmp/wheels
+# Install dependencies including the project itself
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync
 
 FROM python:3.12-slim
 
-# Copy from previous stage
-COPY --from=builder /tmp /tmp
-
-# Make sure we have the latest version of pip
-RUN python -m pip install --upgrade pip
-RUN apt update && apt install -y curl
-
 # Set environment
-ARG BUILD_VERSION
-ENV PATH=/app/.local/bin:$PATH
-ENV PYTHONPATH "${PYTHONPATH}:/app/src"
-ENV BUILD_VERSION $BUILD_VERSION
+ENV PYTHONPATH="/app/src"
 
 # Create fastapi user
 RUN useradd --home-dir /app --create-home fastapi
 USER fastapi
 WORKDIR /app
 
-RUN ls /tmp/wheels
-
-# Install pip packages
-RUN pip install --no-cache-dir --no-index --find-links /tmp/wheels $(ls /tmp/wheels -1 | awk -F - '{ gsub("_", "-", $1); print $1 }' | uniq)
-
-# Delete pip wheels
-USER root
-RUN rm -rf /tmp/wheels
+# Copy the environment, but not the source code
+COPY --from=builder --chown=fastapi:fastapi /app/.venv /app/.venv
 
 # Copy source files into container
-USER fastapi
-COPY --chown=fastapi:fastapi ./entrypoint.sh /app
-COPY --chown=fastapi:fastapi ./src /app/src
-COPY --chown=fastapi:fastapi ./export_schema.sh /app
-COPY --chown=fastapi:fastapi ./graphql /app/graphql
+COPY --chown=fastapi:fastapi ./entrypoint.sh /app/
+COPY --chown=fastapi:fastapi ./src /app/src/
+COPY --chown=fastapi:fastapi ./graphql /app/graphql/
+COPY --chown=fastapi:fastapi ./export_schema.sh /app/
 
 ENTRYPOINT ["bash", "/app/entrypoint.sh"]

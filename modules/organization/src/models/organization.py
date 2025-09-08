@@ -47,9 +47,17 @@ class GraphQLOrganization:
     @classmethod
     async def resolve_reference(cls, id: UUID) -> "GraphQLOrganization":
         from logic import get_organizations
+        from core.exceptions import EntityNotFound
 
         logger.debug(f"Resolving organization reference: {id}")
-        return (await get_organizations(filter_by=FilterBy(equal={"id": id})))[0]
+        organizations = await get_organizations(filter_by=FilterBy(equal={"id": id}))
+
+        # Handle case where organization is not found to prevent "list index out of range" error
+        if not organizations:
+            logger.warning(f"No organization found with id {id}")
+            raise EntityNotFound("Organization Not Found", str(id))
+
+        return organizations[0]
 
 
 @strawberry.input
