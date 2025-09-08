@@ -2,6 +2,10 @@
 pythonpath = "src"
 testpaths = ["tests/"]
 asyncio_mode = "auto"
+markers = [
+    "performance: marks tests as performance tests",
+    "integration: marks tests as integration tests"
+]
 
 env = [
     "SERVER_NAME=Organization Test",

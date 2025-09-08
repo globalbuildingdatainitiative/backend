@@ -44,6 +44,10 @@ async def create_organizations_mutation(
 ) -> list[DBOrganization]:
     from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
 
+    logger.info(
+        f"Creating organizations for user: {current_user.id} with organization_id: {current_user.organization_id}"
+    )
+
     new_organizations = []
     for organization_data in organizations:
         new_organization = DBOrganization(
@@ -55,6 +59,17 @@ async def create_organizations_mutation(
         )
         await new_organization.insert()
         new_organizations.append(new_organization)
+
+        # Verify the organization was inserted and is queryable
+        # This helps prevent timing issues where the organization isn't immediately available
+        try:
+            verification = await DBOrganization.get(new_organization.id)
+            if verification is None:
+                logger.warning(f"Organization {new_organization.id} was not immediately queryable after insertion")
+        except Exception as e:
+            logger.warning(f"Error verifying organization {new_organization.id} after insertion: {e}")
+
+    logger.info(f"Updating user metadata for user {current_user.id} with organization ID {new_organizations[0].id}")
     await update_user_metadata(str(current_user.id), {"organization_id": str(new_organizations[0].id)})
     await assign_role(current_user.id, Role.OWNER)
 

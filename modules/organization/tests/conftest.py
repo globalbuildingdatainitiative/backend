@@ -57,15 +57,16 @@ async def mongo(docker_client):
 
 @pytest.fixture(scope="session")
 async def supertokens(docker_client):
+    # Clean up any existing container with the same name
     try:
-        _container = docker_client.containers.get("supertokens")
+        _container = docker_client.containers.get("supertokens_organization")
         _container.kill()
         sleep(0.2)
     except NotFound:
         pass
-
+    
     container = docker_client.containers.run(
-        image="registry.supertokens.io/supertokens/supertokens-postgresql",
+        image="registry.supertokens.io/supertokens/supertokens-postgresql:10.1",
         ports={"3567": "3569"},
         name="supertokens_organization",
         detach=True,
@@ -73,14 +74,18 @@ async def supertokens(docker_client):
     )
 
     @retry(
-        stop=stop_after_attempt(20),
-        wait=wait_fixed(0.2),
-        retry=retry_if_exception(lambda e: isinstance(e, httpx.HTTPError)),
+        stop=stop_after_attempt(30),  # Increase retry attempts
+        wait=wait_fixed(0.5),  # Increase wait time between retries
+        retry=retry_if_exception(lambda e: isinstance(e, (httpx.HTTPError, httpx.ConnectError))),
     )
     def wait_for_container():
-        response = httpx.get(f"{settings.SUPERTOKENS_CONNECTION_URI}/hello")
-        if response.status_code == 200 and response.text.strip() == "Hello":
-            return True
+        try:
+            response = httpx.get(f"{settings.SUPERTOKENS_CONNECTION_URI}/hello", timeout=10.0)
+            if response.status_code == 200 and response.text.strip() == "Hello":
+                return True
+        except Exception as e:
+            print(f"Waiting for SuperTokens container to be ready... Error: {e}")
+            raise
 
     while True:
         if wait_for_container():
@@ -141,7 +146,7 @@ async def client_unauthenticated(app: FastAPI, database) -> Iterator[AsyncClient
     """Async server client that handles lifespan and teardown"""
 
     async with AsyncClient(
-        app=app,
+        transport=httpx.ASGITransport(app=app),
         base_url=str(settings.SERVER_HOST),
     ) as _client:
         try:

@@ -32,12 +32,14 @@ def docker_client():
 
 @pytest.fixture(scope="session")
 async def supertokens(docker_client):
-    try:
-        _container = docker_client.containers.get("supertokens")
-        _container.kill()
-        sleep(0.2)
-    except NotFound:
-        pass
+    # Clean up any existing containers with conflicting names
+    for container_name in ["supertokens", "supertokens_auth"]:
+        try:
+            _container = docker_client.containers.get(container_name)
+            _container.kill()
+            sleep(0.2)
+        except NotFound:
+            pass
 
     container = docker_client.containers.run(
         image="registry.supertokens.io/supertokens/supertokens-postgresql",
@@ -118,8 +120,21 @@ async def client(app: FastAPI, client_unauthenticated, create_user) -> Iterator[
     yield client_unauthenticated
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
+async def client_user(app: FastAPI, client_unauthenticated, users) -> Iterator[AsyncClient]:
+    """Async server client that authenticates as the first user from the users fixture"""
+
+    user_id = users[0]["id"]
+    response = await client_unauthenticated.get(f"/login/{user_id}")
+    response.raise_for_status()
+
+    client_unauthenticated.headers["Authorization"] = f"Bearer {response.json()['token']}"
+    yield client_unauthenticated
+
+
+@pytest.fixture
 async def users(app):
+    created_users = []
     users = json.loads((Path(__file__).parent / "datafixtures" / "users.json").read_text())
     for user in users:
         response = await sign_up("public", user.get("email"), "currentPassword123")
@@ -138,7 +153,16 @@ async def users(app):
         for role in user.get("roles", []):
             await add_role_to_user("public", user_id, role)
         user.update({"id": user_id})
+        created_users.append(user_id)
+
     yield users
+
+    # Clean up created users
+    for user_id in created_users:
+        try:
+            await delete_user(user_id)
+        except Exception:
+            pass  # Ignore errors during cleanup
 
 
 @pytest.fixture()
@@ -146,7 +170,7 @@ async def client_unauthenticated(app: FastAPI) -> Iterator[AsyncClient]:
     """Async server client that handles lifespan and teardown"""
 
     async with AsyncClient(
-        app=app,
+        transport=httpx.ASGITransport(app=app),
         base_url=str(settings.SERVER_HOST),
     ) as _client:
         try:

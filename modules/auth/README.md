@@ -35,7 +35,8 @@ and [Skaffold](https://skaffold.dev/).
 │   └── conftest.py    # Pytest configuration
 ├── Dockerfile         # Dockerfile for the application
 ├── export_schema.sh   # Export GraphQL Schema
-├── Pipfile            # Project dependencies
+├── pyproject.toml     # Project dependencies
+├── uv.lock            # Locked dependencies
 └── README.md          # Project documentation
 ```
 
@@ -50,7 +51,7 @@ and [Skaffold](https://skaffold.dev/).
 - [Minikube](https://minikube.sigs.k8s.io/docs/start/)
 - [Skaffold](https://skaffold.dev/docs/install/#standalone-binary)
 - Python 3.12
-- [pipenv](https://pipenv.pypa.io/en/latest/#install-pipenv-today)
+- [uv](https://github.com/astral-sh/uv)
 
 ### Linux/MacOS
 
@@ -58,13 +59,13 @@ and [Skaffold](https://skaffold.dev/).
 - [Minikube](https://minikube.sigs.k8s.io/docs/start/)
 - [Skaffold](https://skaffold.dev/docs/install/#standalone-binary)
 - Python 3.12
-- [pipenv](https://pipenv.pypa.io/en/latest/#install-pipenv-today)
+- [uv](https://github.com/astral-sh/uv)
 
 ### Install dependencies
 
 ```shell
 # Install packages
-pipenv install --dev
+uv sync --dev
 ```
 
 ## Local Development
@@ -72,7 +73,7 @@ pipenv install --dev
 ### Run Tests Locally
 
 ```shell
-pytest tests/
+uv run pytest tests/
 ```
 
 ### Export GraphQL schema
