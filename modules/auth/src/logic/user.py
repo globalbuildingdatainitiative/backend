@@ -136,6 +136,7 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
 
     # Update password if current password and new password are provided
     if user_input.current_password and user_input.new_password:
+        # Use the latest user object for password verification
         is_password_valid = await verify_credentials("public", str(user.emails[0]), str(user_input.current_password))
         if isinstance(is_password_valid, WrongCredentialsError):
             raise exceptions.WrongCredentialsError("Current password is incorrect")
@@ -145,11 +146,12 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
             password=user_input.new_password,
             tenant_id_for_password_policy=user.tenant_ids[0],
         )
+        # Refresh user object after password update
+        user = await get_user(user_id)
 
-    # Return fresh data
-    _user = await get_user(user_id)
+    # Use the latest user object instead of fetching again
     user_metadata = await get_user_metadata(user_id)
-    updated_user = await GraphQLUser.from_supertokens(_user, user_metadata.metadata)
+    updated_user = await GraphQLUser.from_supertokens(user, user_metadata.metadata)
 
     return updated_user
 
