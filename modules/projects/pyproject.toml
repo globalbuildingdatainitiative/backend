@@ -23,22 +23,6 @@ dependencies = [
     "motor",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "asgi-lifespan",
-    "docker",
-    "pytest",
-    "pytest-asyncio",
-    "pytest-env", 
-    "pytest-datafixtures",
-    "pytest-mock",
-    "pre-commit",
-    "jsonschema",
-    "ruff",
-    "mongomock-motor",
-]
-
-
 [tool.pytest.ini_options]
 pythonpath = "src"
 testpaths = ["tests/"]
