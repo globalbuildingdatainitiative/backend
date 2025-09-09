@@ -1,5 +1,6 @@
 import logging
 import datetime
+from enum import Enum
 from uuid import UUID
 
 import strawberry
@@ -34,6 +35,21 @@ from models.openbdf.enums import (
     GraphQLBuildingModelScope,
 )
 from models.openbdf.utils import _resolve_dict_value
+
+
+@strawberry.enum(name="ProjectState")
+class GraphQLProjectState(str, Enum):
+    """
+    GraphQL enum for project states in the publication workflow.
+    """
+
+    DRAFT = "DRAFT"
+    IN_REVIEW = "IN_REVIEW"
+    TO_PUBLISH = "TO_PUBLISH"
+    TO_UNPUBLISH = "TO_UNPUBLISH"
+    TO_DELETE = "TO_DELETE"
+    LOCKED = "LOCKED"
+
 
 logger = logging.getLogger("main")
 
@@ -939,3 +955,9 @@ class GraphQLProject:
     reference_study_period: strawberry.auto
     results: GraphQLResults | None = None
     software_info: GraphQLSoftwareInfo
+
+    # State management fields
+    state: GraphQLProjectState
+    created_by: UUID = strawberry.field(name="createdBy")
+    assigned_to: UUID | None = strawberry.field(default=None, name="assignedTo")
+    assigned_at: datetime.datetime | None = strawberry.field(default=None, name="assignedAt")

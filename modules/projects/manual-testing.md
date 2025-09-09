@@ -1,13 +1,6 @@
-# Quickstart: Document Publication Workflow
+# Manual Testing Guide: Document Publication Workflow
 
-## Overview
-This document provides a practical guide for testing the document publication workflow with admin approval. For detailed business requirements and user workflows, see [spec.md](./spec.md).
-
-**Status**: Ready for Testing
-**Last Updated**: 2025-09-09
-
-## Overview
-This document provides a practical guide for testing the document publication workflow with admin approval. For detailed business requirements and user workflows, see [spec.md](./spec.md).
+This guide walks through the complete workflow to validate the implementation of the document publication workflow with admin approval.
 
 ## Prerequisites
 - Running backend services (projects module)
@@ -18,8 +11,6 @@ This document provides a practical guide for testing the document publication wo
 - GraphQL client (GraphiQL, Postman, etc.)
 
 ## Testing the Workflow
-
-This guide walks through the complete workflow to validate the implementation. Each step includes GraphQL examples and expected outcomes.
 
 ### 1. Contributor Submits Project for Review
 As a Contributor, create a project and submit it for review:

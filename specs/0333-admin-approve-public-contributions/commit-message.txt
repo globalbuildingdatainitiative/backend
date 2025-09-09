@@ -1,0 +1,21 @@
+feat: Implement document publication workflow with admin approval
+
+This commit implements the complete document publication workflow with admin approval as specified in the feature specification. The implementation includes:
+
+- State-based project management with six project states (DRAFT, IN_REVIEW, TO_PUBLISH, TO_UNPUBLISH, TO_DELETE, LOCKED)
+- Role-based permissions for three distinct user roles (CONTRIBUTOR, REVIEWER, ADMINISTRATOR)
+- Complete GraphQL API with new mutations and queries for managing the publication workflow
+- Comprehensive test suite following TDD principles with contract tests, integration tests, and unit tests
+- Extended data models with state management fields
+- Service layer implementation with state transition validation
+- Proper error handling and input validation
+- Updated documentation and schema definitions
+
+The implementation follows the Test-Driven Development approach where all tests were written first and fail before the implementation was completed. All tests are now passing, confirming the correct implementation of the feature.
+
+Key files modified/created:
+- Backend models extended with state management fields
+- GraphQL schema updated with new types, mutations, and queries
+- Service layer implementation for state transitions
+- Comprehensive test suite covering all user workflows
+- Updated documentation in specs directory

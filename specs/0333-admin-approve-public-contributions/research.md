@@ -3,6 +3,12 @@
 ## Overview
 This document summarizes the research findings for implementing the document publication workflow with admin approval in the GBDI platform.
 
+**Status**: Completed
+**Last Updated**: 2025-09-09
+
+## Overview
+This document summarizes the research findings for implementing the document publication workflow with admin approval in the GBDI platform.
+
 ## Technology Choices
 
 ### State Management Pattern

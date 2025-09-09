@@ -106,3 +106,80 @@ The module should be run using Skaffold and the configuration file in the root d
 
 When the containers are running the API can be accessed
 at [http://localhost:7003/api/graphql](http://localhost:7003/api/graphql)
+
+# New API Endpoints
+
+## Mutations
+
+### submitForReview
+Submit a project for review (Contributor action)
+Transitions: DRAFT → IN_REVIEW
+
+### approveProject
+Approve a project for publication (Reviewer action)
+Transitions: IN_REVIEW → TO_PUBLISH
+
+### rejectProject
+Reject a project and send it back to draft (Reviewer action)
+Transitions: IN_REVIEW → DRAFT
+
+### publishProject
+Publish a project (Administrator action)
+Transitions: TO_PUBLISH → DRAFT (published)
+
+### unpublishProject
+Mark a project for unpublishing (Administrator action)
+Transitions: DRAFT → TO_UNPUBLISH
+
+### deleteProject
+Delete a project (Administrator action)
+Transitions: TO_DELETE → deleted
+
+### lockProject
+Lock a project (Administrator action)
+Transitions: any state → LOCKED
+
+### unlockProject
+Unlock a project (Administrator action)
+Transitions: LOCKED → previous state
+
+### assignProject
+Assign a project to a user (Administrator action)
+
+## Queries
+
+### projectsByState
+Get projects by state
+
+### projectsForReview
+Get projects that are in review (IN_REVIEW state)
+
+### projectsToPublish
+Get projects that are ready to publish (TO_PUBLISH state)
+
+### projectsToUnpublish
+Get projects that are marked for unpublishing (TO_UNPUBLISH state)
+
+### projectsToDelete
+Get projects that are marked for deletion (TO_DELETE state)
+
+### myProjects
+Get projects created by the current user
+
+### assignedProjects
+Get projects assigned to the current reviewer
+
+# Project States
+
+- DRAFT: The project is being added or edited and is not yet ready for review
+- IN_REVIEW: The project is ready for review by a reviewer
+- TO_PUBLISH: The project has been reviewed and approved for publication by a reviewer
+- TO_UNPUBLISH: The project is currently published and needs to be unpublished by an administrator
+- TO_DELETE: The project is marked for deletion by an administrator
+- LOCKED: The project is locked by an administrator and cannot be edited, (un)published or deleted
+
+# User Roles
+
+- CONTRIBUTOR: Can add and edit their own project contributions
+- REVIEWER: Can add and edit all project contributions but cannot (un)publish, or delete them
+- ADMINISTRATOR: Can perform all operations, including project (un)publication and deletion

@@ -10,6 +10,8 @@ from lcax import Project as LCAxProject
 from lcax import TechFlow as LCAxTechFlow
 from pydantic import Field, BaseModel
 
+from ..project_state import ProjectState
+
 
 class ContributionBase(BaseModel):
     id: UUID = Field(default_factory=uuid4)
@@ -45,3 +47,10 @@ class DBProject(LCAxProject, Document):
     id: UUID
     assemblies: list[Link[DBAssembly]]
     contribution: BackLink[DBContribution] = Field(original_field="project")
+
+    # State management fields
+    state: ProjectState = Field(default=ProjectState.DRAFT)
+    created_by: UUID = Field(alias="createdBy")
+    assigned_to: Optional[UUID] = Field(default=None, alias="assignedTo")
+    assigned_at: Optional[datetime.datetime] = Field(default=None, alias="assignedAt")
+    previous_state: Optional[str] = Field(default=None)

@@ -58,12 +58,14 @@ async def mongo(docker_client):
 @pytest.fixture(scope="session")
 async def supertokens(docker_client):
     # Clean up any existing container with the same name
-    try:
-        _container = docker_client.containers.get("supertokens_organization")
-        _container.kill()
-        sleep(0.2)
-    except NotFound:
-        pass
+    # Clean up any existing containers with conflicting names
+    for container_name in ["supertokens", "supertokens_auth"]:
+        try:
+            _container = docker_client.containers.get(container_name)
+            _container.kill()
+            sleep(0.2)
+        except NotFound:
+            pass
 
     container = docker_client.containers.run(
         image="registry.supertokens.io/supertokens/supertokens-postgresql:10.1",

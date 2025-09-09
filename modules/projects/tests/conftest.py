@@ -20,7 +20,7 @@ from time import sleep
 from core.config import settings
 from core.connection import health_check_mongo, create_mongo_client
 from models import SuperTokensUser
-
+from docker.errors import NotFound
 
 @pytest.fixture(scope="session")
 def docker_client():
@@ -51,8 +51,17 @@ async def mongo(docker_client):
 
 @pytest.fixture(scope="session")
 async def supertokens(docker_client):
+    # Clean up any existing containers with conflicting names
+    for container_name in ["supertokens", "supertokens_auth"]:
+        try:
+            _container = docker_client.containers.get(container_name)
+            _container.kill()
+            sleep(0.2)
+        except NotFound:
+            pass
+
     container = docker_client.containers.run(
-        image="registry.supertokens.io/supertokens/supertokens-postgresql",
+        image="registry.supertokens.io/supertokens/supertokens-postgresql:10.1",
         ports={"3567": "3566"},
         name="supertokens_projects",
         detach=True,
@@ -129,7 +138,7 @@ async def client_unauthenticated(app: FastAPI, database) -> Iterator[AsyncClient
 
 
 @pytest.fixture
-async def projects(datafix_dir):
+async def projects(datafix_dir, create_user):
     """Create test projects linked to contributions"""
     from models import DBProject
 
@@ -141,6 +150,7 @@ async def projects(datafix_dir):
     for i in range(3):  # Create 3 test projects
         project_data["id"] = str(uuid4())
         project_data["name"] = f"Test Project {i}"
+        project_data["createdBy"] = str(create_user.id)  # Add required createdBy field
         project = DBProject(**project_data)
         await project.insert()
         _projects.append(project)

@@ -9,13 +9,14 @@ from models import DBProject
 
 
 @pytest.fixture()
-async def projects(datafix_dir) -> list[DBProject]:
+async def projects(datafix_dir, create_user) -> list[DBProject]:
     projects = []
 
     for i in range(3):
         input_project = json.loads((datafix_dir / "project.json").read_text())
+        input_project["id"] = str(uuid.uuid4())
+        input_project["createdBy"] = str(create_user.id)  # Add required createdBy field
         project = DBProject(**input_project)
-        project.id = uuid.uuid4()
         projects.append(project)
 
     yield projects

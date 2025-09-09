@@ -42,7 +42,7 @@ async def supertokens(docker_client):
             pass
 
     container = docker_client.containers.run(
-        image="registry.supertokens.io/supertokens/supertokens-postgresql",
+        image="registry.supertokens.io/supertokens/supertokens-postgresql:10.1",
         ports={"3567": "3568"},
         name="supertokens_auth",
         detach=True,

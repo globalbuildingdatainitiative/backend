@@ -42,8 +42,12 @@ async def get_contributions(
 async def create_contributions(contributions: list[InputContribution], user: SuperTokensUser) -> list[DBContribution]:
     _contributions = []
     for _contribution in contributions:
+        # Convert the project data to a dictionary and add the required createdBy field
+        project_data = as_dict(_contribution.project)
+        project_data["createdBy"] = str(user.id)
+        
         contribution = DBContribution(
-            project=DBProject(**as_dict(_contribution.project)),
+            project=DBProject(**project_data),
             user_id=user.id,
             organization_id=user.organization_id,
             public=_contribution.public,

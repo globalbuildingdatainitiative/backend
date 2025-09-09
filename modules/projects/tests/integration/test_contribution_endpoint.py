@@ -1,4 +1,5 @@
 import json
+from uuid import uuid4
 
 import pytest
 from httpx import AsyncClient
@@ -55,6 +56,8 @@ async def test_add_contributions_mutation(client: AsyncClient, datafix_dir):
         }
     """
     input_project = json.loads((datafix_dir / "project.json").read_text())
+    # Remove createdBy field if it exists (it should be set automatically by the backend)
+    input_project.pop("createdBy", None)
 
     response = await client.post(
         f"{settings.API_STR}/graphql",

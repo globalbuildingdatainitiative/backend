@@ -3,6 +3,12 @@
 ## Overview
 This document describes the data model for the document publication workflow with admin approval. The model extends the existing project contribution system to add state management and role-based permissions. For business requirements and user workflows, see [spec.md](./spec.md).
 
+**Status**: Implemented
+**Last Updated**: 2025-09-09
+
+## Overview
+This document describes the data model for the document publication workflow with admin approval. The model extends the existing project contribution system to add state management and role-based permissions. For business requirements and user workflows, see [spec.md](./spec.md).
+
 ## Entities
 
 ### ProjectState (Enum)

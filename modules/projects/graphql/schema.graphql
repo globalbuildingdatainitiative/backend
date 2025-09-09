@@ -24,6 +24,10 @@ type AggregationResult {
   aggregation(apply: [InputAggregation!]!): [AggregationResult!]!
 }
 
+input ApproveProjectInput {
+  projectId: UUID!
+}
+
 type AreaType {
   definition: String!
   unit: Unit!
@@ -97,6 +101,11 @@ type Assessor {
   name: String
   email: String
   organization: String
+}
+
+input AssignProjectInput {
+  projectId: UUID!
+  userId: UUID!
 }
 
 """
@@ -455,6 +464,10 @@ scalar Date
 """Date with time (isoformat)"""
 scalar DateTime
 
+input DeleteProjectInput {
+  projectId: UUID!
+}
+
 type EPD {
   comment: String
   conversions: [Conversion!]
@@ -753,6 +766,10 @@ type Location {
   country: Country!
 }
 
+input LockProjectInput {
+  projectId: UUID!
+}
+
 type Mutation {
   """Creates new Contributions"""
   addContributions(contributions: [InputContribution!]!): [Contribution!]!
@@ -762,6 +779,57 @@ type Mutation {
 
   """Updates Contributions"""
   updateContributions(contributions: [UpdateContribution!]!): [Contribution!]!
+
+  """
+  Submit a project for review (Contributor action)
+  Transitions: DRAFT → IN_REVIEW
+  """
+  submitForReview(input: SubmitForReviewInput!): Project!
+
+  """
+  Approve a project for publication (Reviewer action)
+  Transitions: IN_REVIEW → TO_PUBLISH
+  """
+  approveProject(input: ApproveProjectInput!): Project!
+
+  """
+  Reject a project and send it back to draft (Reviewer action)
+  Transitions: IN_REVIEW → DRAFT
+  """
+  rejectProject(input: RejectProjectInput!): Project!
+
+  """
+  Publish a project (Administrator action)
+  Transitions: TO_PUBLISH → DRAFT (published)
+  """
+  publishProject(input: PublishProjectInput!): Project!
+
+  """
+  Mark a project for unpublishing (Administrator action)
+  Transitions: DRAFT → TO_UNPUBLISH
+  """
+  unpublishProject(input: UnpublishProjectInput!): Project!
+
+  """
+  Delete a project (Administrator action)
+  Transitions: TO_DELETE → deleted
+  """
+  deleteProject(input: DeleteProjectInput!): Boolean!
+
+  """
+  Lock a project (Administrator action)
+  Transitions: any state → LOCKED
+  """
+  lockProject(input: LockProjectInput!): Project!
+
+  """
+  Unlock a project (Administrator action)
+  Transitions: LOCKED → previous state
+  """
+  unlockProject(input: UnlockProjectInput!): Project!
+
+  """Assign a project to a user (Administrator action)"""
+  assignProject(input: AssignProjectInput!): Project!
 }
 
 type Owner {
@@ -798,6 +866,10 @@ type ProductMetaData {
 }
 
 type Project {
+  state: ProjectState!
+  createdBy: UUID!
+  assignedTo: UUID
+  assignedAt: DateTime
   assemblies: [Assembly!]!
   classificationSystem: String
   comment: String
@@ -944,12 +1016,29 @@ enum ProjectPhase {
   other
 }
 
+enum ProjectState {
+  DRAFT
+  IN_REVIEW
+  TO_PUBLISH
+  TO_UNPUBLISH
+  TO_DELETE
+  LOCKED
+}
+
+input ProjectsByStateInput {
+  state: ProjectState!
+}
+
 type Publication {
   authors: String
   year: Int
   doi: String
   title: String
   publisher: String
+}
+
+input PublishProjectInput {
+  projectId: UUID!
 }
 
 type Query {
@@ -961,6 +1050,31 @@ type Query {
 
   """Returns all contributions of a user's organization"""
   contributions: ContributionGraphQLResponse!
+
+  """Get projects by state"""
+  projectsByState(input: ProjectsByStateInput!): [Project!]!
+
+  """Get projects that are in review (IN_REVIEW state)"""
+  projectsForReview: [Project!]!
+
+  """Get projects that are ready to publish (TO_PUBLISH state)"""
+  projectsToPublish: [Project!]!
+
+  """Get projects that are marked for unpublishing (TO_UNPUBLISH state)"""
+  projectsToUnpublish: [Project!]!
+
+  """Get projects that are marked for deletion (TO_DELETE state)"""
+  projectsToDelete: [Project!]!
+
+  """Get projects created by the current user"""
+  myProjects: [Project!]!
+
+  """Get projects assigned to the current reviewer"""
+  assignedProjects: [Project!]!
+}
+
+input RejectProjectInput {
+  projectId: UUID!
 }
 
 type Results {
@@ -1060,6 +1174,10 @@ enum SubType {
   representative
 }
 
+input SubmitForReviewInput {
+  projectId: UUID!
+}
+
 type TechFlow {
   comment: String
   conversions: [Conversion!]
@@ -1089,6 +1207,14 @@ enum Unit {
   tones_km
   kgm3
   unknown
+}
+
+input UnlockProjectInput {
+  projectId: UUID!
+}
+
+input UnpublishProjectInput {
+  projectId: UUID!
 }
 
 input UpdateContribution {

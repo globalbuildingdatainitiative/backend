@@ -10,6 +10,8 @@ from models import DBProject, DBContribution
 @pytest.fixture()
 async def metadata_project(create_user, datafix_dir) -> list[DBProject]:
     input_project = json.loads((datafix_dir / "project_with_metadata.json").read_text())
+    # Add the required createdBy field
+    input_project["createdBy"] = str(create_user.id)
     project = DBProject(**input_project)
     project.id = uuid.uuid4()
 
@@ -20,11 +22,13 @@ async def metadata_project(create_user, datafix_dir) -> list[DBProject]:
 
 
 @pytest.fixture()
-async def projects(app, datafix_dir) -> list[DBProject]:
+async def projects(app, datafix_dir, create_user) -> list[DBProject]:
     projects = []
 
     for i in range(3):
         input_project = json.loads((datafix_dir / "project.json").read_text())
+        # Add the required createdBy field
+        input_project["createdBy"] = str(create_user.id)
         project = DBProject(**input_project)
         project.id = uuid.uuid4()
         projects.append(project)
