@@ -13,7 +13,7 @@ from models.database.db_model import DBProject
 from models.openbdf.types import GraphQLProject, GraphQLProjectState
 from logic.project_service import ProjectService
 from logic.permissions import (
-    has_permission,
+    has_project_permission,
     can_submit_for_review,
     can_approve_project,
     can_reject_project,

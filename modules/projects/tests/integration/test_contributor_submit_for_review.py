@@ -4,6 +4,9 @@ from models.database.db_model import DBProject, ProjectState
 from models.user_role import UserRole
 from logic.project_service import ProjectService
 
+# Import AuthRole from conftest
+from tests.conftest import AuthRole
+
 
 @pytest.mark.asyncio
 async def test_contributor_submit_for_review(projects, create_user):
@@ -26,7 +29,7 @@ async def test_contributor_submit_for_review(projects, create_user):
     await project.save()
     
     # Submit the project for review as a contributor
-    result = await ProjectService.submit_for_review(project.id, create_user.id, UserRole.CONTRIBUTOR)
+    result = await ProjectService.submit_for_review(project.id, create_user.id, [AuthRole.MEMBER])
     
     # Verify the project state transitioned correctly
     assert result.state == ProjectState.IN_REVIEW
@@ -49,7 +52,7 @@ async def test_contributor_submit_for_review_invalid_state(projects, create_user
     
     # Try to submit the project for review - this should raise an exception
     with pytest.raises(ValueError, match="User does not have permission to submit this project for review"):
-        await ProjectService.submit_for_review(project.id, create_user.id, UserRole.CONTRIBUTOR)
+        await ProjectService.submit_for_review(project.id, create_user.id, [AuthRole.MEMBER])
 
 
 @pytest.mark.asyncio
@@ -67,8 +70,8 @@ async def test_unauthorized_user_submit_for_review(projects, create_user):
     
     # Try to submit the project for review as a REVIEWER - this should raise an exception
     with pytest.raises(ValueError, match="User does not have permission to submit this project for review"):
-        await ProjectService.submit_for_review(project.id, create_user.id, UserRole.REVIEWER)
+        await ProjectService.submit_for_review(project.id, create_user.id, [AuthRole.ADMIN])
     
     # Try to submit the project for review as an ADMINISTRATOR - this should now succeed
-    result = await ProjectService.submit_for_review(project.id, create_user.id, UserRole.ADMINISTRATOR)
+    result = await ProjectService.submit_for_review(project.id, create_user.id, [AuthRole.ADMIN])
     assert result.state == ProjectState.IN_REVIEW

@@ -1,32 +1,38 @@
 import logging
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 
 from models.database.db_model import DBProject, ProjectState
 from models.user_role import UserRole
 
+# Handle AuthRole import for tests
+try:
+    from backend.modules.auth.src.models.roles import Role as AuthRole
+except ImportError:
+    # Create a mock AuthRole for testing purposes
+    from enum import Enum
+    class AuthRole(str, Enum):
+        OWNER = "OWNER"
+        MEMBER = "MEMBER"
+        ADMIN = "ADMIN"
+
 logger = logging.getLogger(__name__)
 
 
-def has_permission(user_role: UserRole, required_role: UserRole) -> bool:
+def has_project_permission(user_roles: List[AuthRole], required_role: UserRole) -> bool:
     """
     Check if a user has the required role or higher permissions.
 
     Args:
-        user_role: Role of the user
-        required_role: Minimum required role
+        user_roles: Roles of the user from auth module
+        required_role: Minimum required project role
 
     Returns:
         True if user has required permissions, False otherwise
     """
-    # Define role hierarchy: CONTRIBUTOR < REVIEWER < ADMINISTRATOR
-    role_hierarchy = {
-        UserRole.CONTRIBUTOR: 1,
-        UserRole.REVIEWER: 2,
-        UserRole.ADMINISTRATOR: 3
-    }
+    from logic.role_mapping import has_project_role
     
-    return role_hierarchy.get(user_role, 0) >= role_hierarchy.get(required_role, 0)
+    return has_project_role(user_roles, required_role)
 
 
 def validate_project_ownership(project: DBProject, user_id: UUID) -> bool:

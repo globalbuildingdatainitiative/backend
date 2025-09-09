@@ -1,4 +1,5 @@
 import pytest
+from backend.modules.auth.src.models.roles import Role as AuthRole
 
 from models.database.db_model import DBProject, ProjectState
 from models.user_role import UserRole
@@ -37,7 +38,7 @@ async def test_contributor_role_permissions(projects, create_user):
     await project.save()
     
     # Test that contributor can submit their own project for review
-    result = await ProjectService.submit_for_review(project.id, create_user.id, UserRole.CONTRIBUTOR)
+    result = await ProjectService.submit_for_review(project.id, create_user.id, [AuthRole.MEMBER])
     assert result.state == ProjectState.IN_REVIEW
     
     # Reset project to DRAFT for further tests
@@ -46,37 +47,37 @@ async def test_contributor_role_permissions(projects, create_user):
     
     # Test that contributor cannot approve projects (requires REVIEWER role)
     with pytest.raises(ValueError, match="User does not have permission to approve this project"):
-        await ProjectService.approve_project(project.id, create_user.id, UserRole.CONTRIBUTOR)
+        await ProjectService.approve_project(project.id, create_user.id, [AuthRole.MEMBER])
     
     # Test that contributor cannot reject projects (requires REVIEWER role)
     with pytest.raises(ValueError, match="User does not have permission to reject this project"):
-        await ProjectService.reject_project(project.id, create_user.id, UserRole.CONTRIBUTOR)
+        await ProjectService.reject_project(project.id, create_user.id, [AuthRole.MEMBER])
     
     # Test that contributor cannot publish projects (requires ADMINISTRATOR role)
     project.state = ProjectState.TO_PUBLISH
     await project.save()
     with pytest.raises(ValueError, match="User does not have permission to publish this project"):
-        await ProjectService.publish_project(project.id, create_user.id, UserRole.CONTRIBUTOR)
+        await ProjectService.publish_project(project.id, create_user.id, [AuthRole.MEMBER])
     
     # Test that contributor cannot unpublish projects (requires ADMINISTRATOR role)
     project.state = ProjectState.DRAFT
     await project.save()
     with pytest.raises(ValueError, match="User does not have permission to unpublish this project"):
-        await ProjectService.unpublish_project(project.id, create_user.id, UserRole.CONTRIBUTOR)
+        await ProjectService.unpublish_project(project.id, create_user.id, [AuthRole.MEMBER])
     
     # Test that contributor cannot lock projects (requires ADMINISTRATOR role)
     with pytest.raises(ValueError, match="User does not have permission to lock this project"):
-        await ProjectService.lock_project(project.id, create_user.id, UserRole.CONTRIBUTOR)
+        await ProjectService.lock_project(project.id, create_user.id, [AuthRole.MEMBER])
     
     # Test that contributor cannot unlock projects (requires ADMINISTRATOR role)
     project.state = ProjectState.LOCKED
     await project.save()
     with pytest.raises(ValueError, match="User does not have permission to unlock this project"):
-        await ProjectService.unlock_project(project.id, create_user.id, UserRole.CONTRIBUTOR)
+        await ProjectService.unlock_project(project.id, create_user.id, [AuthRole.MEMBER])
     
     # Test that contributor cannot assign projects (requires ADMINISTRATOR role)
     with pytest.raises(ValueError, match="User does not have permission to assign this project"):
-        await ProjectService.assign_project(project.id, create_user.id, create_user.id, UserRole.CONTRIBUTOR)
+        await ProjectService.assign_project(project.id, create_user.id, create_user.id, [AuthRole.MEMBER])
 
 
 @pytest.mark.asyncio
@@ -99,7 +100,7 @@ async def test_reviewer_role_permissions(projects, create_user):
     await project.save()
     
     # Test that reviewer can approve projects in IN_REVIEW state
-    result = await ProjectService.approve_project(project.id, create_user.id, UserRole.REVIEWER)
+    result = await ProjectService.approve_project(project.id, create_user.id, [AuthRole.MEMBER])
     assert result.state == ProjectState.TO_PUBLISH
     
     # Reset project to IN_REVIEW for further tests
@@ -107,7 +108,7 @@ async def test_reviewer_role_permissions(projects, create_user):
     await project.save()
     
     # Test that reviewer can reject projects in IN_REVIEW state
-    result = await ProjectService.reject_project(project.id, create_user.id, UserRole.REVIEWER)
+    result = await ProjectService.reject_project(project.id, create_user.id, [AuthRole.MEMBER])
     assert result.state == ProjectState.DRAFT
     
     # Test that reviewer cannot submit projects for review (requires CONTRIBUTOR role)
@@ -115,35 +116,35 @@ async def test_reviewer_role_permissions(projects, create_user):
     project.created_by = create_user.id
     await project.save()
     with pytest.raises(ValueError, match="User does not have permission to submit this project for review"):
-        await ProjectService.submit_for_review(project.id, create_user.id, UserRole.REVIEWER)
+        await ProjectService.submit_for_review(project.id, create_user.id, [AuthRole.MEMBER])
     
     # Test that reviewer cannot publish projects (requires ADMINISTRATOR role)
     project.state = ProjectState.TO_PUBLISH
     await project.save()
     with pytest.raises(ValueError, match="User does not have permission to publish this project"):
-        await ProjectService.publish_project(project.id, create_user.id, UserRole.REVIEWER)
+        await ProjectService.publish_project(project.id, create_user.id, [AuthRole.MEMBER])
     
     # Test that reviewer cannot unpublish projects (requires ADMINISTRATOR role)
     project.state = ProjectState.DRAFT
     await project.save()
     with pytest.raises(ValueError, match="User does not have permission to unpublish this project"):
-        await ProjectService.unpublish_project(project.id, create_user.id, UserRole.REVIEWER)
+        await ProjectService.unpublish_project(project.id, create_user.id, [AuthRole.MEMBER])
     
     # Test that reviewer cannot lock projects (requires ADMINISTRATOR role)
     with pytest.raises(ValueError, match="User does not have permission to lock this project"):
-        await ProjectService.lock_project(project.id, create_user.id, UserRole.REVIEWER)
+        await ProjectService.lock_project(project.id, create_user.id, [AuthRole.MEMBER])
     
     # Test that reviewer cannot unlock projects (requires ADMINISTRATOR role)
     project.state = ProjectState.LOCKED
     await project.save()
     with pytest.raises(ValueError, match="User does not have permission to unlock this project"):
-        await ProjectService.unlock_project(project.id, create_user.id, UserRole.REVIEWER)
+        await ProjectService.unlock_project(project.id, create_user.id, [AuthRole.MEMBER])
     
     # Test that reviewer cannot assign projects (requires ADMINISTRATOR role)
     project.state = ProjectState.DRAFT
     await project.save()
     with pytest.raises(ValueError, match="User does not have permission to assign this project"):
-        await ProjectService.assign_project(project.id, create_user.id, create_user.id, UserRole.REVIEWER)
+        await ProjectService.assign_project(project.id, create_user.id, create_user.id, [AuthRole.MEMBER])
 
 
 @pytest.mark.asyncio
@@ -164,40 +165,40 @@ async def test_administrator_role_permissions(projects, create_user):
     project = projects[0]
     project.state = ProjectState.TO_PUBLISH
     await project.save()
-    result = await ProjectService.publish_project(project.id, create_user.id, UserRole.ADMINISTRATOR)
+    result = await ProjectService.publish_project(project.id, create_user.id, [AuthRole.ADMIN])
     assert result.state == ProjectState.DRAFT
     
     # Test that administrator can unpublish projects in DRAFT state
     project.state = ProjectState.DRAFT
     await project.save()
-    result = await ProjectService.unpublish_project(project.id, create_user.id, UserRole.ADMINISTRATOR)
+    result = await ProjectService.unpublish_project(project.id, create_user.id, [AuthRole.ADMIN])
     assert result.state == ProjectState.TO_UNPUBLISH
     
     # Test that administrator can lock projects in any state
     project.state = ProjectState.DRAFT
     await project.save()
-    result = await ProjectService.lock_project(project.id, create_user.id, UserRole.ADMINISTRATOR)
+    result = await ProjectService.lock_project(project.id, create_user.id, [AuthRole.ADMIN])
     assert result.state == ProjectState.LOCKED
     
     # Test that administrator can unlock projects in LOCKED state
-    result = await ProjectService.unlock_project(project.id, create_user.id, UserRole.ADMINISTRATOR)
+    result = await ProjectService.unlock_project(project.id, create_user.id, [AuthRole.ADMIN])
     assert result.state == ProjectState.DRAFT
     
     # Test that administrator can assign projects
-    result = await ProjectService.assign_project(project.id, create_user.id, create_user.id, UserRole.ADMINISTRATOR)
+    result = await ProjectService.assign_project(project.id, create_user.id, create_user.id, [AuthRole.ADMIN])
     assert result.assigned_to == create_user.id
     
     # Test that administrator can delete projects
     project.state = ProjectState.TO_DELETE
     await project.save()
-    result = await ProjectService.delete_project(project.id, create_user.id, UserRole.ADMINISTRATOR)
+    result = await ProjectService.delete_project(project.id, create_user.id, [AuthRole.ADMIN])
     assert result == True
     
     # Test that administrator can also perform reviewer operations
     project = projects[1]  # Use a different project
     project.state = ProjectState.IN_REVIEW
     await project.save()
-    result = await ProjectService.approve_project(project.id, create_user.id, UserRole.ADMINISTRATOR)
+    result = await ProjectService.approve_project(project.id, create_user.id, [AuthRole.ADMIN])
     assert result.state == ProjectState.TO_PUBLISH
     
     # Test that administrator can also perform contributor operations
@@ -205,5 +206,5 @@ async def test_administrator_role_permissions(projects, create_user):
     project.state = ProjectState.DRAFT
     project.created_by = create_user.id
     await project.save()
-    result = await ProjectService.submit_for_review(project.id, create_user.id, UserRole.ADMINISTRATOR)
+    result = await ProjectService.submit_for_review(project.id, create_user.id, [AuthRole.ADMIN])
     assert result.state == ProjectState.IN_REVIEW

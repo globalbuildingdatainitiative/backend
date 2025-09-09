@@ -17,6 +17,17 @@ from supertokens_python.recipe.session.asyncio import create_new_session
 from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
 from time import sleep
 
+# Handle AuthRole import for tests
+try:
+    from backend.modules.auth.src.models.roles import Role as AuthRole
+except ImportError:
+    # Create a mock AuthRole for testing purposes
+    from enum import Enum
+    class AuthRole(str, Enum):
+        OWNER = "OWNER"
+        MEMBER = "MEMBER"
+        ADMIN = "ADMIN"
+
 from core.config import settings
 from core.connection import health_check_mongo, create_mongo_client
 from models import SuperTokensUser

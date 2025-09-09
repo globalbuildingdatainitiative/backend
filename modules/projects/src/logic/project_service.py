@@ -8,8 +8,20 @@ from pymongo.errors import DuplicateKeyError
 
 from models.database.db_model import DBProject, ProjectState
 from models.user_role import UserRole
+
+# Handle AuthRole import for tests
+try:
+    from backend.modules.auth.src.models.roles import Role as AuthRole
+except ImportError:
+    # Create a mock AuthRole for testing purposes
+    from enum import Enum
+    class AuthRole(str, Enum):
+        OWNER = "OWNER"
+        MEMBER = "MEMBER"
+        ADMIN = "ADMIN"
+
 from logic.permissions import (
-    has_permission, 
+    has_project_permission, 
     validate_project_ownership, 
     validate_project_assignment,
     can_submit_for_review,
@@ -22,6 +34,7 @@ from logic.permissions import (
     can_unlock_project,
     can_assign_project
 )
+from logic.role_mapping import get_highest_project_role
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +45,7 @@ class ProjectService:
     """
 
     @staticmethod
-    async def submit_for_review(project_id: UUID, user_id: UUID, user_role: UserRole) -> DBProject:
+    async def submit_for_review(project_id: UUID, user_id: UUID, user_roles: List[AuthRole]) -> DBProject:
         """
         Submit a project for review.
 
@@ -41,7 +54,7 @@ class ProjectService:
         Args:
             project_id: ID of the project to submit
             user_id: ID of the user submitting the project
-            user_role: Role of the user submitting the project
+            user_roles: Roles of the user submitting the project
 
         Returns:
             Updated project
@@ -54,6 +67,9 @@ class ProjectService:
         project = await DBProject.get(project_id)
         if not project:
             raise ValueError(f"Project with ID {project_id} not found")
+        
+        # Get the highest project role from auth roles
+        user_role = get_highest_project_role(user_roles)
         
         # Check permissions
         if not can_submit_for_review(project, user_role, user_id):
@@ -69,7 +85,7 @@ class ProjectService:
         return project
 
     @staticmethod
-    async def approve_project(project_id: UUID, user_id: UUID, user_role: UserRole) -> DBProject:
+    async def approve_project(project_id: UUID, user_id: UUID, user_roles: List[AuthRole]) -> DBProject:
         """
         Approve a project for publication.
 
@@ -78,7 +94,7 @@ class ProjectService:
         Args:
             project_id: ID of the project to approve
             user_id: ID of the user approving the project
-            user_role: Role of the user approving the project
+            user_roles: Roles of the user approving the project
 
         Returns:
             Updated project
@@ -91,6 +107,9 @@ class ProjectService:
         project = await DBProject.get(project_id)
         if not project:
             raise ValueError(f"Project with ID {project_id} not found")
+        
+        # Get the highest project role from auth roles
+        user_role = get_highest_project_role(user_roles)
         
         # Check permissions
         if not can_approve_project(project, user_role):
@@ -104,7 +123,7 @@ class ProjectService:
         return project
 
     @staticmethod
-    async def reject_project(project_id: UUID, user_id: UUID, user_role: UserRole) -> DBProject:
+    async def reject_project(project_id: UUID, user_id: UUID, user_roles: List[AuthRole]) -> DBProject:
         """
         Reject a project and send it back to draft.
 
@@ -113,7 +132,7 @@ class ProjectService:
         Args:
             project_id: ID of the project to reject
             user_id: ID of the user rejecting the project
-            user_role: Role of the user rejecting the project
+            user_roles: Roles of the user rejecting the project
 
         Returns:
             Updated project
@@ -126,6 +145,9 @@ class ProjectService:
         project = await DBProject.get(project_id)
         if not project:
             raise ValueError(f"Project with ID {project_id} not found")
+        
+        # Get the highest project role from auth roles
+        user_role = get_highest_project_role(user_roles)
         
         # Check permissions
         if not can_reject_project(project, user_role):
@@ -141,7 +163,7 @@ class ProjectService:
         return project
 
     @staticmethod
-    async def publish_project(project_id: UUID, user_id: UUID, user_role: UserRole) -> DBProject:
+    async def publish_project(project_id: UUID, user_id: UUID, user_roles: List[AuthRole]) -> DBProject:
         """
         Publish a project.
 
@@ -150,7 +172,7 @@ class ProjectService:
         Args:
             project_id: ID of the project to publish
             user_id: ID of the user publishing the project
-            user_role: Role of the user publishing the project
+            user_roles: Roles of the user publishing the project
 
         Returns:
             Updated project
@@ -163,6 +185,9 @@ class ProjectService:
         project = await DBProject.get(project_id)
         if not project:
             raise ValueError(f"Project with ID {project_id} not found")
+        
+        # Get the highest project role from auth roles
+        user_role = get_highest_project_role(user_roles)
         
         # Check permissions
         if not can_publish_project(project, user_role):
@@ -177,7 +202,7 @@ class ProjectService:
         return project
 
     @staticmethod
-    async def unpublish_project(project_id: UUID, user_id: UUID, user_role: UserRole) -> DBProject:
+    async def unpublish_project(project_id: UUID, user_id: UUID, user_roles: List[AuthRole]) -> DBProject:
         """
         Mark a project for unpublishing.
 
@@ -186,7 +211,7 @@ class ProjectService:
         Args:
             project_id: ID of the project to unpublish
             user_id: ID of the user unpublishing the project
-            user_role: Role of the user unpublishing the project
+            user_roles: Roles of the user unpublishing the project
 
         Returns:
             Updated project
@@ -200,6 +225,9 @@ class ProjectService:
         if not project:
             raise ValueError(f"Project with ID {project_id} not found")
         
+        # Get the highest project role from auth roles
+        user_role = get_highest_project_role(user_roles)
+        
         # Check permissions
         if not can_unpublish_project(project, user_role):
             raise ValueError("User does not have permission to unpublish this project")
@@ -212,7 +240,7 @@ class ProjectService:
         return project
 
     @staticmethod
-    async def delete_project(project_id: UUID, user_id: UUID, user_role: UserRole) -> bool:
+    async def delete_project(project_id: UUID, user_id: UUID, user_roles: List[AuthRole]) -> bool:
         """
         Mark a project for deletion.
 
@@ -221,7 +249,7 @@ class ProjectService:
         Args:
             project_id: ID of the project to delete
             user_id: ID of the user deleting the project
-            user_role: Role of the user deleting the project
+            user_roles: Roles of the user deleting the project
 
         Returns:
             True if successful
@@ -235,6 +263,9 @@ class ProjectService:
         if not project:
             raise ValueError(f"Project with ID {project_id} not found")
         
+        # Get the highest project role from auth roles
+        user_role = get_highest_project_role(user_roles)
+        
         # Check permissions
         if not can_delete_project(project, user_role, user_id):
             raise ValueError("User does not have permission to delete this project")
@@ -247,7 +278,7 @@ class ProjectService:
         return True
 
     @staticmethod
-    async def lock_project(project_id: UUID, user_id: UUID, user_role: UserRole) -> DBProject:
+    async def lock_project(project_id: UUID, user_id: UUID, user_roles: List[AuthRole]) -> DBProject:
         """
         Lock a project.
 
@@ -256,7 +287,7 @@ class ProjectService:
         Args:
             project_id: ID of the project to lock
             user_id: ID of the user locking the project
-            user_role: Role of the user locking the project
+            user_roles: Roles of the user locking the project
 
         Returns:
             Updated project
@@ -269,6 +300,9 @@ class ProjectService:
         project = await DBProject.get(project_id)
         if not project:
             raise ValueError(f"Project with ID {project_id} not found")
+        
+        # Get the highest project role from auth roles
+        user_role = get_highest_project_role(user_roles)
         
         # Check permissions
         if not can_lock_project(user_role):
@@ -286,7 +320,7 @@ class ProjectService:
         return project
 
     @staticmethod
-    async def unlock_project(project_id: UUID, user_id: UUID, user_role: UserRole) -> DBProject:
+    async def unlock_project(project_id: UUID, user_id: UUID, user_roles: List[AuthRole]) -> DBProject:
         """
         Unlock a project.
 
@@ -295,7 +329,7 @@ class ProjectService:
         Args:
             project_id: ID of the project to unlock
             user_id: ID of the user unlocking the project
-            user_role: Role of the user unlocking the project
+            user_roles: Roles of the user unlocking the project
 
         Returns:
             Updated project
@@ -308,6 +342,9 @@ class ProjectService:
         project = await DBProject.get(project_id)
         if not project:
             raise ValueError(f"Project with ID {project_id} not found")
+        
+        # Get the highest project role from auth roles
+        user_role = get_highest_project_role(user_roles)
         
         # Check permissions
         if not can_unlock_project(project, user_role):
@@ -326,7 +363,7 @@ class ProjectService:
         return project
 
     @staticmethod
-    async def assign_project(project_id: UUID, user_id: UUID, assignee_id: UUID, user_role: UserRole) -> DBProject:
+    async def assign_project(project_id: UUID, user_id: UUID, assignee_id: UUID, user_roles: List[AuthRole]) -> DBProject:
         """
         Assign a project to a user.
 
@@ -334,7 +371,7 @@ class ProjectService:
             project_id: ID of the project to assign
             user_id: ID of the user assigning the project
             assignee_id: ID of the user to assign the project to
-            user_role: Role of the user assigning the project
+            user_roles: Roles of the user assigning the project
 
         Returns:
             Updated project
@@ -347,6 +384,9 @@ class ProjectService:
         project = await DBProject.get(project_id)
         if not project:
             raise ValueError(f"Project with ID {project_id} not found")
+        
+        # Get the highest project role from auth roles
+        user_role = get_highest_project_role(user_roles)
         
         # Check permissions
         if not can_assign_project(user_role):

@@ -1,5 +1,6 @@
 import pytest
 from uuid import uuid4
+from backend.modules.auth.src.models.roles import Role as AuthRole
 
 from models.database.db_model import DBProject, ProjectState
 from models.user_role import UserRole
@@ -24,7 +25,7 @@ async def test_admin_publish_project(projects, create_user):
     await project.save()
     
     # Publish the project as an administrator
-    result = await ProjectService.publish_project(project.id, create_user.id, UserRole.ADMINISTRATOR)
+    result = await ProjectService.publish_project(project.id, create_user.id, [AuthRole.ADMIN])
     
     # Verify the project state transitioned correctly
     assert result.state == ProjectState.DRAFT
@@ -45,7 +46,7 @@ async def test_admin_publish_project_invalid_state(projects, create_user):
     
     # Try to publish the project as an administrator - this should raise an exception
     with pytest.raises(ValueError, match="User does not have permission to publish this project"):
-        await ProjectService.publish_project(project.id, create_user.id, UserRole.ADMINISTRATOR)
+        await ProjectService.publish_project(project.id, create_user.id, [AuthRole.ADMIN])
 
 
 @pytest.mark.asyncio
@@ -62,8 +63,8 @@ async def test_unauthorized_user_publish_project(projects, create_user):
     
     # Try to publish the project as a CONTRIBUTOR - this should raise an exception
     with pytest.raises(ValueError, match="User does not have permission to publish this project"):
-        await ProjectService.publish_project(project.id, create_user.id, UserRole.CONTRIBUTOR)
+        await ProjectService.publish_project(project.id, create_user.id, [AuthRole.MEMBER])
     
     # Try to publish the project as a REVIEWER - this should also raise an exception
     with pytest.raises(ValueError, match="User does not have permission to publish this project"):
-        await ProjectService.publish_project(project.id, create_user.id, UserRole.REVIEWER)
+        await ProjectService.publish_project(project.id, create_user.id, [AuthRole.MEMBER])
