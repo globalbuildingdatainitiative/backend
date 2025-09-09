@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.1.0](https://github.com/globalbuildingdatainitiative/backend/compare/v1.0.0...v1.1.0) (2025-09-09)
+
+
+### Features
+
+* **change-email:** correct organization and auth module to allow faster email change ([a1a1f76](https://github.com/globalbuildingdatainitiative/backend/commit/a1a1f7678b271bbac32d019f900ece8e646aa58b))
+
+
+### Bug Fixes
+
+* **auth:** Implement proper cache invalidation for user data updates ([65c056c](https://github.com/globalbuildingdatainitiative/backend/commit/65c056cdc7bf55f77f406cf25c8c1a32fc207fcc))
+* **auth:** optimize redundant database queries in update_user function ([14f7548](https://github.com/globalbuildingdatainitiative/backend/commit/14f754838f875060cd16f4f49e30462937dde667))
+* **ruff:** comment unused cached import ([b7cd395](https://github.com/globalbuildingdatainitiative/backend/commit/b7cd3954ff8e654373522e068df890cd4547d41d))
+* **ruff:** correct formating ([70da123](https://github.com/globalbuildingdatainitiative/backend/commit/70da123e1692741a880c28a8fe6126be8dc6831d))
+* set UUID default value annotation in InputOrganization schema ([da27007](https://github.com/globalbuildingdatainitiative/backend/commit/da270077d2a235804190ba334bcf0fa3e9818482))
+* update docs and organization tests ([c1d905e](https://github.com/globalbuildingdatainitiative/backend/commit/c1d905ed97b211d11e4844a8ea0e59ecc6613542))
+
 ## 1.0.0 (2025-08-20)
 
 
