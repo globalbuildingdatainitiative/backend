@@ -1,0 +1,157 @@
+"""
+GraphQL schema for Document Publication Workflow with Admin Approval
+"""
+
+enum ProjectState {
+  DRAFT
+  IN_REVIEW
+  TO_PUBLISH
+  TO_UNPUBLISH
+  TO_DELETE
+  LOCKED
+}
+
+type Project {
+  id: UUID!
+  name: String!
+  description: String
+  state: ProjectState!
+  createdBy: UUID!
+  assignedTo: UUID
+  assignedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input SubmitForReviewInput {
+  projectId: UUID!
+}
+
+input ApproveProjectInput {
+  projectId: UUID!
+}
+
+input RejectProjectInput {
+  projectId: UUID!
+}
+
+input PublishProjectInput {
+  projectId: UUID!
+}
+
+input UnpublishProjectInput {
+  projectId: UUID!
+}
+
+input DeleteProjectInput {
+  projectId: UUID!
+}
+
+input LockProjectInput {
+  projectId: UUID!
+}
+
+input UnlockProjectInput {
+  projectId: UUID!
+}
+
+input AssignProjectInput {
+  projectId: UUID!
+  userId: UUID!
+}
+
+type Mutation {
+  """
+  Submit a project for review (Contributor action)
+  Transitions: DRAFT → IN_REVIEW
+  """
+  submitForReview(input: SubmitForReviewInput!): Project!
+
+  """
+  Approve a project for publication (Reviewer action)
+  Transitions: IN_REVIEW → TO_PUBLISH
+  """
+  approveProject(input: ApproveProjectInput!): Project!
+
+  """
+  Reject a project and send it back to draft (Reviewer action)
+  Transitions: IN_REVIEW → DRAFT
+  """
+  rejectProject(input: RejectProjectInput!): Project!
+
+  """
+  Publish a project (Administrator action)
+  Transitions: TO_PUBLISH → DRAFT (published)
+  """
+  publishProject(input: PublishProjectInput!): Project!
+
+  """
+  Mark a project for unpublishing (Administrator action)
+  Transitions: DRAFT → TO_UNPUBLISH
+  """
+  unpublishProject(input: UnpublishProjectInput!): Project!
+
+  """
+  Delete a project (Administrator action)
+  Transitions: TO_DELETE → deleted
+  """
+  deleteProject(input: DeleteProjectInput!): Boolean!
+
+  """
+  Lock a project (Administrator action)
+  Transitions: any state → LOCKED
+  """
+  lockProject(input: LockProjectInput!): Project!
+
+  """
+  Unlock a project (Administrator action)
+  Transitions: LOCKED → previous state
+  """
+  unlockProject(input: UnlockProjectInput!): Project!
+
+  """
+  Assign a project to a user (Administrator action)
+  """
+  assignProject(input: AssignProjectInput!): Project!
+}
+
+input ProjectsByStateInput {
+  state: ProjectState!
+}
+
+type Query {
+  """
+  Get projects by state
+  """
+  projectsByState(input: ProjectsByStateInput!): [Project!]!
+
+  """
+  Get projects that are in review (IN_REVIEW state)
+  """
+  projectsForReview: [Project!]!
+
+  """
+  Get projects that are ready to publish (TO_PUBLISH state)
+  """
+  projectsToPublish: [Project!]!
+
+  """
+  Get projects that are marked for unpublishing (TO_UNPUBLISH state)
+  """
+  projectsToUnpublish: [Project!]!
+
+  """
+  Get projects that are marked for deletion (TO_DELETE state)
+  """
+  projectsToDelete: [Project!]!
+
+  """
+  Get projects created by the current user
+  """
+  myProjects: [Project!]!
+
+  """
+  Get projects assigned to the current reviewer
+  """
+  assignedProjects: [Project!]!
+}
