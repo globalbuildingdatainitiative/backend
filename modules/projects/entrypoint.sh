@@ -2,13 +2,14 @@
 set -e
 
 # Wait for database to be online
-python /app/src/initialize.py
+/app/.venv/bin/python /app/src/initialize.py
 
 # Start FastAPI
 cd /app/src
+
 echo "Running UVicorn "
 if [ "$RUN_STAGE" = 'DEV' ]; then
-  uvicorn main:app --host 0.0.0.0 --reload;
+  /app/.venv/bin/uvicorn main:app --host 0.0.0.0 --reload;
 else
-  uvicorn main:app --host 0.0.0.0;
+  /app/.venv/bin/uvicorn main:app --host 0.0.0.0;
 fi;

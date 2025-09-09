@@ -56,14 +56,15 @@ def get_origin(request: BaseRequest | None, user_context) -> str:
 
 
 # SMTP Configuration
-smtp_settings = SMTPSettings(
-    host=settings.SMTP_HOST,
-    port=settings.SMTP_PORT,
-    from_=SMTPSettingsFrom(name=settings.SMTP_NAME, email=settings.SMTP_EMAIL),
-    password=settings.SMTP_PASSWORD,
-    secure=False,
-    username=settings.SMTP_USERNAME,
-)
+def get_smtp_settings():
+    return SMTPSettings(
+        host=settings.SMTP_HOST,
+        port=settings.SMTP_PORT,
+        from_=SMTPSettingsFrom(name=settings.SMTP_NAME, email=settings.SMTP_EMAIL),
+        password=settings.SMTP_PASSWORD,
+        secure=False,
+        username=settings.SMTP_USERNAME,
+    )
 
 
 def get_base_email_style() -> str:
@@ -399,13 +400,15 @@ def supertokens_init():
                 ),
                 email_delivery=EmailDeliveryConfig(
                     service=emailpassword.SMTPService(
-                        smtp_settings=smtp_settings, override=custom_smtp_content_override
+                        smtp_settings=get_smtp_settings(), override=custom_smtp_content_override
                     )
                 ),
             ),
             emailverification.init(
                 mode="OPTIONAL",
-                email_delivery=EmailDeliveryConfig(service=emailverification.SMTPService(smtp_settings=smtp_settings)),
+                email_delivery=EmailDeliveryConfig(
+                    service=emailverification.SMTPService(smtp_settings=get_smtp_settings())
+                ),
             ),
             dashboard.init(),
             userroles.init(),

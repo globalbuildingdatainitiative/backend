@@ -1,7 +1,7 @@
 from logging import getLogger
 from uuid import UUID
 
-from aiocache import cached
+# from aiocache import cached
 from supertokens_python.recipe.userroles.asyncio import (
     get_roles_for_user,
     add_role_to_user,
@@ -17,7 +17,7 @@ from models import Role, Permission, RolePermission
 logger = getLogger("main")
 
 
-@cached(ttl=60 * 10)
+# @cached(ttl=60 * 10)
 async def get_roles():
     """Get all roles and their permissions"""
     logger.debug("Fetching all roles and their permissions")
@@ -106,7 +106,7 @@ async def remove_role(user_id: str | UUID, role: Role):
         logger.info(f"Successfully removed role of {role.value} to user: {user_id}.")
 
 
-@cached(ttl=60)
+# @cached(ttl=60)
 async def check_is_admin(user_id: str | UUID) -> bool:
     """Check if the user is an admin"""
 

@@ -45,6 +45,15 @@ To get started please make sure that the following pieces of software are instal
 
 Copy `template.skaffold.env` to `skaffold.env` and populate the env vars
 
+### Environment Variables
+
+For local development, each service requires specific environment variables to be set. These will be automatically loaded from `.env` files when running locally. Please refer to the [Environment Setup Guide](../ENVIRONMENT_SETUP.md) for detailed instructions on configuring these variables.
+
+Each module also contains its own `.env.example` file with the required variables:
+* [auth .env.example](./modules/auth/.env.example)
+* [organization .env.example](./modules/organization/.env.example)
+* [projects .env.example](./modules/projects/.env.example)
+
 # Folder Structure
 
 ```

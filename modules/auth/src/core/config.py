@@ -44,8 +44,8 @@ class Settings(BaseSettings):
     SMTP_PORT: int
     SMTP_EMAIL: str
     SMTP_NAME: str
-    SMTP_PASSWORD: str
-    SMTP_USERNAME: str
+    SMTP_PASSWORD: str = ""
+    SMTP_USERNAME: str = ""
 
     @classmethod
     def settings_customise_sources(
@@ -56,7 +56,7 @@ class Settings(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> Tuple[PydanticBaseSettingsSource, ...]:
-        return (ParsingValues(settings_cls),)
+        return (dotenv_settings, ParsingValues(settings_cls))
 
     class Config:
         case_sensitive = True
