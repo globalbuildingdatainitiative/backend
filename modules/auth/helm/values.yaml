@@ -60,4 +60,4 @@ smtp:
 supertokens:
   accessTokenValidity: 3600
   image:
-    tag: '10.0'
+    tag: '11.0'

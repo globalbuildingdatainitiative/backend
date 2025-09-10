@@ -28,12 +28,12 @@ async def test_filter_users_by_id(users):
 
 @pytest.mark.asyncio
 async def test_filter_users_by_organisation_id(users):
-    filters = FilterBy(equal={"organization_id": users[1].get("organization_id")})
+    filters = FilterBy(contains={"data": users[1].get("organization_id")})
 
     _users = await get_users(filters)
 
     assert len(_users) == 1
-    assert _users[0].organization_id == filters.equal.get("organization_id")
+    assert _users[0].organization_id == filters.contains.get("data")
 
 
 @pytest.mark.asyncio

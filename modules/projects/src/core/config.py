@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     ]
     SUPERTOKENS_CONNECTION_URI: AnyHttpUrl
     SUPERTOKENS_API_KEY: str
+    ROUTER_URL: AnyHttpUrl
 
     LOG_LEVEL: str = "INFO"
 

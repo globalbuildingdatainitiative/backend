@@ -129,7 +129,7 @@ spec:
     spec:
       containers:
         - name: supertokens
-          image: 'registry.supertokens.io/supertokens/supertokens-postgresql:{{ .Values.supertokens.image.tag }}'
+          image: 'supertokens/supertokens-postgresql:{{ .Values.supertokens.image.tag }}'
           ports:
             - containerPort: 3567
           env:

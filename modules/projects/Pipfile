@@ -8,7 +8,7 @@ fastapi = {extras = ["all"], version = ">=0.115.2"}
 strawberry-graphql = {extras = ["fastapi", "cli"], version = ">=0.235.2"}
 tenacity = "*"
 beanie = "==1.29.0"
-supertokens-python = "==0.27.0"
+supertokens-python = ">=0.27.0"
 lcax = "==2.6.0"
 async_lru = "*"
 iso3166 = "*"

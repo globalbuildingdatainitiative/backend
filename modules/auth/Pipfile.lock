@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "32d3bb9d25b8107a23d900bdb27f540921942f33be6a34b9b6e2083caa1e314d"
+            "sha256": "7fd76322a5ea240814a10de343b9d5ad6c98ab30b6c7ec102d22061582cb9da5"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -773,11 +773,11 @@
         },
         "httpx": {
             "hashes": [
-                "sha256:7bb2708e112d8fdd7829cd4243970f0c223274051cb35ee80c03301ee29a3df0",
-                "sha256:f7c2be1d2f3c3c3160d441802406b206c2b76f5947b11115e6df10c6c65e66c2"
+                "sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc",
+                "sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==0.27.2"
+            "version": "==0.28.1"
         },
         "idna": {
             "hashes": [
@@ -1860,12 +1860,12 @@
         },
         "supertokens-python": {
             "hashes": [
-                "sha256:2bec2e539610baf06ab225ccf86f798332b34eee756e52119b9d22e006b447a5",
-                "sha256:7ddb27a25433e77015715e27de60695963c3a4f7ca1611a951a7e7cf54bd12ac"
+                "sha256:7ff201cb90e5f2a662d433af40d1ab7c4cd06fda2610d2c9eed673dcf8630dd1",
+                "sha256:b4c7526dc39a956da2ad994619c62733d58f8478cb9e76004fc1bbd2416c70ba"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==0.27.0"
+            "version": "==0.30.1"
         },
         "tenacity": {
             "hashes": [
@@ -1878,11 +1878,11 @@
         },
         "tldextract": {
             "hashes": [
-                "sha256:4dfc4c277b6b97fa053899fcdb892d2dc27295851ab5fac4e07797b6a21b2e46",
-                "sha256:c9e17f756f05afb5abac04fe8f766e7e70f9fe387adb1859f0f52408ee060200"
+                "sha256:b3d2b70a1594a0ecfa6967d57251527d58e00bb5a91a74387baa0d87a0678609",
+                "sha256:f70f31d10b55c83993f55e91ecb7c5d84532a8972f22ec578ecfbe5ea2292db2"
             ],
-            "markers": "python_version >= '3.8'",
-            "version": "==5.1.2"
+            "markers": "python_version >= '3.9'",
+            "version": "==5.3.0"
         },
         "twilio": {
             "hashes": [

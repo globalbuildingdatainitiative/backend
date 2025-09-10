@@ -15,47 +15,35 @@ from supertokens_python.recipe.session.interfaces import SessionContainer
 from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
 from supertokens_python.recipe.userroles.asyncio import get_roles_for_user
 from supertokens_python.types import AccountInfo, User
+from sqlmodel import Session, select, col
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from core import exceptions
+from core.connection import get_postgres_engine
 from core.exceptions import EntityNotFound
 from logic.roles import assign_role, remove_role
 from models import GraphQLUser, UpdateUserInput, InviteStatus, Role, AcceptInvitationInput
 from models.sort_filter import FilterBy, SortBy
+from models.user import EmailPasswordUser, UserMetadata
 
 logger = getLogger("main")
 
 
 async def get_users(
-    filter_by: FilterBy | None = None, sort_by: SortBy | None = None, limit: int | None = None, offset: int = 0
+        filter_by: FilterBy | None = None, sort_by: SortBy | None = None, limit: int | None = None, offset: int = 0
 ) -> list[GraphQLUser]:
     """Returns all Users & their metadata"""
 
     logger.debug(f"Fetching users with filters: {filter_by} and sort_by: {sort_by}")
 
-    if filter_by:
-        if filter_by.equal and filter_by.equal.get("id"):
-            _user = await get_user_by_id(str(filter_by.equal.get("id")))
-            return [await construct_graphql_user(_user)]
-        elif filter_by.equal and filter_by.equal.get("email"):
-            users = await list_users_by_account_info("public", AccountInfo(email=filter_by.equal.get("email")))
-            return [await construct_graphql_user(_user) for _user in users]
-    #     else:
-    #         gql_users = filter_users(await get_all_users(), filter_by)
-    # else:
-    gql_users = [await construct_graphql_user(_user) for _user in await get_all_users()]
-
-    if filter_by:
-        gql_users = filter_users(gql_users, filter_by)
-
-    if sort_by:
-        gql_users = sort_users(gql_users, sort_by)
-
-    if limit is not None:
-        gql_users = gql_users[offset : offset + limit]
+    if filter_by and filter_by.equal and filter_by.equal.get("id"):
+        _user = await get_user_by_id(str(filter_by.equal.get("id")))
+        return [await construct_graphql_user(_user)]
+    elif filter_by and filter_by.equal and filter_by.equal.get("email"):
+        users = await list_users_by_account_info("public", AccountInfo(email=filter_by.equal.get("email")))
+        return [await construct_graphql_user(_user) for _user in users]
     else:
-        gql_users = gql_users[offset:]
-
-    return gql_users
+        return await get_users_from_supertokens(filter_by, sort_by, limit, offset)
 
 
 async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
@@ -176,14 +164,15 @@ def filter_users(users: list[GraphQLUser], filters: FilterBy) -> list[GraphQLUse
                     user
                     for user in filtered_users
                     if (model_field == "role" and user.role and user.role.value.lower() == str(value).lower())
-                    or (model_field != "role" and str(getattr(user, model_field, None)).lower() == str(value).lower())
+                       or (model_field != "role" and str(getattr(user, model_field, None)).lower() == str(
+                        value).lower())
                 ]
             elif _filter == "contains":
                 filtered_users = [
                     user
                     for user in filtered_users
                     if (model_field == "role" and user.role and value.lower() in user.role.value.lower())
-                    or (model_field != "role" and value.lower() in str(getattr(user, model_field, "")).lower())
+                       or (model_field != "role" and value.lower() in str(getattr(user, model_field, "")).lower())
                 ]
             elif _filter == "is_true":
                 filtered_users = [user for user in filtered_users if bool(getattr(user, model_field, False)) == value]
@@ -268,3 +257,43 @@ async def construct_graphql_user(user: User) -> GraphQLUser:
 @cached(ttl=60)
 async def get_all_users() -> list[User]:
     return (await get_users_newest_first("public", limit=1000)).users
+
+
+async def get_users_from_supertokens(
+        filter_by: FilterBy | None = None, sort_by: SortBy | None = None, limit: int | None = None, offset: int = 0
+) -> list[GraphQLUser]:
+    # import pydevd_pycharm
+    # pydevd_pycharm.settrace('host.minikube.internal', port=5476, stdoutToServer=True, stderrToServer=True)
+    logger.debug(f"Fetching users with filters: {filter_by} and sort_by: {sort_by}")
+
+    async with (AsyncSession(get_postgres_engine()) as session):
+        query = select(UserMetadata)
+        if filter_by and filter_by.contains:
+            contains = []
+            for key in filter_by.contains.keys():
+                contains.append(UserMetadata.user_metadata.contains(filter_by.contains[key]))
+            query = query.where(*contains)
+        else:
+            raise Exception("Invalid filter. Only contains filter is supported.")
+        if sort_by and sort_by.asc:
+            query = query.order_by(col(sort_by.asc))
+        elif sort_by and sort_by.dsc:
+            query = query.order_by(col(sort_by.dsc).desc())
+        if offset:
+            query = query.offset(offset)
+        if limit:
+            query = query.limit(limit)
+
+        meta_data = (await session.exec(query)).all()
+        users = (await session.exec(select(EmailPasswordUser).where(
+            EmailPasswordUser.user_id.in_([_user.user_id for _user in meta_data])))).all()
+
+    return [
+        await GraphQLUser.from_supertokens(
+            user,
+            json.loads(
+                [_data for _data in meta_data if _data.user_id == user.user_id][0].user_metadata
+            )
+        )
+        for user in users
+    ]

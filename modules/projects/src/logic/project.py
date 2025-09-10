@@ -29,7 +29,7 @@ async def get_projects(
 
         # Apply filters if any
         if filter_by:
-            base_query = filter_model_query(DBProject, filter_by, base_query)
+            base_query = await filter_model_query(DBProject, filter_by, base_query)
 
         # Always fetch related links
         base_query = base_query.find({}, fetch_links=True)

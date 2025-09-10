@@ -38,16 +38,19 @@ class GraphQLResponse[T]:
 
         if self._type == "User":
             is_admin = await check_is_admin(get_user(info).id)
-
+            logger.info(f"Is admin: {is_admin}")
             if is_admin:
                 users = await get_users(filter_by, sort_by, limit, offset)
                 logger.info(f"Got {len(users)} users as admin")
             else:
                 filters = filter_by or FilterBy()
-                if filters.equal:
-                    filters.equal["organization_id"] = get_user(info).organization_id
-                else:
-                    filters.equal = {"organization_id": get_user(info).organization_id}
+                org_id = get_user(info).organization_id or ""
+                logger.info(f"filters {filters}")
+
+                if filters.contains and not filters.contains.get("organization_id"):
+                    filters.contains["organization_id"] = org_id
+                elif filters.contains == strawberry.UNSET:
+                    filters.contains = {"organization_id": org_id}
 
                 users = await get_users(filters, sort_by, limit, offset)
                 logger.info(f"Got {len(users)} users")

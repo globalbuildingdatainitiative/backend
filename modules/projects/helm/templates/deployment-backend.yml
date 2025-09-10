@@ -78,5 +78,8 @@ spec:
             - name: SUPERTOKENS_CONNECTION_URI
               value: {{ .Values.backend.authConnectionUri }}
 
+            - name: ROUTER_URL
+              value: {{ .Values.backend.routerUrl }}
+
             - name: LOG_LEVEL
               value: {{ .Values.backend.logLevel }}

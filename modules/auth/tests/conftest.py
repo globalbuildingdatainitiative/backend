@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Iterator
+from typing import Iterator, Any, AsyncGenerator
 from uuid import uuid4, UUID
 
 import docker
@@ -10,7 +10,7 @@ from asgi_lifespan import LifespanManager
 from docker.errors import NotFound
 from fastapi import FastAPI
 from fastapi.requests import Request
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from supertokens_python import RecipeUserId
 from supertokens_python.asyncio import delete_user
 from supertokens_python.recipe.emailpassword.asyncio import sign_up
@@ -31,25 +31,32 @@ def docker_client():
 
 
 @pytest.fixture(scope="session")
-async def supertokens(docker_client):
+async def supertokens(docker_client, postgres):
     try:
-        _container = docker_client.containers.get("supertokens")
+        _container = docker_client.containers.get("supertokens_auth")
         _container.kill()
         sleep(0.2)
     except NotFound:
         pass
 
     container = docker_client.containers.run(
-        image="registry.supertokens.io/supertokens/supertokens-postgresql",
+        image="supertokens/supertokens-postgresql:11.0",
         ports={"3567": "3568"},
         name="supertokens_auth",
         detach=True,
         auto_remove=True,
+        environment={
+            "POSTGRESQL_USER": settings.POSTGRES_USER,
+            "POSTGRESQL_PASSWORD": settings.POSTGRES_PASSWORD,
+            "POSTGRESQL_DATABASE_NAME": settings.POSTGRES_DB,
+            "POSTGRESQL_HOST": postgres.attrs.get("NetworkSettings").get("IPAddress"),
+            "POSTGRESQL_PORT": settings.POSTGRES_PORT,
+        }
     )
 
     @retry(
         stop=stop_after_attempt(20),
-        wait=wait_fixed(0.2),
+        wait=wait_fixed(0.4),
         retry=retry_if_exception(lambda e: isinstance(e, httpx.HTTPError)),
     )
     def wait_for_container():
@@ -61,6 +68,35 @@ async def supertokens(docker_client):
         if wait_for_container():
             break
     try:
+        yield container
+    finally:
+        container.stop()
+
+
+@pytest.fixture(scope="session")
+async def postgres(docker_client):
+    try:
+        _container = docker_client.containers.get("postgres_database")
+        _container.kill()
+        sleep(0.2)
+    except NotFound:
+        pass
+
+    container = docker_client.containers.run(
+        "postgres:15-alpine",
+        ports={"5432": settings.POSTGRES_PORT},
+        environment={
+            "POSTGRES_DB": settings.POSTGRES_DB,
+            "POSTGRES_PASSWORD": settings.POSTGRES_PASSWORD,
+            "POSTGRES_USER": settings.POSTGRES_USER,
+        },
+        name="postgres_database",
+        detach=True,
+        auto_remove=True,
+    )
+
+    try:
+        container.reload()
         yield container
     finally:
         container.stop()
@@ -142,11 +178,11 @@ async def users(app):
 
 
 @pytest.fixture()
-async def client_unauthenticated(app: FastAPI) -> Iterator[AsyncClient]:
+async def client_unauthenticated(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     """Async server client that handles lifespan and teardown"""
 
     async with AsyncClient(
-        app=app,
+        transport=ASGITransport(app=app),
         base_url=str(settings.SERVER_HOST),
     ) as _client:
         try:
