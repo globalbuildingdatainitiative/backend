@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from logging import getLogger
+from logging import getLogger, DEBUG, StreamHandler, Formatter
 from uuid import UUID
 
 import strawberry
@@ -22,7 +22,14 @@ from models import GraphQLUser, UpdateUserInput, InviteStatus, Role, AcceptInvit
 from models.sort_filter import FilterBy, SortBy
 
 logger = getLogger("main")
+logger.setLevel(DEBUG)
 
+if not logger.hasHandlers():
+    ch = StreamHandler()
+    ch.setLevel(DEBUG)
+    formatter = Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
 
 async def get_users(
     filter_by: FilterBy | None = None, sort_by: SortBy | None = None, limit: int | None = None, offset: int = 0
@@ -110,16 +117,20 @@ async def _apply_additional_id_filters(gql_users: list[GraphQLUser], filter_by: 
 
     return gql_users
 
+def mega_logger(msg: str):
+    for _ in range(5):
+        logger.critical("\033[31m--------BEGIN MEGA LOGGER-----------\033[0m")
+
+    logger.critical(msg)
+
+    for _ in range(5):
+        logger.critical("\033[31m--------END MEGA LOGGER-----------\033[0m")
+
 
 async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     """Update user details & metadata"""
 
-    logger.warning("\033[31m--------TEST-----------\033[0m")
-    logger.warning("--------TEST-----------")
-    logger.warning("--------TEST-----------")
-    logger.warning("--------TEST-----------")
-    logger.warning("--------TEST-----------")
-    print("test4")
+    mega_logger(f"Update user called with input: {user_input}")
 
     metadata_update = strawberry.asdict(user_input)
     user_id = str(metadata_update.pop("id"))
@@ -162,32 +173,24 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
         # Refresh user object after email update to ensure we have the latest email for password verification
         user = await get_user(user_id)
 
+
     # Update password if current password and new password are provided
     if user_input.current_password and user_input.new_password:
+        mega_logger(f"Attempting to update password for user {user_id}")
         # Use the latest user object for password verification
         is_password_valid = await verify_credentials("public", str(user.emails[0]), str(user_input.current_password))
         if isinstance(is_password_valid, WrongCredentialsError):
             raise exceptions.WrongCredentialsError("Current password is incorrect")
         
-        # tried the following but didn't seem to work, need to make sure that the new code is being run
-        try:
-            await update_email_or_password(
-                recipe_user_id=user.login_methods[0].recipe_user_id,
-                password=user_input.new_password,
-                tenant_id_for_password_policy=user.tenant_ids[0],
-            )
-            # Refresh user object after password update
-            user = await get_user(user_id)
-        except PasswordPolicyViolationError as e:
-            raise exceptions.PasswordRequirementsViolationError(e.message)
-
-        """ await update_email_or_password(
+        password_update_result = await update_email_or_password(
             recipe_user_id=user.login_methods[0].recipe_user_id,
             password=user_input.new_password,
             tenant_id_for_password_policy=user.tenant_ids[0],
         )
+        if isinstance(password_update_result, PasswordPolicyViolationError):
+            raise exceptions.PasswordRequirementsViolationError(password_update_result.failure_reason)
         # Refresh user object after password update
-        user = await get_user(user_id) """
+        user = await get_user(user_id)
 
     # Use the latest user object instead of fetching again
     user_metadata = await get_user_metadata(user_id)
