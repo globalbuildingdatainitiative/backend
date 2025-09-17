@@ -57,3 +57,13 @@ class WrongCredentialsError(GBDIApiError):
 
 class PasswordRequirementsViolationError(GBDIApiError):
     """Raised when user tries to set a password that does not comply with the password policy"""
+
+class UpdateEmailOrPasswordError(GBDIApiError):
+    """Raised when user tries to update email or password and it fails"""
+
+class EmailAlreadyInUseError(GBDIApiError):
+    """Raised when user tries to update its email but another user already has it"""
+    """Raised when user tries to update email or password and it fails"""
+
+class UnknownUserError(GBDIApiError):
+    """Raised when user tries to update its email but another user already has it"""
