@@ -54,3 +54,6 @@ class InvitationFailed(GBDIApiError):
 
 class WrongCredentialsError(GBDIApiError):
     """Raised when user tries to invite without being part of an organization"""
+
+class PasswordRequirementsViolationError(GBDIApiError):
+    """Raised when user tries to set a password that does not comply with the password policy"""

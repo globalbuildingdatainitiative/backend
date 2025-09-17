@@ -8,7 +8,7 @@ from fastapi.requests import Request
 from strawberry import UNSET
 from supertokens_python.asyncio import get_user, get_users_newest_first, list_users_by_account_info
 from supertokens_python.recipe.emailpassword.asyncio import update_email_or_password, verify_credentials
-from supertokens_python.recipe.emailpassword.interfaces import WrongCredentialsError
+from supertokens_python.recipe.emailpassword.interfaces import WrongCredentialsError, PasswordPolicyViolationError
 from supertokens_python.recipe.session.asyncio import create_new_session
 from supertokens_python.recipe.session.interfaces import SessionContainer
 from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
@@ -114,6 +114,13 @@ async def _apply_additional_id_filters(gql_users: list[GraphQLUser], filter_by: 
 async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     """Update user details & metadata"""
 
+    logger.warning("\033[31m--------TEST-----------\033[0m")
+    logger.warning("--------TEST-----------")
+    logger.warning("--------TEST-----------")
+    logger.warning("--------TEST-----------")
+    logger.warning("--------TEST-----------")
+    print("test4")
+
     metadata_update = strawberry.asdict(user_input)
     user_id = str(metadata_update.pop("id"))
 
@@ -161,14 +168,26 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
         is_password_valid = await verify_credentials("public", str(user.emails[0]), str(user_input.current_password))
         if isinstance(is_password_valid, WrongCredentialsError):
             raise exceptions.WrongCredentialsError("Current password is incorrect")
+        
+        # tried the following but didn't seem to work, need to make sure that the new code is being run
+        try:
+            await update_email_or_password(
+                recipe_user_id=user.login_methods[0].recipe_user_id,
+                password=user_input.new_password,
+                tenant_id_for_password_policy=user.tenant_ids[0],
+            )
+            # Refresh user object after password update
+            user = await get_user(user_id)
+        except PasswordPolicyViolationError as e:
+            raise exceptions.PasswordRequirementsViolationError(e.message)
 
-        await update_email_or_password(
+        """ await update_email_or_password(
             recipe_user_id=user.login_methods[0].recipe_user_id,
             password=user_input.new_password,
             tenant_id_for_password_policy=user.tenant_ids[0],
         )
         # Refresh user object after password update
-        user = await get_user(user_id)
+        user = await get_user(user_id) """
 
     # Use the latest user object instead of fetching again
     user_metadata = await get_user_metadata(user_id)
