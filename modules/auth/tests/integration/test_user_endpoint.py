@@ -80,7 +80,7 @@ async def test_admin_get_users_query(client_admin: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_update_user_mutation(
-    client: AsyncClient,
+    client_user: AsyncClient,
     users,
 ):
     mutation = """
@@ -107,8 +107,6 @@ async def test_update_user_mutation(
             "firstName": "UpdatedFirstName",
             "lastName": "UpdatedLastName",
             "email": "updated@epfl.ch",
-            "currentPassword": "currentPassword123",
-            "newPassword": "newPassword123",
             "invited": True,
             "inviteStatus": "ACCEPTED",
             "inviterName": "John Doe",
@@ -116,7 +114,7 @@ async def test_update_user_mutation(
         }
     }
 
-    response = await client.post(
+    response = await client_user.post(
         f"{settings.API_STR}/graphql",
         json={"query": mutation, "variables": variables},
     )
@@ -127,6 +125,214 @@ async def test_update_user_mutation(
     assert not data.get("errors")
     user = data.get("data", {}).get("updateUser")
     assert user
+
+
+@pytest.mark.asyncio
+async def test_update_user_password_mutation(
+    client_user: AsyncClient,
+    users,
+):
+    mutation = """
+        mutation($userInput: UpdateUserInput!) {
+            updateUser(userInput: $userInput) {
+                id
+                firstName
+                lastName
+                email
+                timeJoined
+                organizationId
+                invited
+                inviteStatus
+                inviterName
+                roles
+            }
+        }
+    """
+
+    user_id = users[0].get("id")
+    variables = {
+        "userInput": {
+            "id": user_id,
+            "currentPassword": "currentPassword123",
+            "newPassword": "newSecurePassword456",
+        }
+    }
+
+    response = await client_user.post(
+        f"{settings.API_STR}/graphql",
+        json={"query": mutation, "variables": variables},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert not data.get("errors")
+    user = data.get("data", {}).get("updateUser")
+    assert user
+
+
+@pytest.mark.asyncio
+async def test_update_user_password_invalid_current_password(
+    client_user: AsyncClient,
+    users,
+):
+    mutation = """
+        mutation($userInput: UpdateUserInput!) {
+            updateUser(userInput: $userInput) {
+                id
+                firstName
+                lastName
+                email
+                timeJoined
+                organizationId
+                invited
+                inviteStatus
+                inviterName
+                roles
+            }
+        }
+    """
+
+    user_id = users[0].get("id")
+    variables = {
+        "userInput": {
+            "id": user_id,
+            "currentPassword": "wrongPassword",
+            "newPassword": "newSecurePassword456",
+        }
+    }
+
+    response = await client_user.post(
+        f"{settings.API_STR}/graphql",
+        json={"query": mutation, "variables": variables},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # Should return an error for wrong current password
+    assert data.get("errors")
+    assert "Current password is incorrect" in data.get("errors")[0].get("message")
+
+
+@pytest.mark.asyncio
+async def test_update_user_email_and_password_mutation(
+    client_user: AsyncClient,
+    users,
+):
+    mutation = """
+        mutation($userInput: UpdateUserInput!) {
+            updateUser(userInput: $userInput) {
+                id
+                firstName
+                lastName
+                email
+                timeJoined
+                organizationId
+                invited
+                inviteStatus
+                inviterName
+                roles
+            }
+        }
+    """
+
+    user_id = users[0].get("id")
+    variables = {
+        "userInput": {
+            "id": user_id,
+            "email": "mixedupdate@epfl.ch",
+            "currentPassword": "currentPassword123",
+            "newPassword": "mixedUpdatePassword789",
+        }
+    }
+
+    response = await client_user.post(
+        f"{settings.API_STR}/graphql",
+        json={"query": mutation, "variables": variables},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert not data.get("errors")
+    user = data.get("data", {}).get("updateUser")
+    assert user
+    assert user.get("email") == "mixedupdate@epfl.ch"
+
+
+@pytest.mark.asyncio
+async def test_user_with_pending_organization_id(
+    client_user: AsyncClient,
+    users,
+):
+    # First, update a user to have a pending organization ID
+    mutation = """
+        mutation($userInput: UpdateUserInput!) {
+            updateUser(userInput: $userInput) {
+                id
+                firstName
+                lastName
+                email
+                timeJoined
+                organizationId
+                invited
+                inviteStatus
+                inviterName
+                roles
+            }
+        }
+    """
+
+    user_id = users[0].get("id")
+    variables = {
+        "userInput": {
+            "id": user_id,
+            "organizationId": str(users[1].get("organization_id")),  # Use another user's org ID
+            "invited": True,
+            "inviteStatus": "PENDING",
+        }
+    }
+
+    response = await client_user.post(
+        f"{settings.API_STR}/graphql",
+        json={"query": mutation, "variables": variables},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert not data.get("errors")
+    user = data.get("data", {}).get("updateUser")
+    assert user
+
+    # Test that we can still query users with pending organization IDs
+    query = """
+        query {
+            users {
+                items {
+                    id
+                    email
+                    organizationId
+                    invited
+                    inviteStatus
+                }
+                count
+            }
+        }
+    """
+
+    response = await client_user.post(
+        f"{settings.API_STR}/graphql",
+        json={"query": query},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert not data.get("errors")
+    _users = data.get("data", {}).get("users", {}).get("items")
+    assert _users is not None
 
 
 @pytest.mark.asyncio

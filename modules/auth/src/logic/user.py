@@ -56,6 +56,10 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     if not user:
         raise EntityNotFound(f"No user found with the provided ID: {user_input.id}", "Auth")
 
+    # Store email before removing it from metadata_update
+    new_email = metadata_update.get("email")
+    current_email = str(user.emails[0]) if user.emails else None
+
     del metadata_update["current_password"]
     del metadata_update["new_password"]
     if metadata_update["organization_id"] is UNSET or metadata_update["organization_id"] is None:
@@ -76,9 +80,19 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     if metadata_update:
         await update_user_metadata(user_id, json.loads(metadata_update))
 
-    # Update password if current password and new password are provided
+    # Update email if provided and different from current
+    if new_email is not UNSET and new_email != current_email:
+        await update_email_or_password(
+            recipe_user_id=user.login_methods[0].recipe_user_id,
+            email=str(new_email),
+            tenant_id_for_password_policy=user.tenant_ids[0],
+        )
+        # Refresh user object after email update to ensure we have the latest email for password verification
+        user = await get_user(user_id)
 
+    # Update password if current password and new password are provided
     if user_input.current_password and user_input.new_password:
+        # Use the latest user object for password verification
         is_password_valid = await verify_credentials("public", str(user.emails[0]), str(user_input.current_password))
         if isinstance(is_password_valid, WrongCredentialsError):
             raise exceptions.WrongCredentialsError("Current password is incorrect")
@@ -88,10 +102,14 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
             password=user_input.new_password,
             tenant_id_for_password_policy=user.tenant_ids[0],
         )
+        # Refresh user object after password update
+        user = await get_user(user_id)
 
-    user_data = await get_users(FilterBy(equal={"id": user_id}))
+    # Use the latest user object instead of fetching again
+    user_metadata = await get_user_metadata(user_id)
+    updated_user = await GraphQLUser.from_supertokens(user, user_metadata.metadata)
 
-    return user_data[0]
+    return updated_user
 
 
 async def accept_invitation(user: AcceptInvitationInput) -> bool:
@@ -246,12 +264,20 @@ async def impersonate_user(request: Request, user_id: str) -> SessionContainer:
 
 @cached(ttl=60)
 async def get_user_by_id(user_id: str) -> User:
-    return await get_user(user_id)
+    logger.debug(f"Looking up user by ID: {user_id}")
+    user = await get_user(user_id)
+    if user is None:
+        logger.debug(f"No user found with ID: {user_id}")
+    else:
+        logger.debug(f"Found user with ID: {user_id}")
+    return user
 
 
 @cached(ttl=60)
 async def construct_graphql_user(user: User) -> GraphQLUser:
-    return await GraphQLUser.from_supertokens(user, (await get_user_metadata(user.id)).metadata)
+    metadata = (await get_user_metadata(user.id)).metadata
+    logger.debug(f"Constructing GraphQLUser for {user.id} with metadata: {metadata}")
+    return await GraphQLUser.from_supertokens(user, metadata)
 
 
 @cached(ttl=60)

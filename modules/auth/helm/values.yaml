@@ -60,4 +60,5 @@ smtp:
 supertokens:
   accessTokenValidity: 3600
   image:
-    tag: '11.0'
+    # https://github.com/supertokens/supertokens-docker-postgresql/tags
+    tag: '11.1'

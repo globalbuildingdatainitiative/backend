@@ -16,12 +16,14 @@ def get_origin(request: BaseRequest | None, user_context) -> str:
         else:
             if origin.endswith("gbdi.io"):
                 return origin
+            elif origin.endswith("epfl.ch"):
+                return origin
             elif origin.startswith("http://localhost"):
                 return origin
 
     # in case the origin is unknown or not set, we return a default
     # value which will be used for this request.
-    return "https://app.gbdi.io"
+    return settings.BACKEND_CORS_ORIGINS[0]
 
 
 def supertokens_init():

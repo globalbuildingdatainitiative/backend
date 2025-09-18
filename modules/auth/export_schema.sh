@@ -1,4 +1,4 @@
-#! /usr/bin/bash
+#!/usr/bin/env sh
 set -e
 
 export SERVER_NAME=Projects Test
