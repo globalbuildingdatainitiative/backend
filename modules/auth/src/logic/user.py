@@ -186,7 +186,7 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
             password=user_input.new_password,
             tenant_id_for_password_policy=user.tenant_ids[0],
         )
-        if isinstance(email_update_result, UnknownUserIdError):
+        if isinstance(password_update_result, UnknownUserIdError):
             raise exceptions.UnknownUserError("User not found")
         if isinstance(password_update_result, UpdateEmailOrPasswordEmailChangeNotAllowedError):
             raise exceptions.UpdateEmailOrPasswordError(password_update_result.reason)
