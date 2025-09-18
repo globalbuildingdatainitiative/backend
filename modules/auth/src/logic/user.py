@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from logging import getLogger, DEBUG, StreamHandler, Formatter
+from logging import getLogger
 from uuid import UUID
 
 import strawberry
