@@ -109,20 +109,8 @@ async def _apply_additional_id_filters(gql_users: list[GraphQLUser], filter_by: 
 
     return gql_users
 
-def mega_logger(msg: str):
-    for _ in range(5):
-        logger.critical("\033[31m--------BEGIN MEGA LOGGER-----------\033[0m")
-
-    logger.critical(msg)
-
-    for _ in range(5):
-        logger.critical("\033[31m--------END MEGA LOGGER-----------\033[0m")
-
-
 async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     """Update user details & metadata"""
-
-    mega_logger(f"Update user called with input: {user_input}")
 
     metadata_update = strawberry.asdict(user_input)
     user_id = str(metadata_update.pop("id"))
@@ -175,7 +163,6 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
 
     # Update password if current password and new password are provided
     if user_input.current_password and user_input.new_password:
-        mega_logger(f"Attempting to update password for user {user_id}")
         # Use the latest user object for password verification
         is_password_valid = await verify_credentials("public", str(user.emails[0]), str(user_input.current_password))
         if isinstance(is_password_valid, WrongCredentialsError):
