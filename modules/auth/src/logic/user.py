@@ -179,7 +179,7 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
             raise exceptions.UpdateEmailOrPasswordError(password_update_result.reason)
         if isinstance(password_update_result, PasswordPolicyViolationError):
             raise exceptions.PasswordRequirementsViolationError(password_update_result.failure_reason)
-
+        
         # Refresh user object after password update
         user = await get_user(user_id)
 
