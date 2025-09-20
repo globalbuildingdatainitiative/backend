@@ -10,7 +10,7 @@ async def test_filter_users_by_email_with_no_matches(users):
     filters = FilterBy(
         equal={
             "email": users[0].get("email"),
-            "organizationId": users[1].get("organization_id"),  # Different org ID
+            "organization_id": users[1].get("organization_id"),  # Different org ID
         }
     )
 
@@ -26,14 +26,14 @@ async def test_filter_users_by_email_contains_and_organization_id(users):
     # Get the email domain
     email_domain = users[0].get("email").split("@")[1]
 
-    filters = FilterBy(equal={"organizationId": users[0].get("organization_id")}, contains={"email": email_domain})
+    filters = FilterBy(equal={"organization_id": users[0].get("organization_id")}, contains={"email": email_domain})
 
     _users = await get_users(filters)
 
     # Should return users with the same organization ID and email domain
     assert len(_users) >= 1
     for user in _users:
-        assert user.organization_id == filters.equal.get("organizationId")
+        assert user.organization_id == filters.equal.get("organization_id")
         assert email_domain in user.email
 
 

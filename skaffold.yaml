@@ -3,6 +3,8 @@ kind: Config
 metadata:
   name: gbdi
 build:
+  local:
+    useBuildkit: true
   artifacts:
     - image: gbdi/router
       context: ./modules/router
@@ -198,10 +200,10 @@ portForward:
     namespace: auth
     port: 3567
 
-  - resourceType: service
-    resourceName: database-service
-    namespace: auth
-    port: 5432
+#  - resourceType: service
+#    resourceName: database-service
+#    namespace: auth
+#    port: 5432
 
   - resourceType: service
     resourceName: backend-service

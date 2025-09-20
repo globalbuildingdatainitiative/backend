@@ -28,7 +28,7 @@ async def filter_users(value: str, organization_id: str) -> list[UUID]:
     query = """
     query($value: String!, $organization_id: String!) {
         users {
-            items(filterBy: {contains: {data: $value, organization_id: $organization_id}}) {
+            items(filterBy: {contains: {name: $value, organization_id: $organization_id}}) {
                 id
             }
         }

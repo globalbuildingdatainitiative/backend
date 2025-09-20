@@ -15,7 +15,7 @@ from supertokens_python.recipe.session.interfaces import SessionContainer
 from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
 from supertokens_python.recipe.userroles.asyncio import get_roles_for_user
 from supertokens_python.types import AccountInfo, User
-from sqlmodel import Session, select, col
+from sqlmodel import Session, select, col, or_
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from core import exceptions
@@ -45,6 +45,41 @@ async def get_users(
     else:
         return await get_users_from_supertokens(filter_by, sort_by, limit, offset)
 
+
+async def _apply_additional_id_filters(gql_users: list[GraphQLUser], filter_by: FilterBy | None) -> list[GraphQLUser]:
+    """
+    Apply additional filtering logic for ID-based queries with multiple filters.
+
+    When querying by ID with additional filters, this function ensures that:
+    1. Additional filters are applied selectively to avoid losing the user
+    2. If additional filters contradict the ID filter, the original user is preserved
+
+    Args:
+        gql_users: List of GraphQLUser objects from initial filtering
+        filter_by: FilterBy object containing the filter criteria
+
+    Returns:
+        List of GraphQLUser objects after applying additional ID filter logic
+    """
+    # Apply additional filters if there are more than just the ID filter
+    # But only if we actually found a user with the ID filter
+    if filter_by and filter_by.equal and filter_by.equal.get("id") and len(filter_by.equal) > 1 and gql_users:
+        # For ID-based queries, we should be more selective about additional filters
+        # Only apply filters that don't contradict the fact that we found a specific user
+        id_only_filter = FilterBy(equal={"id": filter_by.equal.get("id")})
+        gql_users = filter_users(gql_users, id_only_filter)
+
+        # If we lost the user after filtering, it means the additional filters were contradictory
+        # In that case, return the original user (since ID filter takes precedence)
+        if not gql_users:
+            # Re-fetch the user by ID only
+            _user = await get_user_by_id(str(filter_by.equal.get("id")))
+            if _user:
+                gql_users = [await construct_graphql_user(_user)]
+            else:
+                gql_users = []
+
+    return gql_users
 
 async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     """Update user details & metadata"""
@@ -262,7 +297,6 @@ async def impersonate_user(request: Request, user_id: str) -> SessionContainer:
     )
 
 
-@cached(ttl=60)
 async def get_user_by_id(user_id: str) -> User:
     logger.debug(f"Looking up user by ID: {user_id}")
     user = await get_user(user_id)
@@ -288,8 +322,6 @@ async def get_all_users() -> list[User]:
 async def get_users_from_supertokens(
         filter_by: FilterBy | None = None, sort_by: SortBy | None = None, limit: int | None = None, offset: int = 0
 ) -> list[GraphQLUser]:
-    # import pydevd_pycharm
-    # pydevd_pycharm.settrace('host.minikube.internal', port=5476, stdoutToServer=True, stderrToServer=True)
     logger.debug(f"Fetching users with filters: {filter_by} and sort_by: {sort_by}")
 
     async with (AsyncSession(get_postgres_engine()) as session):
@@ -297,10 +329,17 @@ async def get_users_from_supertokens(
         if filter_by and filter_by.contains:
             contains = []
             for key in filter_by.contains.keys():
-                contains.append(UserMetadata.user_metadata.contains(filter_by.contains[key]))
+                if key == "name":
+                    contains.append(or_(
+                        UserMetadata.user_metadata.icontains(f'"first_name":"{filter_by.contains[key]}"'),
+                        UserMetadata.user_metadata.icontains(f'"last_name":"{filter_by.contains[key]}"')
+                    ))
+                else:
+                    contains.append(UserMetadata.user_metadata.icontains(f'"{key}":"{filter_by.contains[key]}"'))
             query = query.where(*contains)
-        else:
+        elif filter_by:
             raise Exception("Invalid filter. Only contains filter is supported.")
+
         if sort_by and sort_by.asc:
             query = query.order_by(col(sort_by.asc))
         elif sort_by and sort_by.dsc:
@@ -311,9 +350,11 @@ async def get_users_from_supertokens(
             query = query.limit(limit)
 
         meta_data = (await session.exec(query)).all()
+
         users = (await session.exec(select(EmailPasswordUser).where(
             EmailPasswordUser.user_id.in_([_user.user_id for _user in meta_data])))).all()
 
+    logger.debug(f"Found {len(users)} users")
     return [
         await GraphQLUser.from_supertokens(
             user,

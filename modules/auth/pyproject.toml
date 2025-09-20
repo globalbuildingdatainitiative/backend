@@ -7,10 +7,12 @@ dependencies = [
     "fastapi[all]",
     "uvicorn[standard]",
     "strawberry-graphql[fastapi,cli]>=0.134.0",
-    "supertokens-python==0.27.0",
+    "supertokens-python>=0.27.0",
     "pyyaml",
     "aiocache",
     "tenacity",
+    "sqlmodel>=0.0.25",
+    "asyncpg>=0.30.0",
 ]
 
 [tool.pytest.ini_options]
@@ -54,4 +56,5 @@ dev = [
     "pre-commit>=3.6.0",
     "ruff>=0.12.10",
     "mongomock-motor",
+    "psycopg2-binary>=2.9.10",
 ]

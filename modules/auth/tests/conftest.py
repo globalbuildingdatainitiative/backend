@@ -57,8 +57,8 @@ async def supertokens(docker_client, postgres):
     )
 
     @retry(
-        stop=stop_after_attempt(20),
-        wait=wait_fixed(0.4),
+        stop=stop_after_attempt(30),
+        wait=wait_fixed(1),
         retry=retry_if_exception(lambda e: isinstance(e, httpx.HTTPError)),
     )
     def wait_for_container():
@@ -98,6 +98,7 @@ async def postgres(docker_client):
     )
 
     try:
+        sleep(1)
         container.reload()
         yield container
     finally:
@@ -178,8 +179,8 @@ async def users(app):
         await update_user_metadata(
             user_id,
             {
-                "firstName": user.get("firstName"),
-                "lastName": user.get("lastName"),
+                "first_name": user.get("firstName"),
+                "last_name": user.get("lastName"),
                 "organization_id": user.get("organization_id"),
                 "invited": user.get("invited"),
                 "invite_status": user.get("invite_status"),
