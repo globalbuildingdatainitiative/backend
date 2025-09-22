@@ -51,7 +51,9 @@ async def filter_users(value: str, organization_id: str) -> list[UUID]:
             logger.error(f"Error in filter_users: {e.request} for users with: {value}")
             raise exc.MicroServiceConnectionError(f"Could not connect to {e.request.url}") from e
         if response.is_error:
-            raise exc.MicroServiceConnectionError(f"Could not receive data from {config.settings.ROUTER_URL}. Got {response.text}")
+            raise exc.MicroServiceConnectionError(
+                f"Could not receive data from {config.settings.ROUTER_URL}. Got {response.text}"
+            )
         data = response.json()
         if errors := data.get("errors"):
             raise exc.MicroServiceResponseError(f"Got error from {config.settings.ROUTER_URL}: {errors}")

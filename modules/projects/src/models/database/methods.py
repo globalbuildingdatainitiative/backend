@@ -69,7 +69,7 @@ async def group_projects(organization_id: UUID, group_by: str, limit: int, items
         await DBProject.find(
             Or(DBProject.contribution.organizationId == organization_id, DBProject.contribution.public == True),  # noqa: E712
             fetch_links=True,
-            allowDiskUse=True
+            allowDiskUse=True,
         )
         .aggregate(
             [
@@ -78,7 +78,7 @@ async def group_projects(organization_id: UUID, group_by: str, limit: int, items
                 {"$limit": limit},
             ],
             projection_model=ProjectGroup,
-            allowDiskUse=True
+            allowDiskUse=True,
         )
         .to_list()
     )

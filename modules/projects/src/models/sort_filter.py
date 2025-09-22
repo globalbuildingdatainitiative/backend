@@ -11,7 +11,6 @@ from strawberry.scalars import JSON
 from iso3166 import countries as iso_countries
 
 
-
 logger = getLogger("main")
 
 
@@ -39,7 +38,10 @@ def get_matching_country_codes(search_text: str) -> list[str]:
 
 
 async def filter_model_query(
-    model: Type[Document], filters: BaseFilter, query: FindMany[FindQueryResultType] | None = None, organization_id: UUID | None = None
+    model: Type[Document],
+    filters: BaseFilter,
+    query: FindMany[FindQueryResultType] | None = None,
+    organization_id: UUID | None = None,
 ) -> FindMany[FindQueryResultType]:
     if query is None:
         query = model.find_all(fetch_links=True)
@@ -66,6 +68,7 @@ async def filter_model_query(
                     continue
                 elif _field == "User":
                     from logic.federation import filter_users
+
                     user_ids = await filter_users(value, str(organization_id))
                     query = query.find({"userId": {"$in": user_ids}})
                     continue
