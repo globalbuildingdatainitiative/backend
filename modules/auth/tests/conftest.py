@@ -11,17 +11,20 @@ from docker.errors import NotFound
 from fastapi import FastAPI
 from fastapi.requests import Request
 from httpx import AsyncClient, ASGITransport
+from sqlmodel import SQLModel
 from supertokens_python import RecipeUserId
 from supertokens_python.asyncio import delete_user
 from supertokens_python.recipe.emailpassword.asyncio import sign_up
+from supertokens_python.recipe.emailpassword.interfaces import EmailAlreadyExistsError
 from supertokens_python.recipe.session.asyncio import create_new_session
-from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
 from supertokens_python.recipe.userroles.asyncio import add_role_to_user
 from tenacity import stop_after_attempt, wait_fixed, retry_if_exception, retry
 from time import sleep
 
 from core.config import settings
+from core.connection import get_postgres_engine
 from logic.roles import assign_role
+from logic.user import create_user_meta_data
 from models import SuperTokensUser, Role
 
 
@@ -53,7 +56,7 @@ async def supertokens(docker_client, postgres):
             "POSTGRESQL_DATABASE_NAME": settings.POSTGRES_DB,
             "POSTGRESQL_HOST": postgres.attrs.get("NetworkSettings").get("IPAddress"),
             "POSTGRESQL_PORT": settings.POSTGRES_PORT,
-        }
+        },
     )
 
     @retry(
@@ -105,6 +108,18 @@ async def postgres(docker_client):
         container.stop()
 
 
+@pytest.fixture()
+async def db(postgres) -> AsyncGenerator[Any, Any]:
+    engine = get_postgres_engine()
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
+
+    yield engine
+
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.drop_all)
+
+
 @pytest.fixture(scope="session")
 async def app(supertokens) -> FastAPI:
     from main import app
@@ -118,15 +133,25 @@ async def app(supertokens) -> FastAPI:
         yield app
 
 
-@pytest.fixture(scope="session")
-async def create_user(app) -> SuperTokensUser:
+@pytest.fixture
+async def create_user(app, db) -> AsyncGenerator[SuperTokensUser, Any]:
     response = await sign_up("public", "my@email.com", "currentPassword123")
-    yield SuperTokensUser(id=UUID(response.user.id), organization_id=uuid4())
+    await create_user_meta_data(
+        response.user.id, {"email": response.user.emails[0], "time_joined": response.user.time_joined}
+    )
+
+    _user = SuperTokensUser(id=UUID(response.user.id), organization_id=uuid4())
+    yield _user
+
+    await delete_user(str(_user.id))
 
 
 @pytest.fixture
-async def create_admin_user(app) -> SuperTokensUser:
+async def create_admin_user(app, db) -> AsyncGenerator[SuperTokensUser, Any]:
     response = await sign_up("public", "admin@email.com", "currentPassword123")
+    await create_user_meta_data(
+        response.user.id, {"email": response.user.emails[0], "time_joined": response.user.time_joined}
+    )
     _user = SuperTokensUser(id=UUID(response.user.id), organization_id=uuid4())
     await assign_role(_user.id, Role.ADMIN)
 
@@ -136,7 +161,7 @@ async def create_admin_user(app) -> SuperTokensUser:
 
 
 @pytest.fixture()
-async def client_admin(app: FastAPI, client_unauthenticated, create_admin_user) -> Iterator[AsyncClient]:
+async def client_admin(app: FastAPI, client_unauthenticated, create_admin_user) -> AsyncGenerator[AsyncClient, None]:
     """Async server client that handles lifespan and teardown"""
 
     response = await client_unauthenticated.get(f"/login/{create_admin_user.id}")
@@ -147,7 +172,7 @@ async def client_admin(app: FastAPI, client_unauthenticated, create_admin_user) 
 
 
 @pytest.fixture()
-async def client(app: FastAPI, client_unauthenticated, create_user) -> Iterator[AsyncClient]:
+async def client(app: FastAPI, client_unauthenticated, create_user) -> AsyncGenerator[AsyncClient, None]:
     """Async server client that handles lifespan and teardown"""
 
     response = await client_unauthenticated.get(f"/login/{create_user.id}")
@@ -170,21 +195,26 @@ async def client_user(app: FastAPI, client_unauthenticated, users) -> Iterator[A
 
 
 @pytest.fixture
-async def users(app):
+async def users(app, db):
     created_users = []
     users = json.loads((Path(__file__).parent / "datafixtures" / "users.json").read_text())
     for user in users:
         response = await sign_up("public", user.get("email"), "currentPassword123")
+        if isinstance(response, EmailAlreadyExistsError):
+            continue
         user_id = response.user.id
-        await update_user_metadata(
+        await create_user_meta_data(
             user_id,
             {
                 "first_name": user.get("firstName"),
                 "last_name": user.get("lastName"),
                 "organization_id": user.get("organization_id"),
+                "pending_org_id": user.get("pending_org_id"),
                 "invited": user.get("invited"),
                 "invite_status": user.get("invite_status"),
                 "inviter_name": user.get("inviter_name"),
+                "time_joined": response.user.time_joined,
+                "email": user.get("email"),
             },
         )
         for role in user.get("roles", []):

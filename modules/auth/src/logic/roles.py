@@ -1,7 +1,6 @@
 from logging import getLogger
 from uuid import UUID
 
-# from aiocache import cached
 from supertokens_python.recipe.userroles.asyncio import (
     get_roles_for_user,
     add_role_to_user,
@@ -100,7 +99,7 @@ async def remove_role(user_id: str | UUID, role: Role):
     if isinstance(response, UnknownRoleError):
         logger.warning(f"Role: {role.value} does not exist")
         raise EntityNotFound(f"Role: {role.value} does not exist", "Auth")
-    elif response.did_user_have_role is False:
+    elif not response.did_user_have_role:
         logger.info(f"User: {user_id} did have role of {role.value}.")
     else:
         logger.info(f"Successfully removed role of {role.value} to user: {user_id}.")

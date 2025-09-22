@@ -42,8 +42,6 @@ async def get_organizations(
 async def create_organizations_mutation(
     organizations: list[InputOrganization], current_user: SuperTokensUser
 ) -> list[DBOrganization]:
-    from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
-
     logger.info(
         f"Creating organizations for user: {current_user.id} with organization_id: {current_user.organization_id}"
     )
@@ -71,8 +69,10 @@ async def create_organizations_mutation(
 
     # Only update user metadata and assign role if at least one organization was created
     if new_organizations:
+        from logic.federation import update_user
+
         logger.info(f"Updating user metadata for user {current_user.id} with organization ID {new_organizations[0].id}")
-        await update_user_metadata(str(current_user.id), {"organization_id": str(new_organizations[0].id)})
+        await update_user(current_user.id, {"organizationId": str(new_organizations[0].id)})
         await assign_role(current_user.id, Role.OWNER)
 
     return new_organizations

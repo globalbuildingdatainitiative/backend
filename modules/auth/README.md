@@ -100,6 +100,11 @@ uv run pytest tests/
 ./export_schema.sh
 ```
 
+### Create Database Migration
+```shell
+alembic revision --autogenerate
+```
+
 ## Running
 
 The module should be run using Skaffold and the configuration file in the root directory.

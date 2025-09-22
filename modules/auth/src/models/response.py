@@ -47,10 +47,10 @@ class GraphQLResponse[T]:
                 org_id = get_user(info).organization_id or ""
                 logger.info(f"filters {filters}")
 
-                if filters.contains and not filters.contains.get("organization_id"):
-                    filters.contains["organization_id"] = org_id
-                elif filters.contains == strawberry.UNSET:
-                    filters.contains = {"organization_id": org_id}
+                if filters.equal and not filters.equal.get("organization_id") and org_id != "":
+                    filters.equal["organization_id"] = org_id
+                elif filters.equal == strawberry.UNSET and org_id != "":
+                    filters.equal = {"organization_id": org_id}
 
                 users = await get_users(filters, sort_by, limit, offset)
                 logger.info(f"Got {len(users)} users")

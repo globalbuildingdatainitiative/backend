@@ -1,3 +1,4 @@
+
 import pytest
 
 from logic import (
@@ -63,7 +64,7 @@ async def test_get_organizations_with_limit_and_offset(organizations):
 
 
 @pytest.mark.asyncio
-async def test_create_organizations(create_user):
+async def test_create_organizations(create_user, mock_update_user_metadata):
     """Tests creating a new organization"""
 
     name = "New Organization"

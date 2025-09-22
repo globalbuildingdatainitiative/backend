@@ -200,10 +200,11 @@ portForward:
     namespace: auth
     port: 3567
 
-#  - resourceType: service
-#    resourceName: database-service
-#    namespace: auth
-#    port: 5432
+  - resourceType: service
+    resourceName: database-service
+    namespace: auth
+    port: 5432
+    localPort: 5434
 
   - resourceType: service
     resourceName: backend-service

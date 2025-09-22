@@ -1,22 +1,6 @@
-from typing import Any
-
 import pytest
+
 from models import DBOrganization, CountryCodes, StakeholderEnum, OrganizationMetaDataModel
-import supertokens_python.recipe.usermetadata.asyncio
-
-
-@pytest.fixture(scope="session")
-def mock_update_user_metadata(session_mocker):
-    async def fake_update_user_metadata(
-        user_id: str, metadata_update: dict[str, Any], user_context: dict[str, Any] | None = None
-    ):
-        pass
-
-    session_mocker.patch.object(
-        supertokens_python.recipe.usermetadata.asyncio,
-        "update_user_metadata",
-        fake_update_user_metadata,
-    )
 
 
 @pytest.fixture()

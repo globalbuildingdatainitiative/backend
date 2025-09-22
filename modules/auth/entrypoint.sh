@@ -4,6 +4,9 @@ set -e
 # Wait for database to be online
 /app/.venv/bin/python /app/src/initialize.py
 
+# Run migrations
+/app/.venv/bin/python -m alembic upgrade head
+
 # Start FastAPI
 cd /app/src
 

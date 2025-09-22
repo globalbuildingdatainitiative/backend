@@ -54,7 +54,7 @@ class GraphQLUser:
         effective_org_id = metadata.get("organization_id") if not invited else metadata.get("pending_org_id")
 
         return cls(
-            id=UUID(user.id if hasattr(user, 'id') else user.user_id),
+            id=UUID(user.id if hasattr(user, "id") else user.user_id),
             email=user.emails[0] if hasattr(user, "emails") else user.email,
             time_joined=datetime.fromtimestamp(round(user.time_joined / 1000)),
             first_name=metadata.get("first_name") or metadata.get("firstName"),
@@ -63,7 +63,30 @@ class GraphQLUser:
             invited=invited,
             invite_status=InviteStatus(metadata.get("invite_status", InviteStatus.NONE)),
             inviter_name=metadata.get("inviter_name"),
-            roles=[Role(role) for role in (await get_roles_for_user("public", user.id if hasattr(user, 'id') else user.user_id)).roles],
+            roles=[
+                Role(role)
+                for role in (await get_roles_for_user("public", user.id if hasattr(user, "id") else user.user_id)).roles
+            ],
+        )
+
+    @classmethod
+    async def from_sqlmodel(cls, user: "UserMetadata") -> Self:
+        invited = user.meta_data.get("invited", False)
+        effective_org_id = (
+            user.meta_data.get("organization_id") if not invited else user.meta_data.get("pending_org_id")
+        )
+
+        return cls(
+            id=UUID(user.id),
+            email=user.meta_data.get("email"),
+            time_joined=datetime.fromtimestamp(round(user.meta_data.get("time_joined") / 1000)),
+            first_name=user.meta_data.get("first_name"),
+            last_name=user.meta_data.get("last_name"),
+            organization_id=effective_org_id,
+            invited=invited,
+            invite_status=InviteStatus(user.meta_data.get("invite_status", InviteStatus.NONE)),
+            inviter_name=user.meta_data.get("inviter_name"),
+            roles=[Role(role) for role in (await get_roles_for_user("public", user.id)).roles],
         )
 
     @classmethod
@@ -117,17 +140,6 @@ class AcceptInvitationInput:
     new_password: str | None = None
 
 
-class EmailPasswordUser(SQLModel, table=True):
-    __tablename__ = "emailpassword_users"
-    app_id: str = Field(primary_key=True)
-    user_id: str = Field(primary_key=True)
-    email: str
-    # password_hash: str
-    time_joined: int
-
-
 class UserMetadata(SQLModel, table=True):
-    __tablename__ = "user_metadata"
-    app_id: str = Field(primary_key=True)
-    user_id: str = Field(primary_key=True)
-    user_metadata: dict = Field(default=dict, sa_column=Column(JSON))
+    id: str = Field(primary_key=True)
+    meta_data: dict = Field(default=dict, sa_column=Column(JSON))

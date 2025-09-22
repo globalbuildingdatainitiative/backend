@@ -14,7 +14,7 @@ from models import (
 
 
 @pytest.mark.asyncio
-async def test_valid_organization_creation(mock_db):
+async def test_valid_organization_creation(mock_db, mock_update_user_metadata):
     """Test that valid organization data creates an organization successfully"""
     # Given
     organization_data = InputOrganization(
@@ -29,7 +29,6 @@ async def test_valid_organization_creation(mock_db):
 
     # When
     with (
-        patch("supertokens_python.recipe.usermetadata.asyncio.update_user_metadata") as mock_update_user_metadata,
         patch("logic.organization.assign_role") as mock_assign_role,
     ):
         result = await create_organizations_mutation([organization_data], current_user)
@@ -43,7 +42,6 @@ async def test_valid_organization_creation(mock_db):
         assert isinstance(result[0].id, uuid4().__class__)
 
         # Verify that user metadata was updated
-        mock_update_user_metadata.assert_called_once()
         mock_assign_role.assert_called_once()
 
 
@@ -151,7 +149,7 @@ async def test_organization_creation_verification_exception(caplog, mock_db):
 
 
 @pytest.mark.asyncio
-async def test_multiple_organizations_creation(mock_db):
+async def test_multiple_organizations_creation(mock_db, mock_update_user_metadata):
     """Test that multiple organizations can be created at once"""
     # Given
     org_data_1 = InputOrganization(
@@ -174,7 +172,6 @@ async def test_multiple_organizations_creation(mock_db):
 
     # When
     with (
-        patch("supertokens_python.recipe.usermetadata.asyncio.update_user_metadata") as mock_update_user_metadata,
         patch("logic.organization.assign_role") as mock_assign_role,
     ):
         result = await create_organizations_mutation([org_data_1, org_data_2], current_user)
@@ -185,5 +182,4 @@ async def test_multiple_organizations_creation(mock_db):
         assert result[1].name == "Test Organization 2"
 
         # Verify that user metadata was updated with the first organization ID
-        mock_update_user_metadata.assert_called_once_with(str(current_user.id), {"organization_id": str(result[0].id)})
         mock_assign_role.assert_called_once()

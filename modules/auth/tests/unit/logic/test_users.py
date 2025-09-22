@@ -33,7 +33,7 @@ async def test_filter_users_by_organisation_id(users):
     _users = await get_users(filters)
 
     assert len(_users) == 2
-    assert _users[0].organization_id == filters.contains.get("data")
+    assert _users[0].organization_id == filters.contains.get("organization_id")
 
 
 @pytest.mark.asyncio
@@ -48,7 +48,9 @@ async def test_filter_users_by_email(users):
 
 @pytest.mark.asyncio
 async def test_filter_users_by_multiple_keys(users):
-    filters = FilterBy(contains={"name": users[0].get("firstName").lower(), "organization_id": users[0].get("organization_id")})
+    filters = FilterBy(
+        contains={"name": users[0].get("firstName").lower(), "organization_id": users[0].get("organization_id")}
+    )
 
     _users = await get_users(filters)
 

@@ -10,7 +10,7 @@ async def test_filter_users_by_email_with_no_matches(users):
     filters = FilterBy(
         equal={
             "email": users[0].get("email"),
-            "organization_id": users[1].get("organization_id"),  # Different org ID
+            "organization_id": users[2].get("organization_id"),  # Different org ID
         }
     )
 

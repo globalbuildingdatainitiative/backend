@@ -66,7 +66,7 @@ class Settings(BaseSettings):
             password=info.data.get("POSTGRES_PASSWORD"),
             host=info.data.get("POSTGRES_HOST"),
             port=info.data.get("POSTGRES_PORT"),
-            path=info.data.get("POSTGRES_DB")
+            path=info.data.get("POSTGRES_DB"),
         )
 
     @classmethod

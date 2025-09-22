@@ -17,6 +17,7 @@ from supertokens_python.recipe.session.asyncio import create_new_session
 from supertokens_python.recipe.userroles.asyncio import create_new_role_or_add_permissions
 from tenacity import stop_after_attempt, wait_fixed, retry, retry_if_exception
 
+import logic
 from core.config import settings
 from core.connection import health_check_mongo, create_mongo_client
 from models import SuperTokensUser
@@ -66,7 +67,7 @@ async def supertokens(docker_client):
         pass
 
     container = docker_client.containers.run(
-        image="registry.supertokens.io/supertokens/supertokens-postgresql:10.1",
+        image="supertokens/supertokens-postgresql:11.0",
         ports={"3567": "3569"},
         name="supertokens_organization",
         detach=True,
@@ -153,3 +154,15 @@ async def client_unauthenticated(app: FastAPI, database) -> Iterator[AsyncClient
             yield _client
         except Exception as exc:
             print(exc)
+
+
+@pytest.fixture(scope="session")
+def mock_update_user_metadata(session_mocker):
+    async def fake_update_user_metadata(uid: str, metadata_update: dict):
+        pass
+
+    session_mocker.patch.object(
+        logic.federation,
+        "update_user",
+        fake_update_user_metadata,
+    )
