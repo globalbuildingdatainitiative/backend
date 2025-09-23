@@ -216,6 +216,93 @@ async def test_update_user_password_invalid_current_password(
 
 
 @pytest.mark.asyncio
+async def test_update_user_email_already_in_use(
+    client_user: AsyncClient,
+    users,
+):
+    mutation = """
+        mutation($userInput: UpdateUserInput!) {
+            updateUser(userInput: $userInput) {
+                id
+                firstName
+                lastName
+                email
+                timeJoined
+                organizationId
+                invited
+                inviteStatus
+                inviterName
+                roles
+            }
+        }
+    """
+
+    user_id = users[0].get("id")
+    variables = {
+        "userInput": {
+            "id": user_id,
+            "email": "john@company.com",  # This email is already in use as defined in /modules/auth/tests/datafixtures/users.json
+        }
+    }
+
+    response = await client_user.post(
+        f"{settings.API_STR}/graphql",
+        json={"query": mutation, "variables": variables},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # Should return an error for wrong current password
+    assert data.get("errors")
+    assert "Email is already in use" in data.get("errors")[0].get("message")
+
+
+@pytest.mark.asyncio
+async def test_update_user_password_invalid_new_password(
+    client_user: AsyncClient,
+    users,
+):
+    mutation = """
+        mutation($userInput: UpdateUserInput!) {
+            updateUser(userInput: $userInput) {
+                id
+                firstName
+                lastName
+                email
+                timeJoined
+                organizationId
+                invited
+                inviteStatus
+                inviterName
+                roles
+            }
+        }
+    """
+
+    user_id = users[0].get("id")
+    variables = {
+        "userInput": {
+            "id": user_id,
+            "currentPassword": "currentPassword123",
+            "newPassword": "qwe",
+        }
+    }
+
+    response = await client_user.post(
+        f"{settings.API_STR}/graphql",
+        json={"query": mutation, "variables": variables},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # Should return an error for violation of password policy
+    assert data.get("errors")
+    assert "Password must" in data.get("errors")[0].get("message")
+
+
+@pytest.mark.asyncio
 async def test_update_user_email_and_password_mutation(
     client_user: AsyncClient,
     users,

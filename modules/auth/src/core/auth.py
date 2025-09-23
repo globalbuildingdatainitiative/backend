@@ -346,7 +346,7 @@ def functions_override(original_impl: RecipeInterface):
 
     # Prevents using the fake password (Initially assigned to invited users)
     async def update_email_or_password(
-        user_id: RecipeUserId,
+        recipe_user_id: RecipeUserId,  # seems to be called as keyword arguments and not positional, so it has to be called recipe_user_id and not user_id
         email: Union[str, None],
         password: Union[str, None],
         apply_password_policy: Union[bool, None],
@@ -357,7 +357,7 @@ def functions_override(original_impl: RecipeInterface):
             raise Exception("Please use a different password")
 
         return await og_update_email_or_password(
-            user_id, email, password, apply_password_policy, tenant_id_for_password_policy, user_context
+            recipe_user_id, email, password, apply_password_policy, tenant_id_for_password_policy, user_context
         )
 
     # Prevents signing in with Fake password (User must change the password before signing in)

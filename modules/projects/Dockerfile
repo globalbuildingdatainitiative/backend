@@ -22,6 +22,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 FROM python:3.12-slim
 
 # Set environment
+ENV PATH="/app/.venv/bin/:${PATH}"
 ENV PYTHONPATH="/app/src"
 
 # Create fastapi user

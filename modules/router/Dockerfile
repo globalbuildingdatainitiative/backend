@@ -22,6 +22,9 @@ COPY --chown=rover:rover ./schemas/auth/schema.graphql /app/schemas/auth.graphql
 COPY --chown=rover:rover ./schemas/projects/schema.graphql /app/schemas/projects.graphql
 COPY --chown=rover:rover ./schemas/organization/schema.graphql /app/schemas/organization.graphql
 
+# Not in use yet, kept here as a comment if needed in the future to harmonize with the docker files in /auth, /projects and /organization
+# ENV PATH="/app/.venv/bin/:${PATH}"
+
 # Add Rover to PATH
 ENV PATH=/app/.rover/bin:$PATH
 

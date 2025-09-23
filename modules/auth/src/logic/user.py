@@ -12,7 +12,13 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from strawberry import UNSET
 from supertokens_python.asyncio import get_user, get_users_newest_first
 from supertokens_python.recipe.emailpassword.asyncio import update_email_or_password, verify_credentials
-from supertokens_python.recipe.emailpassword.interfaces import WrongCredentialsError
+from supertokens_python.recipe.emailpassword.interfaces import (
+    WrongCredentialsError,
+    PasswordPolicyViolationError,
+    UpdateEmailOrPasswordEmailChangeNotAllowedError,
+    EmailAlreadyExistsError,
+    UnknownUserIdError,
+)
 from supertokens_python.recipe.session.asyncio import create_new_session
 from supertokens_python.recipe.session.interfaces import SessionContainer
 from supertokens_python.recipe.usermetadata.asyncio import (
@@ -176,12 +182,22 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
 
     # Update email if provided and different from current
     if new_email is not UNSET and new_email != current_email:
-        await update_email_or_password(
+        email_update_result = await update_email_or_password(
             recipe_user_id=user.login_methods[0].recipe_user_id,
             email=str(new_email),
             tenant_id_for_password_policy=user.tenant_ids[0],
         )
+
         await update_user_metadata(user_id, {"email": str(new_email)})
+
+        if isinstance(email_update_result, UnknownUserIdError):
+            raise exceptions.UnknownUserError("User not found")
+        if isinstance(email_update_result, UpdateEmailOrPasswordEmailChangeNotAllowedError):
+            raise exceptions.UpdateEmailOrPasswordError(email_update_result.reason)
+        if isinstance(email_update_result, EmailAlreadyExistsError):
+            raise exceptions.EmailAlreadyInUseError("Email is already in use by another user")
+
+
         # Refresh user object after email update to ensure we have the latest email for password verification
         user = await get_user(user_id)
 
@@ -192,11 +208,18 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
         if isinstance(is_password_valid, WrongCredentialsError):
             raise exceptions.WrongCredentialsError("Current password is incorrect")
 
-        await update_email_or_password(
+        password_update_result = await update_email_or_password(
             recipe_user_id=user.login_methods[0].recipe_user_id,
             password=user_input.new_password,
             tenant_id_for_password_policy=user.tenant_ids[0],
         )
+        if isinstance(password_update_result, UnknownUserIdError):
+            raise exceptions.UnknownUserError("User not found")
+        if isinstance(password_update_result, UpdateEmailOrPasswordEmailChangeNotAllowedError):
+            raise exceptions.UpdateEmailOrPasswordError(password_update_result.reason)
+        if isinstance(password_update_result, PasswordPolicyViolationError):
+            raise exceptions.PasswordRequirementsViolationError(password_update_result.failure_reason)
+
         # Refresh user object after password update
         user = await get_user(user_id)
 
