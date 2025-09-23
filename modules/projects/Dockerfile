@@ -22,9 +22,10 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 FROM python:3.12-slim
 
 # Set environment
+ARG BUILD_VERSION
+ENV BUILD_VERSION $BUILD_VERSION
 ENV PATH="/app/.venv/bin/:${PATH}"
-ENV PYTHONPATH="/app/src"
-
+ENV PYTHONPATH "${PYTHONPATH}:/app/src"
 # Create fastapi user
 RUN useradd --home-dir /app --create-home fastapi
 USER fastapi

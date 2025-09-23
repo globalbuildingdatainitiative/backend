@@ -38,6 +38,7 @@ backend:
   secretName: backend-secret
   authApiKey: ""
   authConnectionUri: ""
+  routerUrl: "http://localhost:7000/graphql"
   logLevel: "INFO"
 
 

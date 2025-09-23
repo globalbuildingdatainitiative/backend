@@ -3,6 +3,8 @@ kind: Config
 metadata:
   name: gbdi
 build:
+  local:
+    useBuildkit: true
   artifacts:
     - image: gbdi/router
       context: ./modules/router
@@ -172,6 +174,7 @@ manifests:
           backend.serverName: "Projects"
           backend.authApiKey: fakeKey
           backend.authConnectionUri: http://supertokens-service.auth:3567
+          backend.routerUrl: "http://router-service.router:7000"
           backend.logLevel: "DEBUG"
           appDomain: "localhost:8000"
           appProtocol: "http"
@@ -196,6 +199,12 @@ portForward:
     resourceName: supertokens-service
     namespace: auth
     port: 3567
+
+  - resourceType: service
+    resourceName: database-service
+    namespace: auth
+    port: 5432
+    localPort: 5434
 
   - resourceType: service
     resourceName: backend-service

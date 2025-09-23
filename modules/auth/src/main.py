@@ -14,7 +14,7 @@ from core.auth import supertokens_init
 from core.config import settings
 from logic.roles import create_roles
 from routes import graphql_app
-from routes.heatlth import health_router
+from routes.health import health_router
 
 log_config = yaml.safe_load((Path(__file__).parent / "logging.yaml").read_text())
 log_config["loggers"]["main"]["level"] = settings.LOG_LEVEL

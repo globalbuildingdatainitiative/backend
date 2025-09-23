@@ -52,7 +52,7 @@ async def test_users_query(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_admin_get_users_query(client_admin: AsyncClient):
+async def test_admin_get_users_query(client_admin: AsyncClient, users):
     query = """
         query {
             users {

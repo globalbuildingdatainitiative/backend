@@ -1,12 +1,16 @@
 import json
+from copy import deepcopy
 from datetime import datetime
 from logging import getLogger
 from uuid import UUID
 
 import strawberry
+from aiocache import cached
 from fastapi.requests import Request
+from sqlmodel import select, col, or_
+from sqlmodel.ext.asyncio.session import AsyncSession
 from strawberry import UNSET
-from supertokens_python.asyncio import get_user, get_users_newest_first, list_users_by_account_info
+from supertokens_python.asyncio import get_user, get_users_newest_first
 from supertokens_python.recipe.emailpassword.asyncio import update_email_or_password, verify_credentials
 from supertokens_python.recipe.emailpassword.interfaces import (
     WrongCredentialsError,
@@ -17,15 +21,21 @@ from supertokens_python.recipe.emailpassword.interfaces import (
 )
 from supertokens_python.recipe.session.asyncio import create_new_session
 from supertokens_python.recipe.session.interfaces import SessionContainer
-from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
+from supertokens_python.recipe.usermetadata.asyncio import (
+    update_user_metadata as _update_user_metadata,
+    get_user_metadata,
+)
 from supertokens_python.recipe.userroles.asyncio import get_roles_for_user
-from supertokens_python.types import AccountInfo, User
+from supertokens_python.types import User
 
 from core import exceptions
+from core.connection import get_postgres_engine
 from core.exceptions import EntityNotFound
 from logic.roles import assign_role, remove_role
+from logic.utils import to_snake
 from models import GraphQLUser, UpdateUserInput, InviteStatus, Role, AcceptInvitationInput
 from models.sort_filter import FilterBy, SortBy
+from models.user import UserMetadata
 
 logger = getLogger("main")
 
@@ -37,48 +47,65 @@ async def get_users(
 
     logger.debug(f"Fetching users with filters: {filter_by} and sort_by: {sort_by}")
 
-    # Log the individual filter components for debugging
-    if filter_by and filter_by.equal:
-        logger.debug(f"Equal filters: {filter_by.equal}")
-
-    gql_users = []
-
-    # Handle special case filters first
-    if filter_by and filter_by.equal:
-        # ID filter - direct lookup (prioritize ID filter even with other filters)
-        if filter_by.equal.get("id"):
-            _user = await get_user_by_id(str(filter_by.equal.get("id")))
-            if _user:
-                gql_users = [await construct_graphql_user(_user)]
-            else:
-                gql_users = []
-        # Email filter - use SuperTokens account info lookup (only when it's the sole filter)
-        elif filter_by.equal.get("email") and len(filter_by.equal) == 1:
-            users = await list_users_by_account_info("public", AccountInfo(email=filter_by.equal.get("email")))
-            gql_users = [await construct_graphql_user(_user) for _user in users]
-        # Combined filters or other filters - fetch all users and apply post-filtering
-        else:
-            gql_users = [await construct_graphql_user(_user) for _user in await get_all_users()]
-            gql_users = filter_users(gql_users, filter_by)
-    else:
-        # No equal filters - fetch all users and apply post-filtering
-        gql_users = [await construct_graphql_user(_user) for _user in await get_all_users()]
+    async with AsyncSession(get_postgres_engine()) as session:
+        query = select(UserMetadata)
 
         if filter_by:
-            gql_users = filter_users(gql_users, filter_by)
+            for _filter, fields in filter_by.items():
+                if not fields:
+                    continue
 
-    # Apply additional filters handling for ID-based queries with multiple filters
-    gql_users = await _apply_additional_id_filters(gql_users, filter_by)
+                for _field, value in fields.items():
+                    if not _field or value is UNSET:
+                        continue
+                    _field = to_snake(_field)
+                    if isinstance(value, UUID):
+                        value = str(value)
 
-    if sort_by:
-        gql_users = sort_users(gql_users, sort_by)
+                    if _filter == "contains":
+                        if _field == "name":
+                            query = query.where(
+                                or_(_get_field("first_name").icontains(value), _get_field("last_name").icontains(value))
+                            )
+                        else:
+                            query = query.where(_get_field(_field).icontains(value))
+                    elif _filter == "equal":
+                        query = query.where(_get_field(_field) == value)
+                    elif _filter == "not_equal":
+                        query = query.where(_get_field(_field) != value)
+                    elif _filter == "_in":
+                        query = query.where(_get_field(_field).in_(value))
+                    elif _filter == "gt":
+                        query = query.where(_get_field(_field) > value)
+                    elif _filter == "gte":
+                        query = query.where(_get_field(_field) >= value)
+                    elif _filter == "lt":
+                        query = query.where(_get_field(_field) < value)
+                    elif _filter == "lte":
+                        query = query.where(_get_field(_field) <= value)
+                    elif _filter == "is_true" and value is not None:
+                        query = query.where(_get_field(_field) is True)
 
-    if limit is not None:
-        gql_users = gql_users[offset : offset + limit]
+        if sort_by and sort_by.asc:
+            query = query.order_by(col(sort_by.asc))
+        elif sort_by and sort_by.dsc:
+            query = query.order_by(col(sort_by.dsc).desc())
+        if offset:
+            query = query.offset(offset)
+        if limit:
+            query = query.limit(limit)
+
+        users = (await session.exec(query)).all()
+
+    logger.debug(f"Found {len(users)} users")
+    return [await GraphQLUser.from_sqlmodel(user) for user in users]
+
+
+def _get_field(field):
+    if field == "id":
+        return UserMetadata.id
     else:
-        gql_users = gql_users[offset:]
-
-    return gql_users
+        return UserMetadata.meta_data[field].astext
 
 
 async def _apply_additional_id_filters(gql_users: list[GraphQLUser], filter_by: FilterBy | None) -> list[GraphQLUser]:
@@ -143,6 +170,8 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     def custom_serializer(obj):
         if isinstance(obj, InviteStatus):
             return obj.value
+        if isinstance(obj, UUID):
+            return str(obj)
 
     metadata_update = json.dumps(
         {key: value for key, value in metadata_update.items() if value is not UNSET}, default=custom_serializer
@@ -164,7 +193,7 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
             raise exceptions.UpdateEmailOrPasswordError(email_update_result.reason)
         if isinstance(email_update_result, EmailAlreadyExistsError):
             raise exceptions.EmailAlreadyInUseError("Email is already in use by another user")
-
+        await update_user_metadata(user_id, {"email": str(new_email)})
         # Refresh user object after email update to ensure we have the latest email for password verification
         user = await get_user(user_id)
 
@@ -356,11 +385,51 @@ async def get_user_by_id(user_id: str) -> User:
     return user
 
 
+@cached(ttl=60)
 async def construct_graphql_user(user: User) -> GraphQLUser:
     metadata = (await get_user_metadata(user.id)).metadata
     logger.debug(f"Constructing GraphQLUser for {user.id} with metadata: {metadata}")
     return await GraphQLUser.from_supertokens(user, metadata)
 
 
+@cached(ttl=60)
 async def get_all_users() -> list[User]:
-    return (await get_users_newest_first("public", limit=500)).users
+    return (await get_users_newest_first("public", limit=1000)).users
+
+
+async def update_user_metadata(user_id: str, metadata: dict):
+    logger.debug(f"Updating user metadata for {user_id}")
+    async with AsyncSession(get_postgres_engine()) as session:
+        user = await session.get(UserMetadata, user_id)
+        if not user:
+            raise EntityNotFound(f"User metadata not found for user_id: {user_id}", "Auth")
+        _metadata = deepcopy(user.meta_data)
+
+        for key, value in metadata.items():
+            if value is None:
+                try:
+                    del _metadata[key]
+                except KeyError:
+                    continue
+            else:
+                _metadata[key] = value
+
+        user.meta_data = _metadata
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+
+    await _update_user_metadata(user_id, metadata)
+    return metadata
+
+
+async def create_user_meta_data(user_id: str, meta_data: dict) -> UserMetadata:
+    logger.info(f"Creating user metadata for {user_id}")
+    async with AsyncSession(get_postgres_engine()) as session:
+        user = UserMetadata(id=user_id, meta_data=meta_data)
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+
+    await _update_user_metadata(user_id, meta_data)
+    return user

@@ -61,4 +61,4 @@ supertokens:
   accessTokenValidity: 3600
   image:
     # https://github.com/supertokens/supertokens-docker-postgresql/tags
-    tag: '10.1'
+    tag: '11.1'

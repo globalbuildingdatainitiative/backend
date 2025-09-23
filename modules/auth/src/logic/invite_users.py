@@ -9,11 +9,12 @@ from supertokens_python.recipe.emailpassword.asyncio import (
     sign_up,
 )
 from supertokens_python.recipe.emailpassword.interfaces import SignUpOkResult
-from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata, get_user_metadata
+from supertokens_python.recipe.usermetadata.asyncio import get_user_metadata
 from supertokens_python.types import AccountInfo
 
 from core.auth import FAKE_PASSWORD
 from core.exceptions import UserHasNoOrganization, InvitationFailed
+from logic.user import create_user_meta_data, update_user_metadata
 from models import InviteStatus, InviteResult
 
 
@@ -36,6 +37,19 @@ async def invite_users(emails: List[str], inviter_id: UUID, request: Request) ->
             existing_users = await list_users_by_account_info("public", AccountInfo(email=email))
             if existing_users:
                 user_id = existing_users[0].id
+                # Updating the user-metadata with invitation details
+                await update_user_metadata(
+                    user_id,
+                    {
+                        "email": str(email),
+                        "invited": True,
+                        "invite_status": InviteStatus.PENDING.value,
+                        "inviter_id": str(inviter_id),
+                        "inviter_name": inviter_name,
+                        "pending_org_id": str(inviter_org_id),
+                        "time_joined": existing_users[0].time_joined,
+                    },
+                )
             else:
                 # Creating a user with fake password
                 sign_up_result = await sign_up("public", email, FAKE_PASSWORD)
@@ -45,17 +59,19 @@ async def invite_users(emails: List[str], inviter_id: UUID, request: Request) ->
 
                 user_id = sign_up_result.user.id
 
-            # Updating the user-metadata with invitation details
-            await update_user_metadata(
-                user_id,
-                {
-                    "invited": True,
-                    "invite_status": InviteStatus.PENDING.value,
-                    "inviter_id": str(inviter_id),
-                    "inviter_name": inviter_name,
-                    "pending_org_id": str(inviter_org_id),
-                },
-            )
+                # Updating the user-metadata with invitation details
+                await create_user_meta_data(
+                    user_id,
+                    {
+                        "email": str(email),
+                        "invited": True,
+                        "invite_status": InviteStatus.PENDING.value,
+                        "inviter_id": str(inviter_id),
+                        "inviter_name": inviter_name,
+                        "pending_org_id": str(inviter_org_id),
+                        "time_joined": sign_up_result.user.time_joined,
+                    },
+                )
             await send_reset_password_email(
                 "public", user_id, email, user_context={"user_id": user_id, "request": request}
             )

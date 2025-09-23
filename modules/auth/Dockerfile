@@ -37,6 +37,8 @@ COPY --from=builder --chown=fastapi:fastapi /app/.venv /app/.venv
 COPY --chown=fastapi:fastapi ./entrypoint.sh /app/
 COPY --chown=fastapi:fastapi ./src /app/src/
 COPY --chown=fastapi:fastapi ./graphql /app/graphql/
+COPY --chown=fastapi:fastapi ./alembic /app/alembic/
+COPY --chown=fastapi:fastapi ./pyproject.toml /app/
 COPY --chown=fastapi:fastapi ./export_schema.sh /app/
 
 ENTRYPOINT ["bash", "/app/entrypoint.sh"]

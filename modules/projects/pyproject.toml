@@ -42,7 +42,8 @@ env = [
     "MONGO_DB=projects",
     "MONGO_PORT=27017",
     "SUPERTOKENS_CONNECTION_URI=http://localhost:3566",
-    "SUPERTOKENS_API_KEY="
+    "SUPERTOKENS_API_KEY=",
+    "ROUTER_URL=http://localhost:6000"
 ]
 
 [tool.ruff]

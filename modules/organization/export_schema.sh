@@ -13,5 +13,5 @@ export MONGO_PORT=27017
 export SUPERTOKENS_CONNECTION_URI=http://test.gbdi.io
 export SUPERTOKENS_API_KEY=DHALFKJDHALFJHDAJF
 
-strawberry export-schema --app-dir ./src schema > graphql/schema.graphql
+/app/.venv/bin/python -m strawberry export-schema --app-dir ./src schema > graphql/schema.graphql
 
