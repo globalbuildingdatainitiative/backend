@@ -214,6 +214,7 @@ async def test_update_user_password_invalid_current_password(
     assert data.get("errors")
     assert "Current password is incorrect" in data.get("errors")[0].get("message")
 
+
 @pytest.mark.asyncio
 async def test_update_user_email_already_in_use(
     client_user: AsyncClient,
@@ -240,7 +241,7 @@ async def test_update_user_email_already_in_use(
     variables = {
         "userInput": {
             "id": user_id,
-            "email": "john@company.com" # This email is already in use as defined in /modules/auth/tests/datafixtures/users.json
+            "email": "john@company.com",  # This email is already in use as defined in /modules/auth/tests/datafixtures/users.json
         }
     }
 
@@ -255,6 +256,7 @@ async def test_update_user_email_already_in_use(
     # Should return an error for wrong current password
     assert data.get("errors")
     assert "Email is already in use" in data.get("errors")[0].get("message")
+
 
 @pytest.mark.asyncio
 async def test_update_user_password_invalid_new_password(

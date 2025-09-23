@@ -340,7 +340,7 @@ def functions_override(original_impl: RecipeInterface):
 
     # Prevents using the fake password (Initially assigned to invited users)
     async def update_email_or_password(
-        recipe_user_id: RecipeUserId, # seems to be called as keyword arguments and not positional, so it has to be called recipe_user_id and not user_id
+        recipe_user_id: RecipeUserId,  # seems to be called as keyword arguments and not positional, so it has to be called recipe_user_id and not user_id
         email: Union[str, None],
         password: Union[str, None],
         apply_password_policy: Union[bool, None],
