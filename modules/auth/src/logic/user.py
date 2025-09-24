@@ -5,12 +5,11 @@ from logging import getLogger
 from uuid import UUID
 
 import strawberry
-from aiocache import cached
 from fastapi.requests import Request
 from sqlmodel import select, col, or_
 from sqlmodel.ext.asyncio.session import AsyncSession
 from strawberry import UNSET
-from supertokens_python.asyncio import get_user, get_users_newest_first
+from supertokens_python.asyncio import get_user
 from supertokens_python.recipe.emailpassword.asyncio import update_email_or_password, verify_credentials
 from supertokens_python.recipe.emailpassword.interfaces import (
     WrongCredentialsError,
@@ -385,16 +384,10 @@ async def get_user_by_id(user_id: str) -> User:
     return user
 
 
-@cached(ttl=60)
 async def construct_graphql_user(user: User) -> GraphQLUser:
     metadata = (await get_user_metadata(user.id)).metadata
     logger.debug(f"Constructing GraphQLUser for {user.id} with metadata: {metadata}")
     return await GraphQLUser.from_supertokens(user, metadata)
-
-
-@cached(ttl=60)
-async def get_all_users() -> list[User]:
-    return (await get_users_newest_first("public", limit=1000)).users
 
 
 async def update_user_metadata(user_id: str, metadata: dict):
