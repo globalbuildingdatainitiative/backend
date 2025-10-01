@@ -23,7 +23,7 @@ from supertokens_python.recipe.emailpassword.interfaces import (
 )
 from supertokens_python.recipe.emailpassword.types import FormField, PasswordResetEmailTemplateVars, SMTPOverrideInput
 from supertokens_python.recipe.session.interfaces import SessionContainer
-from supertokens_python.recipe.usermetadata.asyncio import get_user_metadata, update_user_metadata
+from supertokens_python.recipe.usermetadata.asyncio import get_user_metadata
 from tenacity import stop_after_attempt, wait_fixed, before_log, after_log, retry
 
 from core.config import settings
@@ -300,6 +300,7 @@ def custom_smtp_content_override(original_implementation: SMTPOverrideInput) -> 
 
 def override_email_password_apis(original_implementation: APIInterface):
     """Extends the sign-up process to include first name and last name"""
+    from logic.user import create_user_meta_data
 
     original_sign_up_post = original_implementation.sign_up_post
 
@@ -324,8 +325,15 @@ def override_email_password_apis(original_implementation: APIInterface):
             first_name = next(f.value for f in form_fields if f.id == "firstName")
             last_name = next(f.value for f in form_fields if f.id == "lastName")
 
-            await update_user_metadata(response.user.id, {"first_name": first_name, "last_name": last_name})
-
+            await create_user_meta_data(
+                response.user.id,
+                {
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "email": str(response.user.emails[0]),
+                    "time_joined": response.user.time_joined,
+                },
+            )
         return response
 
     original_implementation.sign_up_post = sign_up_post
@@ -335,8 +343,6 @@ def override_email_password_apis(original_implementation: APIInterface):
 def functions_override(original_impl: RecipeInterface):
     og_emailpassword_sign_in = original_impl.sign_in
     og_update_email_or_password = original_impl.update_email_or_password
-
-    # og_reset_password_using_token = original_impl.reset_password_using_token
 
     # Prevents using the fake password (Initially assigned to invited users)
     async def update_email_or_password(
@@ -370,7 +376,6 @@ def functions_override(original_impl: RecipeInterface):
         )
 
     original_impl.update_email_or_password = update_email_or_password
-    # original_impl.reset_password_using_token = reset_password_using_token
     original_impl.sign_in = emailpassword_sign_in
     return original_impl
 

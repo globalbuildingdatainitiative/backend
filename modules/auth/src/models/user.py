@@ -2,15 +2,17 @@ from datetime import datetime
 from enum import Enum
 from typing import Self, List
 from uuid import UUID
+from sqlalchemy import Column
 
 import logging
 import strawberry
 from pydantic import BaseModel
+from sqlmodel import SQLModel, Field
 from strawberry import UNSET
 from strawberry.federation.schema_directives import Shareable
 from supertokens_python.recipe.userroles.asyncio import get_roles_for_user
 from supertokens_python.types import User
-
+from sqlalchemy.dialects.postgresql import JSON
 from core.auth import FAKE_PASSWORD
 from models.roles import Role
 from .scalers import EmailAddress
@@ -52,15 +54,38 @@ class GraphQLUser:
         effective_org_id = metadata.get("organization_id") if not invited else metadata.get("pending_org_id")
 
         return cls(
-            id=UUID(user.id),
-            email=user.emails[0],
+            id=UUID(user.id if hasattr(user, "id") else user.user_id),
+            email=user.emails[0] if hasattr(user, "emails") else user.email,
             time_joined=datetime.fromtimestamp(round(user.time_joined / 1000)),
-            first_name=metadata.get("first_name"),
-            last_name=metadata.get("last_name"),
+            first_name=metadata.get("first_name") or metadata.get("firstName"),
+            last_name=metadata.get("last_name") or metadata.get("lastName"),
             organization_id=effective_org_id,
             invited=invited,
             invite_status=InviteStatus(metadata.get("invite_status", InviteStatus.NONE)),
             inviter_name=metadata.get("inviter_name"),
+            roles=[
+                Role(role)
+                for role in (await get_roles_for_user("public", user.id if hasattr(user, "id") else user.user_id)).roles
+            ],
+        )
+
+    @classmethod
+    async def from_sqlmodel(cls, user: "UserMetadata") -> Self:
+        invited = user.meta_data.get("invited", False)
+        effective_org_id = (
+            user.meta_data.get("organization_id") if not invited else user.meta_data.get("pending_org_id")
+        )
+
+        return cls(
+            id=UUID(user.id),
+            email=user.meta_data.get("email"),
+            time_joined=datetime.fromtimestamp(round(user.meta_data.get("time_joined") / 1000)),
+            first_name=user.meta_data.get("first_name"),
+            last_name=user.meta_data.get("last_name"),
+            organization_id=effective_org_id,
+            invited=invited,
+            invite_status=InviteStatus(user.meta_data.get("invite_status", InviteStatus.NONE)),
+            inviter_name=user.meta_data.get("inviter_name"),
             roles=[Role(role) for role in (await get_roles_for_user("public", user.id)).roles],
         )
 
@@ -113,3 +138,8 @@ class AcceptInvitationInput:
     last_name: str | None = None
     current_password: str = FAKE_PASSWORD
     new_password: str | None = None
+
+
+class UserMetadata(SQLModel, table=True):
+    id: str = Field(primary_key=True)
+    meta_data: dict = Field(default=dict, sa_column=Column(JSON))

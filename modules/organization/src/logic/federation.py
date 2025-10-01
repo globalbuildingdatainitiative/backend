@@ -76,3 +76,50 @@ async def get_auth_user(uid: UUID) -> dict[str, str]:
     logger.debug(f"Returning user data: {user}")
 
     return user
+
+
+async def update_user(uid: UUID, meta_data: dict) -> dict[str, str]:
+    query = """
+    mutation($update: UpdateUserInput!) {
+        updateUser(userInput: $update) {
+            id
+        }
+    }
+    """
+    logger.info(f"Updating user {uid}")
+    jwt_token = await create_jwt()
+    logger.debug(f"Created JWT token: {jwt_token[:20]}...")  # Log first 20 chars of token for debugging
+
+    async with httpx.AsyncClient(
+        headers={"authorization": f"Bearer {jwt_token}"},
+    ) as client:
+        try:
+            response = await client.post(
+                f"{settings.ROUTER_URL}graphql",
+                json={
+                    "query": query,
+                    "variables": {"update": {"id": str(uid), **meta_data}},
+                },
+            )
+            logger.debug(f"Received response from auth service with status: {response.status_code}")
+            logger.debug(f"Response content: {response.text}")
+        except httpx.RequestError as e:
+            logger.error(f"Error in get_auth_user: {e.request} for user: {uid}")
+            raise MicroServiceConnectionError(f"Could not connect to {e.request.url}") from e
+        if response.is_error:
+            raise MicroServiceConnectionError(f"Could not receive data from {settings.ROUTER_URL}. Got {response.text}")
+        data = response.json()
+        logger.debug(f"Parsed response data: {data}")
+        if errors := data.get("errors"):
+            logger.error(f"GraphQL errors in update_user for user {uid}: {errors}")
+            raise MicroServiceResponseError(f"Got error from {settings.ROUTER_URL}: {errors}")
+
+    # Check if user data exists before accessing it
+    user_data = data.get("data", {}).get("updateUser", {})
+
+    if not user_data:
+        logger.error(f"No user found in auth service for uid: {uid}")
+        raise MicroServiceResponseError(f"No user found in auth service for uid: {uid}")
+
+    logger.debug(f"Updated {user_data.get('id')} user")
+    return user_data

@@ -4,6 +4,9 @@ set -e
 # Wait for database to be online
 python /app/src/initialize.py
 
+# Run migrations
+python -m alembic upgrade head
+
 # Start FastAPI
 cd /app/src
 

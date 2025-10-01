@@ -5,10 +5,10 @@ from uuid import uuid4
 
 from core.auth import FAKE_PASSWORD
 from core.config import settings
+from logic.user import create_user_meta_data, update_user_metadata
 from models import InviteStatus, Role
 from logic.roles import assign_role
 from supertokens_python.recipe.emailpassword.asyncio import sign_up
-from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
 
 
 @pytest.mark.asyncio
@@ -95,6 +95,13 @@ async def test_accept_invitation_mutation(client: AsyncClient):
     # Create a new user with FAKE_PASSWORD
     response = await sign_up("public", "testuser@epfl.ch", FAKE_PASSWORD)
     user_id = response.user.id
+    await create_user_meta_data(
+        user_id,
+        {
+            "email": str(response.user.emails[0]),
+            "time_joined": response.user.time_joined,
+        },
+    )
 
     # Set up the test user with correct metadata
     await update_user_metadata(
@@ -141,6 +148,13 @@ async def test_reject_invitation_mutation(client: AsyncClient):
     # Create a new user
     response = await sign_up("public", "rejectuser@epfl.ch", FAKE_PASSWORD)
     user_id = response.user.id
+    await create_user_meta_data(
+        user_id,
+        {
+            "email": str(response.user.emails[0]),
+            "time_joined": response.user.time_joined,
+        },
+    )
 
     # Set up the test user with correct metadata
     await update_user_metadata(
@@ -186,7 +200,7 @@ async def test_resend_invitation_mutation(mock_send_email, client: AsyncClient):
     mock_send_email.return_value = None
 
     # Set up the test user with correct metadata
-    await update_user_metadata(
+    await create_user_meta_data(
         user_id,
         {
             "invited": True,

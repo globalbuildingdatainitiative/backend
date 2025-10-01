@@ -24,7 +24,7 @@ async def get_contributions(
 ) -> list[DBContribution]:
     query = DBContribution.find(Or(DBContribution.organization_id == organization_id, DBContribution.public == True))  # noqa: E712
 
-    query = filter_model_query(DBContribution, filter_by, query)
+    query = await filter_model_query(DBContribution, filter_by, query, organization_id)
     query = sort_model_query(DBContribution, sort_by, query)
 
     if limit is not None:

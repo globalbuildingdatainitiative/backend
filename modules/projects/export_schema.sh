@@ -4,6 +4,7 @@ mkdir -p graphql
 
 export SERVER_NAME=Organization Test
 export SERVER_HOST=http://test.gbdi.io
+export ROUTER_URL=http://test.gbdi.io
 export MONGO_HOST=localhost
 export MONGO_USER=testuser
 export MONGO_PASSWORD=mypassword

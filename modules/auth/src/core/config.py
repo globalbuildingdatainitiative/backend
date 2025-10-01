@@ -1,8 +1,9 @@
 from typing import Any, Type, Tuple
 import json
 
-from pydantic import AnyHttpUrl
+from pydantic import AnyHttpUrl, PostgresDsn, field_validator
 from pydantic.fields import FieldInfo
+from pydantic_core.core_schema import ValidationInfo
 from pydantic_settings import (
     BaseSettings,
     EnvSettingsSource,
@@ -46,6 +47,27 @@ class Settings(BaseSettings):
     SMTP_NAME: str
     SMTP_PASSWORD: str = ""
     SMTP_USERNAME: str = ""
+
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_HOST: str
+    POSTGRES_DB: str = ""
+    POSTGRES_PORT: int = 5432
+    POSTGRES_URI: PostgresDsn | None = None
+
+    @field_validator("POSTGRES_URI")
+    @classmethod
+    def assemble_db_connection(cls, v: str | None, info: ValidationInfo) -> PostgresDsn:
+        if isinstance(v, str):
+            return v
+        return PostgresDsn.build(
+            scheme="postgresql+asyncpg",
+            username=info.data.get("POSTGRES_USER"),
+            password=info.data.get("POSTGRES_PASSWORD"),
+            host=info.data.get("POSTGRES_HOST"),
+            port=info.data.get("POSTGRES_PORT"),
+            path=info.data.get("POSTGRES_DB"),
+        )
 
     @classmethod
     def settings_customise_sources(

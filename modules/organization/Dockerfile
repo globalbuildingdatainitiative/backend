@@ -23,7 +23,9 @@ FROM python:3.12-slim
 
 # Set environment
 ENV PATH="/app/.venv/bin/:${PATH}"
-ENV PYTHONPATH="/app/src"
+ARG BUILD_VERSION
+ENV BUILD_VERSION $BUILD_VERSION
+ENV PYTHONPATH="${PYTHONPATH}:/app/src"
 
 # Create fastapi user
 RUN useradd --home-dir /app --create-home fastapi

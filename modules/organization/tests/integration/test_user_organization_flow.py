@@ -18,7 +18,7 @@ from models.user import get_user_organization
 
 
 @pytest.mark.integration
-async def test_end_to_end_user_organization_flow():
+async def test_end_to_end_user_organization_flow(mock_update_user_metadata):
     """Test the complete flow from organization creation to user profile retrieval"""
     # Given
     organization_data = InputOrganization(

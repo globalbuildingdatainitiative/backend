@@ -34,10 +34,7 @@ spec:
                   key: password
 
             - name: POSTGRES_DB
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Values.db.configmap }}
-                  key: POSTGRES_DB
+              value: 'meta_data'
 
             - name: POSTGRES_HOST
               valueFrom:
@@ -166,7 +163,7 @@ spec:
                   key: POSTGRES_PORT
       containers:
         - name: supertokens
-          image: 'registry.supertokens.io/supertokens/supertokens-postgresql:{{ .Values.supertokens.image.tag }}'
+          image: 'supertokens/supertokens-postgresql:{{ .Values.supertokens.image.tag }}'
           ports:
             - containerPort: 3567
           env:
