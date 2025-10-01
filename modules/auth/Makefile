@@ -55,6 +55,10 @@ run-prod: ## Run the application in production mode
 schema: ## Export GraphQL schema
 	$(UV) run ./export_schema.sh
 
+.PHONY: revision
+revision: ## Create a new database migration
+	$(UV) run alembic revision --autogenerate
+
 .PHONY: clean
 clean: ## Clean up generated files
 	rm -rf __pycache__
