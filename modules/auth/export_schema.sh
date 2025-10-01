@@ -19,4 +19,4 @@ export POSTGRES_DB=auth
 export POSTGRES_PORT=5432
 
 mkdir -p graphql
-/app/.venv/bin/python -m strawberry export-schema --app-dir ./src schema > graphql/schema.graphql
+strawberry export-schema --app-dir ./src schema > graphql/schema.graphql
