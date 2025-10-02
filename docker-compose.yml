@@ -1,0 +1,127 @@
+services:
+  # PostgreSQL for Auth module
+  postgres-auth:
+    image: postgres:15-alpine
+    container_name: gbdi-postgres-auth
+    environment:
+      POSTGRES_USER: postgresuser
+      POSTGRES_PASSWORD: adgakj2354jhsklh78354
+      POSTGRES_DB: auth
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-auth-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgresuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gbdi-network
+
+  # SuperTokens for Auth module
+  supertokens:
+    image: registry.supertokens.io/supertokens/supertokens-postgresql:11.1
+    container_name: gbdi-supertokens
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+    environment:
+      POSTGRESQL_CONNECTION_URI: postgresql://postgresuser:adgakj2354jhsklh78354@postgres-auth:5432/auth
+      POSTGRESQL_TABLE_SCHEMA: supertokens
+    ports:
+      - "3567:3567"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3567/hello"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gbdi-network
+
+  # MongoDB for Projects module
+  mongo-projects:
+    image: mongo:7
+    container_name: gbdi-mongo-projects
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: postgresuser
+      MONGO_INITDB_ROOT_PASSWORD: adgakj2354jhsklh78354
+      MONGO_INITDB_DATABASE: projects
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-projects-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gbdi-network
+
+  # MongoDB for Organization module
+  mongo-organization:
+    image: mongo:7
+    container_name: gbdi-mongo-organization
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: postgresuser
+      MONGO_INITDB_ROOT_PASSWORD: adgakj2354jhsklh78354
+      MONGO_INITDB_DATABASE: organization
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo-organization-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gbdi-network
+
+  # Apollo Router
+  router:
+    image: ghcr.io/apollographql/router:v1.59.1
+    container_name: gbdi-router
+    ports:
+      - "4000:4000"
+      - "8088:8088"
+    environment:
+      CLIENT_ORIGIN: http://localhost:8000
+      AUTH_URL: http://host.docker.internal:7001/api/graphql
+      ORGANIZATION_URL: http://host.docker.internal:7002/api/graphql
+      PROJECTS_URL: http://host.docker.internal:7003/api/graphql
+      ENABLE_INTROSPECTION: "true"
+      APOLLO_ROUTER_LOG: debug
+    volumes:
+      - ./modules/router/config/router.yaml:/app/router.yaml:ro
+      - ./modules/router/config/supergraph-config.yaml:/app/supergraph-config.yaml:ro
+      - ./modules/router/config/main.rhai:/app/rhai/main.rhai:ro
+      - ./modules/auth/graphql/schema.graphql:/app/schemas/auth.graphql:ro
+      - ./modules/organization/graphql/schema.graphql:/app/schemas/organization.graphql:ro
+      - ./modules/projects/graphql/schema.graphql:/app/schemas/projects.graphql:ro
+    command: >
+      sh -c "
+      echo 'Waiting for services to be available...' &&
+      sleep 5 &&
+      echo 'Building supergraph schema...' &&
+      /dist/router --version &&
+      /dist/router
+      --hot-reload
+      --config /app/router.yaml
+      --supergraph /app/supergraph-config.yaml
+      "
+    networks:
+      - gbdi-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+networks:
+  gbdi-network:
+    driver: bridge
+
+volumes:
+  postgres-auth-data:
+  mongo-projects-data:
+  mongo-organization-data:

@@ -58,6 +58,6 @@ async def filter_users(value: str, organization_id: str) -> list[UUID]:
         if errors := data.get("errors"):
             raise exc.MicroServiceResponseError(f"Got error from {config.settings.ROUTER_URL}: {errors}")
 
-    users = [UUID(user.get("id")) for user in data["data"]["users"]["items"]]
+    users = [UUID(user.get("id")) for user in data["data"]["users"]["items"] if user is not None]
     logger.debug(f"Got users: {users}")
     return users

@@ -97,7 +97,15 @@ async def get_users(
         users = (await session.exec(query)).all()
 
     logger.debug(f"Found {len(users)} users")
-    return [await GraphQLUser.from_sqlmodel(user) for user in users]
+    gql_users = []
+    for user in users:
+        try:
+            gql_user = await GraphQLUser.from_sqlmodel(user)
+            gql_users.append(gql_user)
+        except Exception as e:
+            logger.warning(f"Failed to construct GraphQLUser for user {user.id}: {e}")
+            continue
+    return gql_users
 
 
 def _get_field(field):
