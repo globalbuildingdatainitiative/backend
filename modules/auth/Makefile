@@ -67,6 +67,14 @@ schema: ## Export GraphQL schema
 revision: ## Create a new database migration
 	$(UV) run alembic revision --autogenerate
 
+.PHONY: upgrade
+upgrade: ## Run database migrations (upgrade to head)
+	$(UV) run --env-file=.env alembic upgrade head
+
+.PHONY: downgrade
+downgrade: ## Downgrade database migration by one step
+	$(UV) run --env-file=.env alembic downgrade -1
+
 .PHONY: clean
 clean: ## Clean up generated files
 	rm -rf __pycache__

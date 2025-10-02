@@ -11,8 +11,7 @@ from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from core.config import settings
 from models.user import UserMetadata
@@ -26,18 +25,20 @@ depends_on: Union[str, Sequence[str], None] = None
 
 async def migrate_supertokens_metadata(connection):
     postgres_supertokens_uri = f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/auth"
-    connectable = AsyncEngine(create_engine(str(postgres_supertokens_uri), echo=True, future=True))
+    connectable = create_async_engine(postgres_supertokens_uri, echo=True, future=True)
 
     async with connectable.connect() as _connection:
-        # Try to query the old user_metadata table
+        # Try to query the old user_metadata table in SuperTokens schema
         # If it doesn't exist (fresh install), return empty list
         try:
-            result = await _connection.execute(sa.text("SELECT * FROM user_metadata"))
+            result = await _connection.execute(sa.text("SELECT * FROM supertokens.user_metadata"))
             rows = result.fetchall()
             return rows
         except sa.exc.ProgrammingError:
             # Table doesn't exist (fresh install), nothing to migrate
             return []
+        finally:
+            await connectable.dispose()
 
 
 def upgrade() -> None:
@@ -46,7 +47,7 @@ def upgrade() -> None:
     rows = op.run_async(async_function=migrate_supertokens_metadata)
     if rows:  # Only insert if there's data to migrate
         op.bulk_insert(
-            UserMetadata.__table__, [{"id": row.user_id, "user_metadata": json.loads(row.user_metadata)} for row in rows]
+            UserMetadata.__table__, [{"id": row.user_id, "meta_data": json.loads(row.user_metadata)} for row in rows]
         )
 
 
