@@ -29,19 +29,25 @@ async def migrate_supertokens_metadata(connection):
     connectable = AsyncEngine(create_engine(str(postgres_supertokens_uri), echo=True, future=True))
 
     async with connectable.connect() as _connection:
-        result = await _connection.execute(sa.text("SELECT * FROM user_metadata"))
-        rows = result.fetchall()
-
-    return rows
+        # Try to query the old user_metadata table
+        # If it doesn't exist (fresh install), return empty list
+        try:
+            result = await _connection.execute(sa.text("SELECT * FROM user_metadata"))
+            rows = result.fetchall()
+            return rows
+        except sa.exc.ProgrammingError:
+            # Table doesn't exist (fresh install), nothing to migrate
+            return []
 
 
 def upgrade() -> None:
     """Upgrade schema."""
 
     rows = op.run_async(async_function=migrate_supertokens_metadata)
-    op.bulk_insert(
-        UserMetadata.__table__, [{"id": row.user_id, "user_metadata": json.loads(row.user_metadata)} for row in rows]
-    )
+    if rows:  # Only insert if there's data to migrate
+        op.bulk_insert(
+            UserMetadata.__table__, [{"id": row.user_id, "user_metadata": json.loads(row.user_metadata)} for row in rows]
+        )
 
 
 def downgrade() -> None:

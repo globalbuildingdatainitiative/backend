@@ -14,15 +14,14 @@ install: ## Install dependencies for all modules
 	@echo "✓ All dependencies installed"
 
 .PHONY: db-up
-db-up: ## Start all database services (postgres, supertokens, mongo) and router
-	@echo "Starting database services and router..."
+db-up: ## Start all database services (postgres, supertokens, mongo)
+	@echo "Starting database services..."
 	docker-compose up -d
 	@echo "✓ Services started"
 	@echo "  - PostgreSQL (auth): localhost:5434"
 	@echo "  - SuperTokens: localhost:3567"
 	@echo "  - MongoDB (projects): localhost:27017"
 	@echo "  - MongoDB (organization): localhost:27018"
-	@echo "  - Apollo Router: localhost:4000"
 
 .PHONY: db-down
 db-down: ## Stop all database services
@@ -46,17 +45,40 @@ db-clean: ## Stop database services and remove volumes (WARNING: deletes all dat
 db-logs: ## Show logs from database services
 	docker-compose logs -f
 
+.PHONY: init
+init: ## Initialize all modules (wait for databases, run migrations)
+	@echo "Initializing all modules..."
+	@echo "Waiting for databases to be ready..."
+# 	@until docker exec -it postgres-auth pg_isready -U postgres > /dev/null 2>&1; do \
+# 		echo "Waiting for PostgreSQL (auth) to be ready..."; \
+# 		sleep 2; \
+# 	done; \
+# 	@until docker exec -it mongo-projects mongo --eval "db.adminCommand('ping')" > /dev/null 2>&1; do \
+# 		echo "Waiting for MongoDB (projects) to be ready..."; \
+# 		sleep 2; \
+# 	done; \
+# 	@until docker exec -it mongo-organization mongo --eval "db.adminCommand('ping')" > /dev/null 2>&1; do \
+# 		echo "Waiting for MongoDB (organization) to be ready..."; \
+# 		sleep 2; \
+# 	done; \
+# 	@echo "Databases are ready."
+	@echo "Running initialization for each module..."
+	@cd modules/auth && $(MAKE) init
+	@cd modules/organization && $(MAKE) init
+	@cd modules/projects && $(MAKE) init
+	@echo "✓ All modules initialized"
+
 .PHONY: run
-run: db-up ## Start all services (databases + router + all backend modules)
+run: db-up init ## Start all services (databases + router + all backend modules)
 	@echo "Starting all backend services..."
-	@echo "Waiting for databases and router to be ready..."
-	@sleep 5
+	@echo "Waiting for databases to be ready..."
+	@sleep 2
 	@echo ""
 	@echo "Starting backend services in parallel..."
 	@echo "  - Auth service will run on http://localhost:7001"
 	@echo "  - Organization service will run on http://localhost:7002"
 	@echo "  - Projects service will run on http://localhost:7003"
-	@echo "  - Router service is running on http://localhost:4000 (via docker-compose)"
+	@echo "  - Router service will run on http://localhost:4000"
 	@echo ""
 	@echo "Press Ctrl+C to stop all services"
 	@echo ""
@@ -68,6 +90,7 @@ run-services:
 	cd modules/auth && $(MAKE) run & \
 	cd modules/organization && $(MAKE) run & \
 	cd modules/projects && $(MAKE) run & \
+	cd modules/router && $(MAKE) run & \
 	wait
 
 .PHONY: run-auth

@@ -3,13 +3,13 @@ subgraphs:
   auth:
     routing_url: "http://localhost:7001/api/graphql"
     schema:
-      file: /app/schemas/auth.graphql
+      file: ../../auth/graphql/schema.graphql
   organization:
     routing_url: "http://localhost:7002/api/graphql"
     schema:
-      file: /app/schemas/organization.graphql
+      file: ../../organization/graphql/schema.graphql
   projects:
     routing_url: "http://localhost:7003/api/graphql"
     schema:
-      file: /app/schemas/projects.graphql
+      file: ../../projects/graphql/schema.graphql
 

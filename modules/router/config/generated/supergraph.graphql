@@ -1,0 +1,1769 @@
+schema
+  @link(url: "https://specs.apollo.dev/link/v1.0")
+  @link(url: "https://specs.apollo.dev/join/v0.4", for: EXECUTION)
+{
+  query: Query
+  mutation: Mutation
+}
+
+directive @join__directive(graphs: [join__Graph!], name: String!, args: join__DirectiveArguments) repeatable on SCHEMA | OBJECT | INTERFACE | FIELD_DEFINITION
+
+directive @join__enumValue(graph: join__Graph!) repeatable on ENUM_VALUE
+
+directive @join__field(graph: join__Graph, requires: join__FieldSet, provides: join__FieldSet, type: String, external: Boolean, override: String, usedOverridden: Boolean, overrideLabel: String) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+directive @join__graph(name: String!, url: String!) on ENUM_VALUE
+
+directive @join__implements(graph: join__Graph!, interface: String!) repeatable on OBJECT | INTERFACE
+
+directive @join__type(graph: join__Graph!, key: join__FieldSet, extension: Boolean! = false, resolvable: Boolean! = true, isInterfaceObject: Boolean! = false) repeatable on OBJECT | INTERFACE | UNION | ENUM | INPUT_OBJECT | SCALAR
+
+directive @join__unionMember(graph: join__Graph!, member: String!) repeatable on UNION
+
+directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
+
+input AcceptInvitationInput
+  @join__type(graph: AUTH)
+{
+  id: UUID!
+  firstName: String = null
+  lastName: String = null
+  currentPassword: String! = "asokdA87fnf30efjoiOI**cwjkn"
+  newPassword: String = null
+}
+
+enum AggregationMethod
+  @join__type(graph: PROJECTS)
+{
+  AVG @join__enumValue(graph: PROJECTS)
+  SUM @join__enumValue(graph: PROJECTS)
+  MIN @join__enumValue(graph: PROJECTS)
+  MAX @join__enumValue(graph: PROJECTS)
+  MEDIAN @join__enumValue(graph: PROJECTS)
+  PCT25 @join__enumValue(graph: PROJECTS)
+  PCT75 @join__enumValue(graph: PROJECTS)
+  STD @join__enumValue(graph: PROJECTS)
+  DIV @join__enumValue(graph: PROJECTS)
+}
+
+type AggregationResult
+  @join__type(graph: PROJECTS)
+{
+  method: AggregationMethod!
+  field: String!
+  value: Float
+  aggregation(apply: [InputAggregation!]!): [AggregationResult!]!
+}
+
+type AreaType
+  @join__type(graph: PROJECTS)
+{
+  definition: String!
+  unit: Unit!
+  value: Float!
+}
+
+type Assembly
+  @join__type(graph: PROJECTS)
+{
+  classification: [Classification!]
+  comment: String
+  description: String
+  id: UUID!
+  metaData: AssemblyMetaData
+  name: String!
+  products: [Product!]!
+  quantity: Float!
+  results: Results
+  unit: Unit!
+}
+
+type AssemblyMetaData
+  @join__type(graph: PROJECTS)
+{
+  volume: ValueUnit
+}
+
+type AssessmentMetaData
+  @join__type(graph: PROJECTS)
+{
+  assessmentMethodologyDescription: String
+  uncertainty: Float
+  cutoffMethod: String
+  assessor: Assessor
+  year: Int
+  quantitySource: String
+  quantitySourceDetail: String
+  purpose: String
+  iso21931Compliance: Boolean
+  en15978Compliance: Boolean
+  rics2017Compliance: Boolean
+  rics2023Compliance: Boolean
+  ashrae240pCompliance: Boolean
+  seiPrestandardCompliance: Boolean
+  verified: Boolean
+  verifiedInfo: String
+  validityPeriod: String
+  resultsValidationDescription: String
+  toolReportUpload: Base64
+  reportName: String
+  additionalLcaReportName: String
+  projectPhaseAtReporting: String
+  projectPhaseAtTimeOfAssessment: String
+  operationalEnergyIncluded: Boolean
+  biogenicCarbonIncluded: Boolean
+  biogenicCarbonAccountingMethod: String
+  bioSustainabilityCertification: String
+  biogenicCarbonDescription: String
+  projectRefrigerants: String
+  refrigerantTypeIncluded: String
+  substructureScope: String
+  shellSuperstructureScope: String
+  shellExteriorEnclosureScope: String
+  interiorConstructionScope: String
+  interiorFinishesScope: String
+  servicesMechanicalScope: String
+  servicesElectricalScope: String
+  servicesPlumbingScope: String
+  siteworkScope: String
+  equipmentScope: String
+  furnishingsScope: String
+  lcaRequirements: String
+  date: Date
+}
+
+type Assessor
+  @join__type(graph: PROJECTS)
+{
+  name: String
+  email: String
+  organization: String
+}
+
+"""
+Represents binary data as Base64-encoded strings, using the standard alphabet.
+"""
+scalar Base64
+  @join__type(graph: PROJECTS)
+  @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc4648.html#section-4")
+
+enum BuildingModelScope
+  @join__type(graph: PROJECTS)
+{
+  facilitating_works @join__enumValue(graph: PROJECTS)
+  substructure @join__enumValue(graph: PROJECTS)
+  superstructure_frame @join__enumValue(graph: PROJECTS)
+  superstructure_envelope @join__enumValue(graph: PROJECTS)
+  superstructure_internal_elements @join__enumValue(graph: PROJECTS)
+  finishes @join__enumValue(graph: PROJECTS)
+  building_services @join__enumValue(graph: PROJECTS)
+  external_works @join__enumValue(graph: PROJECTS)
+  ff_e @join__enumValue(graph: PROJECTS)
+}
+
+enum BuildingType
+  @join__type(graph: PROJECTS)
+{
+  new_construction_works @join__enumValue(graph: PROJECTS)
+  demolition @join__enumValue(graph: PROJECTS)
+  deconstruction_and_new_construction_works @join__enumValue(graph: PROJECTS)
+  retrofit_works @join__enumValue(graph: PROJECTS)
+  extension_works @join__enumValue(graph: PROJECTS)
+  retrofit_and_extension_works @join__enumValue(graph: PROJECTS)
+  fit_out_works @join__enumValue(graph: PROJECTS)
+  operations @join__enumValue(graph: PROJECTS)
+  unknown @join__enumValue(graph: PROJECTS)
+  other @join__enumValue(graph: PROJECTS)
+}
+
+enum BuildingTypology
+  @join__type(graph: PROJECTS)
+{
+  office @join__enumValue(graph: PROJECTS)
+  residential @join__enumValue(graph: PROJECTS)
+  public @join__enumValue(graph: PROJECTS)
+  commercial @join__enumValue(graph: PROJECTS)
+  industrial @join__enumValue(graph: PROJECTS)
+  infrastructure @join__enumValue(graph: PROJECTS)
+  agricultural @join__enumValue(graph: PROJECTS)
+  educational @join__enumValue(graph: PROJECTS)
+  health @join__enumValue(graph: PROJECTS)
+  unknown @join__enumValue(graph: PROJECTS)
+  other @join__enumValue(graph: PROJECTS)
+}
+
+type Classification
+  @join__type(graph: PROJECTS)
+{
+  code: String!
+  name: String!
+  system: String!
+}
+
+type Contribution
+  @join__type(graph: PROJECTS)
+{
+  project: Project!
+  user: User!
+  id: UUID!
+  uploadedAt: DateTime!
+  userId: UUID!
+  organizationId: UUID!
+  public: Boolean!
+}
+
+type ContributionGraphQLGroupResponse
+  @join__type(graph: PROJECTS)
+{
+  group: String!
+  count: Int!
+  items(limit: Int = null): [Contribution!]!
+  aggregation(apply: [InputAggregation!]!): [AggregationResult!]!
+}
+
+type ContributionGraphQLResponse
+  @join__type(graph: PROJECTS)
+{
+  """The list of items in this pagination window."""
+  items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int): [Contribution!]
+
+  """Total number of items in the filtered dataset."""
+  count(filterBy: FilterBy = null): Int!
+  groups(groupBy: String!, limit: Int! = 50): [ContributionGraphQLGroupResponse!]!
+
+  """
+  Apply aggregation to the items. The aggregation should be specified in the 'apply' argument, which should be provided in MongoDB aggregation syntax.
+  """
+  aggregation(apply: JSON!): JSON!
+}
+
+type Conversion
+  @join__type(graph: PROJECTS)
+{
+  metaData: String!
+  to: Unit!
+  value: Float!
+}
+
+type Cost
+  @join__type(graph: PROJECTS)
+{
+  currency: String
+  totalCost: Float
+  hardCost: Float
+  softCost: Float
+  siteworksCost: Float
+  costSource: String
+  notes: String
+}
+
+enum Country
+  @join__type(graph: PROJECTS)
+{
+  unknown @join__enumValue(graph: PROJECTS)
+  afg @join__enumValue(graph: PROJECTS)
+  ala @join__enumValue(graph: PROJECTS)
+  alb @join__enumValue(graph: PROJECTS)
+  dza @join__enumValue(graph: PROJECTS)
+  asm @join__enumValue(graph: PROJECTS)
+  and_ @join__enumValue(graph: PROJECTS)
+  ago @join__enumValue(graph: PROJECTS)
+  aia @join__enumValue(graph: PROJECTS)
+  ata @join__enumValue(graph: PROJECTS)
+  atg @join__enumValue(graph: PROJECTS)
+  arg @join__enumValue(graph: PROJECTS)
+  arm @join__enumValue(graph: PROJECTS)
+  abw @join__enumValue(graph: PROJECTS)
+  aus @join__enumValue(graph: PROJECTS)
+  aut @join__enumValue(graph: PROJECTS)
+  aze @join__enumValue(graph: PROJECTS)
+  bhs @join__enumValue(graph: PROJECTS)
+  bhr @join__enumValue(graph: PROJECTS)
+  bgd @join__enumValue(graph: PROJECTS)
+  brb @join__enumValue(graph: PROJECTS)
+  blr @join__enumValue(graph: PROJECTS)
+  bel @join__enumValue(graph: PROJECTS)
+  blz @join__enumValue(graph: PROJECTS)
+  ben @join__enumValue(graph: PROJECTS)
+  bmu @join__enumValue(graph: PROJECTS)
+  btn @join__enumValue(graph: PROJECTS)
+  bol @join__enumValue(graph: PROJECTS)
+  bes @join__enumValue(graph: PROJECTS)
+  bih @join__enumValue(graph: PROJECTS)
+  bwa @join__enumValue(graph: PROJECTS)
+  bvt @join__enumValue(graph: PROJECTS)
+  bra @join__enumValue(graph: PROJECTS)
+  iot @join__enumValue(graph: PROJECTS)
+  brn @join__enumValue(graph: PROJECTS)
+  bgr @join__enumValue(graph: PROJECTS)
+  bfa @join__enumValue(graph: PROJECTS)
+  bdi @join__enumValue(graph: PROJECTS)
+  cpv @join__enumValue(graph: PROJECTS)
+  khm @join__enumValue(graph: PROJECTS)
+  cmr @join__enumValue(graph: PROJECTS)
+  can @join__enumValue(graph: PROJECTS)
+  cym @join__enumValue(graph: PROJECTS)
+  caf @join__enumValue(graph: PROJECTS)
+  tcd @join__enumValue(graph: PROJECTS)
+  chl @join__enumValue(graph: PROJECTS)
+  chn @join__enumValue(graph: PROJECTS)
+  cxr @join__enumValue(graph: PROJECTS)
+  cck @join__enumValue(graph: PROJECTS)
+  col @join__enumValue(graph: PROJECTS)
+  com @join__enumValue(graph: PROJECTS)
+  cog @join__enumValue(graph: PROJECTS)
+  cod @join__enumValue(graph: PROJECTS)
+  cok @join__enumValue(graph: PROJECTS)
+  cri @join__enumValue(graph: PROJECTS)
+  civ @join__enumValue(graph: PROJECTS)
+  hrv @join__enumValue(graph: PROJECTS)
+  cub @join__enumValue(graph: PROJECTS)
+  cuw @join__enumValue(graph: PROJECTS)
+  cyp @join__enumValue(graph: PROJECTS)
+  cze @join__enumValue(graph: PROJECTS)
+  dnk @join__enumValue(graph: PROJECTS)
+  dji @join__enumValue(graph: PROJECTS)
+  dma @join__enumValue(graph: PROJECTS)
+  dom @join__enumValue(graph: PROJECTS)
+  ecu @join__enumValue(graph: PROJECTS)
+  egy @join__enumValue(graph: PROJECTS)
+  slv @join__enumValue(graph: PROJECTS)
+  gnq @join__enumValue(graph: PROJECTS)
+  eri @join__enumValue(graph: PROJECTS)
+  est @join__enumValue(graph: PROJECTS)
+  swz @join__enumValue(graph: PROJECTS)
+  eth @join__enumValue(graph: PROJECTS)
+  flk @join__enumValue(graph: PROJECTS)
+  fro @join__enumValue(graph: PROJECTS)
+  fji @join__enumValue(graph: PROJECTS)
+  fin @join__enumValue(graph: PROJECTS)
+  fra @join__enumValue(graph: PROJECTS)
+  guf @join__enumValue(graph: PROJECTS)
+  pyf @join__enumValue(graph: PROJECTS)
+  atf @join__enumValue(graph: PROJECTS)
+  gab @join__enumValue(graph: PROJECTS)
+  gmb @join__enumValue(graph: PROJECTS)
+  geo @join__enumValue(graph: PROJECTS)
+  deu @join__enumValue(graph: PROJECTS)
+  gha @join__enumValue(graph: PROJECTS)
+  gib @join__enumValue(graph: PROJECTS)
+  grc @join__enumValue(graph: PROJECTS)
+  grl @join__enumValue(graph: PROJECTS)
+  grd @join__enumValue(graph: PROJECTS)
+  glp @join__enumValue(graph: PROJECTS)
+  gum @join__enumValue(graph: PROJECTS)
+  gtm @join__enumValue(graph: PROJECTS)
+  ggy @join__enumValue(graph: PROJECTS)
+  gin @join__enumValue(graph: PROJECTS)
+  gnb @join__enumValue(graph: PROJECTS)
+  guy @join__enumValue(graph: PROJECTS)
+  hti @join__enumValue(graph: PROJECTS)
+  hmd @join__enumValue(graph: PROJECTS)
+  vat @join__enumValue(graph: PROJECTS)
+  hnd @join__enumValue(graph: PROJECTS)
+  hkg @join__enumValue(graph: PROJECTS)
+  hun @join__enumValue(graph: PROJECTS)
+  isl @join__enumValue(graph: PROJECTS)
+  ind @join__enumValue(graph: PROJECTS)
+  idn @join__enumValue(graph: PROJECTS)
+  irn @join__enumValue(graph: PROJECTS)
+  irq @join__enumValue(graph: PROJECTS)
+  irl @join__enumValue(graph: PROJECTS)
+  imn @join__enumValue(graph: PROJECTS)
+  isr @join__enumValue(graph: PROJECTS)
+  ita @join__enumValue(graph: PROJECTS)
+  jam @join__enumValue(graph: PROJECTS)
+  jpn @join__enumValue(graph: PROJECTS)
+  jey @join__enumValue(graph: PROJECTS)
+  jor @join__enumValue(graph: PROJECTS)
+  kaz @join__enumValue(graph: PROJECTS)
+  ken @join__enumValue(graph: PROJECTS)
+  kir @join__enumValue(graph: PROJECTS)
+  prk @join__enumValue(graph: PROJECTS)
+  kor @join__enumValue(graph: PROJECTS)
+  kwt @join__enumValue(graph: PROJECTS)
+  kgz @join__enumValue(graph: PROJECTS)
+  lao @join__enumValue(graph: PROJECTS)
+  lva @join__enumValue(graph: PROJECTS)
+  lbn @join__enumValue(graph: PROJECTS)
+  lso @join__enumValue(graph: PROJECTS)
+  lbr @join__enumValue(graph: PROJECTS)
+  lby @join__enumValue(graph: PROJECTS)
+  lie @join__enumValue(graph: PROJECTS)
+  ltu @join__enumValue(graph: PROJECTS)
+  lux @join__enumValue(graph: PROJECTS)
+  mac @join__enumValue(graph: PROJECTS)
+  mdg @join__enumValue(graph: PROJECTS)
+  mwi @join__enumValue(graph: PROJECTS)
+  mys @join__enumValue(graph: PROJECTS)
+  mdv @join__enumValue(graph: PROJECTS)
+  mli @join__enumValue(graph: PROJECTS)
+  mlt @join__enumValue(graph: PROJECTS)
+  mhl @join__enumValue(graph: PROJECTS)
+  mtq @join__enumValue(graph: PROJECTS)
+  mrt @join__enumValue(graph: PROJECTS)
+  mus @join__enumValue(graph: PROJECTS)
+  myt @join__enumValue(graph: PROJECTS)
+  mex @join__enumValue(graph: PROJECTS)
+  fsm @join__enumValue(graph: PROJECTS)
+  mda @join__enumValue(graph: PROJECTS)
+  mco @join__enumValue(graph: PROJECTS)
+  mng @join__enumValue(graph: PROJECTS)
+  mne @join__enumValue(graph: PROJECTS)
+  msr @join__enumValue(graph: PROJECTS)
+  mar @join__enumValue(graph: PROJECTS)
+  moz @join__enumValue(graph: PROJECTS)
+  mmr @join__enumValue(graph: PROJECTS)
+  nam @join__enumValue(graph: PROJECTS)
+  nru @join__enumValue(graph: PROJECTS)
+  npl @join__enumValue(graph: PROJECTS)
+  nld @join__enumValue(graph: PROJECTS)
+  ncl @join__enumValue(graph: PROJECTS)
+  nzl @join__enumValue(graph: PROJECTS)
+  nic @join__enumValue(graph: PROJECTS)
+  ner @join__enumValue(graph: PROJECTS)
+  nga @join__enumValue(graph: PROJECTS)
+  niu @join__enumValue(graph: PROJECTS)
+  nfk @join__enumValue(graph: PROJECTS)
+  mkd @join__enumValue(graph: PROJECTS)
+  mnp @join__enumValue(graph: PROJECTS)
+  nor @join__enumValue(graph: PROJECTS)
+  omn @join__enumValue(graph: PROJECTS)
+  pak @join__enumValue(graph: PROJECTS)
+  plw @join__enumValue(graph: PROJECTS)
+  pse @join__enumValue(graph: PROJECTS)
+  pan @join__enumValue(graph: PROJECTS)
+  png @join__enumValue(graph: PROJECTS)
+  pry @join__enumValue(graph: PROJECTS)
+  per @join__enumValue(graph: PROJECTS)
+  phl @join__enumValue(graph: PROJECTS)
+  pcn @join__enumValue(graph: PROJECTS)
+  pol @join__enumValue(graph: PROJECTS)
+  prt @join__enumValue(graph: PROJECTS)
+  pri @join__enumValue(graph: PROJECTS)
+  qat @join__enumValue(graph: PROJECTS)
+  reu @join__enumValue(graph: PROJECTS)
+  rou @join__enumValue(graph: PROJECTS)
+  rus @join__enumValue(graph: PROJECTS)
+  rwa @join__enumValue(graph: PROJECTS)
+  blm @join__enumValue(graph: PROJECTS)
+  shn @join__enumValue(graph: PROJECTS)
+  kna @join__enumValue(graph: PROJECTS)
+  lca @join__enumValue(graph: PROJECTS)
+  maf @join__enumValue(graph: PROJECTS)
+  spm @join__enumValue(graph: PROJECTS)
+  vct @join__enumValue(graph: PROJECTS)
+  wsm @join__enumValue(graph: PROJECTS)
+  smr @join__enumValue(graph: PROJECTS)
+  stp @join__enumValue(graph: PROJECTS)
+  sau @join__enumValue(graph: PROJECTS)
+  sen @join__enumValue(graph: PROJECTS)
+  srb @join__enumValue(graph: PROJECTS)
+  syc @join__enumValue(graph: PROJECTS)
+  sle @join__enumValue(graph: PROJECTS)
+  sgp @join__enumValue(graph: PROJECTS)
+  sxm @join__enumValue(graph: PROJECTS)
+  svk @join__enumValue(graph: PROJECTS)
+  svn @join__enumValue(graph: PROJECTS)
+  slb @join__enumValue(graph: PROJECTS)
+  som @join__enumValue(graph: PROJECTS)
+  zaf @join__enumValue(graph: PROJECTS)
+  sgs @join__enumValue(graph: PROJECTS)
+  ssd @join__enumValue(graph: PROJECTS)
+  esp @join__enumValue(graph: PROJECTS)
+  lka @join__enumValue(graph: PROJECTS)
+  sdn @join__enumValue(graph: PROJECTS)
+  sur @join__enumValue(graph: PROJECTS)
+  sjm @join__enumValue(graph: PROJECTS)
+  swe @join__enumValue(graph: PROJECTS)
+  che @join__enumValue(graph: PROJECTS)
+  syr @join__enumValue(graph: PROJECTS)
+  twn @join__enumValue(graph: PROJECTS)
+  tjk @join__enumValue(graph: PROJECTS)
+  tza @join__enumValue(graph: PROJECTS)
+  tha @join__enumValue(graph: PROJECTS)
+  tls @join__enumValue(graph: PROJECTS)
+  tgo @join__enumValue(graph: PROJECTS)
+  tkl @join__enumValue(graph: PROJECTS)
+  ton @join__enumValue(graph: PROJECTS)
+  tto @join__enumValue(graph: PROJECTS)
+  tun @join__enumValue(graph: PROJECTS)
+  tur @join__enumValue(graph: PROJECTS)
+  tkm @join__enumValue(graph: PROJECTS)
+  tca @join__enumValue(graph: PROJECTS)
+  tuv @join__enumValue(graph: PROJECTS)
+  uga @join__enumValue(graph: PROJECTS)
+  ukr @join__enumValue(graph: PROJECTS)
+  are @join__enumValue(graph: PROJECTS)
+  gbr @join__enumValue(graph: PROJECTS)
+  usa @join__enumValue(graph: PROJECTS)
+  umi @join__enumValue(graph: PROJECTS)
+  ury @join__enumValue(graph: PROJECTS)
+  uzb @join__enumValue(graph: PROJECTS)
+  vut @join__enumValue(graph: PROJECTS)
+  ven @join__enumValue(graph: PROJECTS)
+  vnm @join__enumValue(graph: PROJECTS)
+  vgb @join__enumValue(graph: PROJECTS)
+  vir @join__enumValue(graph: PROJECTS)
+  wlf @join__enumValue(graph: PROJECTS)
+  esh @join__enumValue(graph: PROJECTS)
+  yem @join__enumValue(graph: PROJECTS)
+  zmb @join__enumValue(graph: PROJECTS)
+  zwe @join__enumValue(graph: PROJECTS)
+}
+
+enum CountryCodes
+  @join__type(graph: ORGANIZATION)
+{
+  AFG @join__enumValue(graph: ORGANIZATION)
+  ALA @join__enumValue(graph: ORGANIZATION)
+  ALB @join__enumValue(graph: ORGANIZATION)
+  DZA @join__enumValue(graph: ORGANIZATION)
+  ASM @join__enumValue(graph: ORGANIZATION)
+  AND @join__enumValue(graph: ORGANIZATION)
+  AGO @join__enumValue(graph: ORGANIZATION)
+  AIA @join__enumValue(graph: ORGANIZATION)
+  ATA @join__enumValue(graph: ORGANIZATION)
+  ATG @join__enumValue(graph: ORGANIZATION)
+  ARG @join__enumValue(graph: ORGANIZATION)
+  ARM @join__enumValue(graph: ORGANIZATION)
+  ABW @join__enumValue(graph: ORGANIZATION)
+  AUS @join__enumValue(graph: ORGANIZATION)
+  AUT @join__enumValue(graph: ORGANIZATION)
+  AZE @join__enumValue(graph: ORGANIZATION)
+  BHS @join__enumValue(graph: ORGANIZATION)
+  BHR @join__enumValue(graph: ORGANIZATION)
+  BGD @join__enumValue(graph: ORGANIZATION)
+  BRB @join__enumValue(graph: ORGANIZATION)
+  BLR @join__enumValue(graph: ORGANIZATION)
+  BEL @join__enumValue(graph: ORGANIZATION)
+  BLZ @join__enumValue(graph: ORGANIZATION)
+  BEN @join__enumValue(graph: ORGANIZATION)
+  BMU @join__enumValue(graph: ORGANIZATION)
+  BTN @join__enumValue(graph: ORGANIZATION)
+  BOL @join__enumValue(graph: ORGANIZATION)
+  BES @join__enumValue(graph: ORGANIZATION)
+  BIH @join__enumValue(graph: ORGANIZATION)
+  BWA @join__enumValue(graph: ORGANIZATION)
+  BVT @join__enumValue(graph: ORGANIZATION)
+  BRA @join__enumValue(graph: ORGANIZATION)
+  IOT @join__enumValue(graph: ORGANIZATION)
+  BRN @join__enumValue(graph: ORGANIZATION)
+  BGR @join__enumValue(graph: ORGANIZATION)
+  BFA @join__enumValue(graph: ORGANIZATION)
+  BDI @join__enumValue(graph: ORGANIZATION)
+  CPV @join__enumValue(graph: ORGANIZATION)
+  KHM @join__enumValue(graph: ORGANIZATION)
+  CMR @join__enumValue(graph: ORGANIZATION)
+  CAN @join__enumValue(graph: ORGANIZATION)
+  CYM @join__enumValue(graph: ORGANIZATION)
+  CAF @join__enumValue(graph: ORGANIZATION)
+  TCD @join__enumValue(graph: ORGANIZATION)
+  CHL @join__enumValue(graph: ORGANIZATION)
+  CHN @join__enumValue(graph: ORGANIZATION)
+  CXR @join__enumValue(graph: ORGANIZATION)
+  CCK @join__enumValue(graph: ORGANIZATION)
+  COL @join__enumValue(graph: ORGANIZATION)
+  COM @join__enumValue(graph: ORGANIZATION)
+  COG @join__enumValue(graph: ORGANIZATION)
+  COD @join__enumValue(graph: ORGANIZATION)
+  COK @join__enumValue(graph: ORGANIZATION)
+  CRI @join__enumValue(graph: ORGANIZATION)
+  CIV @join__enumValue(graph: ORGANIZATION)
+  HRV @join__enumValue(graph: ORGANIZATION)
+  CUB @join__enumValue(graph: ORGANIZATION)
+  CUW @join__enumValue(graph: ORGANIZATION)
+  CYP @join__enumValue(graph: ORGANIZATION)
+  CZE @join__enumValue(graph: ORGANIZATION)
+  DNK @join__enumValue(graph: ORGANIZATION)
+  DJI @join__enumValue(graph: ORGANIZATION)
+  DMA @join__enumValue(graph: ORGANIZATION)
+  DOM @join__enumValue(graph: ORGANIZATION)
+  ECU @join__enumValue(graph: ORGANIZATION)
+  EGY @join__enumValue(graph: ORGANIZATION)
+  SLV @join__enumValue(graph: ORGANIZATION)
+  GNQ @join__enumValue(graph: ORGANIZATION)
+  ERI @join__enumValue(graph: ORGANIZATION)
+  EST @join__enumValue(graph: ORGANIZATION)
+  SWZ @join__enumValue(graph: ORGANIZATION)
+  ETH @join__enumValue(graph: ORGANIZATION)
+  FLK @join__enumValue(graph: ORGANIZATION)
+  FRO @join__enumValue(graph: ORGANIZATION)
+  FJI @join__enumValue(graph: ORGANIZATION)
+  FIN @join__enumValue(graph: ORGANIZATION)
+  FRA @join__enumValue(graph: ORGANIZATION)
+  GUF @join__enumValue(graph: ORGANIZATION)
+  PYF @join__enumValue(graph: ORGANIZATION)
+  ATF @join__enumValue(graph: ORGANIZATION)
+  GAB @join__enumValue(graph: ORGANIZATION)
+  GMB @join__enumValue(graph: ORGANIZATION)
+  GEO @join__enumValue(graph: ORGANIZATION)
+  DEU @join__enumValue(graph: ORGANIZATION)
+  GHA @join__enumValue(graph: ORGANIZATION)
+  GIB @join__enumValue(graph: ORGANIZATION)
+  GRC @join__enumValue(graph: ORGANIZATION)
+  GRL @join__enumValue(graph: ORGANIZATION)
+  GRD @join__enumValue(graph: ORGANIZATION)
+  GLP @join__enumValue(graph: ORGANIZATION)
+  GUM @join__enumValue(graph: ORGANIZATION)
+  GTM @join__enumValue(graph: ORGANIZATION)
+  GGY @join__enumValue(graph: ORGANIZATION)
+  GIN @join__enumValue(graph: ORGANIZATION)
+  GNB @join__enumValue(graph: ORGANIZATION)
+  GUY @join__enumValue(graph: ORGANIZATION)
+  HTI @join__enumValue(graph: ORGANIZATION)
+  HMD @join__enumValue(graph: ORGANIZATION)
+  VAT @join__enumValue(graph: ORGANIZATION)
+  HND @join__enumValue(graph: ORGANIZATION)
+  HKG @join__enumValue(graph: ORGANIZATION)
+  HUN @join__enumValue(graph: ORGANIZATION)
+  ISL @join__enumValue(graph: ORGANIZATION)
+  IND @join__enumValue(graph: ORGANIZATION)
+  IDN @join__enumValue(graph: ORGANIZATION)
+  IRN @join__enumValue(graph: ORGANIZATION)
+  IRQ @join__enumValue(graph: ORGANIZATION)
+  IRL @join__enumValue(graph: ORGANIZATION)
+  ISR @join__enumValue(graph: ORGANIZATION)
+  ITA @join__enumValue(graph: ORGANIZATION)
+  JAM @join__enumValue(graph: ORGANIZATION)
+  JPN @join__enumValue(graph: ORGANIZATION)
+  JEY @join__enumValue(graph: ORGANIZATION)
+  JOR @join__enumValue(graph: ORGANIZATION)
+  KAZ @join__enumValue(graph: ORGANIZATION)
+  KEN @join__enumValue(graph: ORGANIZATION)
+  KIR @join__enumValue(graph: ORGANIZATION)
+  PRK @join__enumValue(graph: ORGANIZATION)
+  KOR @join__enumValue(graph: ORGANIZATION)
+  KWT @join__enumValue(graph: ORGANIZATION)
+  KGZ @join__enumValue(graph: ORGANIZATION)
+  LAO @join__enumValue(graph: ORGANIZATION)
+  LVA @join__enumValue(graph: ORGANIZATION)
+  LBN @join__enumValue(graph: ORGANIZATION)
+  LSO @join__enumValue(graph: ORGANIZATION)
+  LBR @join__enumValue(graph: ORGANIZATION)
+  LBY @join__enumValue(graph: ORGANIZATION)
+  LIE @join__enumValue(graph: ORGANIZATION)
+  LTU @join__enumValue(graph: ORGANIZATION)
+  LUX @join__enumValue(graph: ORGANIZATION)
+  MAC @join__enumValue(graph: ORGANIZATION)
+  MDG @join__enumValue(graph: ORGANIZATION)
+  MWI @join__enumValue(graph: ORGANIZATION)
+  MYS @join__enumValue(graph: ORGANIZATION)
+  MDV @join__enumValue(graph: ORGANIZATION)
+  MLI @join__enumValue(graph: ORGANIZATION)
+  MLT @join__enumValue(graph: ORGANIZATION)
+  MHL @join__enumValue(graph: ORGANIZATION)
+  MTQ @join__enumValue(graph: ORGANIZATION)
+  MRT @join__enumValue(graph: ORGANIZATION)
+  MUS @join__enumValue(graph: ORGANIZATION)
+  MYT @join__enumValue(graph: ORGANIZATION)
+  MEX @join__enumValue(graph: ORGANIZATION)
+  FSM @join__enumValue(graph: ORGANIZATION)
+  MDA @join__enumValue(graph: ORGANIZATION)
+  MCO @join__enumValue(graph: ORGANIZATION)
+  MNG @join__enumValue(graph: ORGANIZATION)
+  MNE @join__enumValue(graph: ORGANIZATION)
+  MSR @join__enumValue(graph: ORGANIZATION)
+  MAR @join__enumValue(graph: ORGANIZATION)
+  MOZ @join__enumValue(graph: ORGANIZATION)
+  MMR @join__enumValue(graph: ORGANIZATION)
+  NAM @join__enumValue(graph: ORGANIZATION)
+  NRU @join__enumValue(graph: ORGANIZATION)
+  NPL @join__enumValue(graph: ORGANIZATION)
+  NLD @join__enumValue(graph: ORGANIZATION)
+  NCL @join__enumValue(graph: ORGANIZATION)
+  NZL @join__enumValue(graph: ORGANIZATION)
+  NIC @join__enumValue(graph: ORGANIZATION)
+  NER @join__enumValue(graph: ORGANIZATION)
+  NGA @join__enumValue(graph: ORGANIZATION)
+  NIU @join__enumValue(graph: ORGANIZATION)
+  NFK @join__enumValue(graph: ORGANIZATION)
+  MNP @join__enumValue(graph: ORGANIZATION)
+  NOR @join__enumValue(graph: ORGANIZATION)
+  OMN @join__enumValue(graph: ORGANIZATION)
+  PAK @join__enumValue(graph: ORGANIZATION)
+  PLW @join__enumValue(graph: ORGANIZATION)
+  PSE @join__enumValue(graph: ORGANIZATION)
+  PAN @join__enumValue(graph: ORGANIZATION)
+  PNG @join__enumValue(graph: ORGANIZATION)
+  PRY @join__enumValue(graph: ORGANIZATION)
+  PER @join__enumValue(graph: ORGANIZATION)
+  PHL @join__enumValue(graph: ORGANIZATION)
+  PCN @join__enumValue(graph: ORGANIZATION)
+  POL @join__enumValue(graph: ORGANIZATION)
+  PRT @join__enumValue(graph: ORGANIZATION)
+  PRI @join__enumValue(graph: ORGANIZATION)
+  QAT @join__enumValue(graph: ORGANIZATION)
+  REU @join__enumValue(graph: ORGANIZATION)
+  ROU @join__enumValue(graph: ORGANIZATION)
+  RUS @join__enumValue(graph: ORGANIZATION)
+  RWA @join__enumValue(graph: ORGANIZATION)
+  RYU @join__enumValue(graph: ORGANIZATION)
+  SBH @join__enumValue(graph: ORGANIZATION)
+  SHN @join__enumValue(graph: ORGANIZATION)
+  KNA @join__enumValue(graph: ORGANIZATION)
+  LCA @join__enumValue(graph: ORGANIZATION)
+  MAF @join__enumValue(graph: ORGANIZATION)
+  SPM @join__enumValue(graph: ORGANIZATION)
+  VCT @join__enumValue(graph: ORGANIZATION)
+  WSM @join__enumValue(graph: ORGANIZATION)
+  SMR @join__enumValue(graph: ORGANIZATION)
+  STP @join__enumValue(graph: ORGANIZATION)
+  SAU @join__enumValue(graph: ORGANIZATION)
+  SEN @join__enumValue(graph: ORGANIZATION)
+  SRB @join__enumValue(graph: ORGANIZATION)
+  SYC @join__enumValue(graph: ORGANIZATION)
+  SLE @join__enumValue(graph: ORGANIZATION)
+  SGP @join__enumValue(graph: ORGANIZATION)
+  SXM @join__enumValue(graph: ORGANIZATION)
+  SVK @join__enumValue(graph: ORGANIZATION)
+  SVN @join__enumValue(graph: ORGANIZATION)
+  SLB @join__enumValue(graph: ORGANIZATION)
+  SOM @join__enumValue(graph: ORGANIZATION)
+  ZAF @join__enumValue(graph: ORGANIZATION)
+  SGS @join__enumValue(graph: ORGANIZATION)
+  SSD @join__enumValue(graph: ORGANIZATION)
+  ESP @join__enumValue(graph: ORGANIZATION)
+  LKA @join__enumValue(graph: ORGANIZATION)
+  SDN @join__enumValue(graph: ORGANIZATION)
+  SUR @join__enumValue(graph: ORGANIZATION)
+  SJM @join__enumValue(graph: ORGANIZATION)
+  SWE @join__enumValue(graph: ORGANIZATION)
+  CHE @join__enumValue(graph: ORGANIZATION)
+  SYR @join__enumValue(graph: ORGANIZATION)
+  TWN @join__enumValue(graph: ORGANIZATION)
+  TJK @join__enumValue(graph: ORGANIZATION)
+  TZA @join__enumValue(graph: ORGANIZATION)
+  THA @join__enumValue(graph: ORGANIZATION)
+  TLS @join__enumValue(graph: ORGANIZATION)
+  TGO @join__enumValue(graph: ORGANIZATION)
+  TKL @join__enumValue(graph: ORGANIZATION)
+  TON @join__enumValue(graph: ORGANIZATION)
+  TTO @join__enumValue(graph: ORGANIZATION)
+  TUN @join__enumValue(graph: ORGANIZATION)
+  TUR @join__enumValue(graph: ORGANIZATION)
+  TKM @join__enumValue(graph: ORGANIZATION)
+  TCA @join__enumValue(graph: ORGANIZATION)
+  TUV @join__enumValue(graph: ORGANIZATION)
+  UGA @join__enumValue(graph: ORGANIZATION)
+  UKR @join__enumValue(graph: ORGANIZATION)
+  ARE @join__enumValue(graph: ORGANIZATION)
+  GBR @join__enumValue(graph: ORGANIZATION)
+  UMI @join__enumValue(graph: ORGANIZATION)
+  USA @join__enumValue(graph: ORGANIZATION)
+  URY @join__enumValue(graph: ORGANIZATION)
+  UZB @join__enumValue(graph: ORGANIZATION)
+  VUT @join__enumValue(graph: ORGANIZATION)
+  VEN @join__enumValue(graph: ORGANIZATION)
+  VNM @join__enumValue(graph: ORGANIZATION)
+  VGB @join__enumValue(graph: ORGANIZATION)
+  VIR @join__enumValue(graph: ORGANIZATION)
+  WLF @join__enumValue(graph: ORGANIZATION)
+  ESH @join__enumValue(graph: ORGANIZATION)
+  YEM @join__enumValue(graph: ORGANIZATION)
+  ZMB @join__enumValue(graph: ORGANIZATION)
+  ZWE @join__enumValue(graph: ORGANIZATION)
+}
+
+"""Date (isoformat)"""
+scalar Date
+  @join__type(graph: PROJECTS)
+
+"""Date with time (isoformat)"""
+scalar DateTime
+  @join__type(graph: AUTH)
+  @join__type(graph: PROJECTS)
+
+scalar EmailAddress
+  @join__type(graph: AUTH)
+
+type Energy
+  @join__type(graph: PROJECTS)
+{
+  toolEnergyModeling: String
+  toolEnergyModelingVersion: String
+  energyModelMethodologyReference: String
+  gwpEnergySourcesYear: Float
+  siteLocationWeatherData: String
+  electricityProvider: String
+  electricitySource: String
+  electricityCarbonFactor: Float
+  electricityCarbonFactorSource: String
+}
+
+type EPD
+  @join__type(graph: PROJECTS)
+{
+  comment: String
+  conversions: [Conversion!]
+  declaredUnit: Unit!
+  formatVersion: String!
+  id: UUID!
+  impacts: Results!
+  location: Country!
+  metaData: JSON!
+  name: String!
+  publishedDate: Date!
+  referenceServiceLife: Int
+  source: Source
+  standard: Standard!
+  subtype: SubType!
+  validUntil: Date!
+  version: String!
+}
+
+union EPDTechFlow
+  @join__type(graph: PROJECTS)
+  @join__unionMember(graph: PROJECTS, member: "EPD")
+  @join__unionMember(graph: PROJECTS, member: "TechFlow")
+ = EPD | TechFlow
+
+input FilterBy
+  @join__type(graph: AUTH)
+  @join__type(graph: ORGANIZATION)
+  @join__type(graph: PROJECTS)
+{
+  equal: JSON
+  contains: JSON
+  startsWith: JSON
+  endsWith: JSON
+  gt: JSON
+  gte: JSON
+  lt: JSON
+  lte: JSON
+  notEqual: JSON
+  isTrue: Boolean
+  in: JSON
+}
+
+enum GeneralEnergyClass
+  @join__type(graph: PROJECTS)
+{
+  existing @join__enumValue(graph: PROJECTS)
+  standard @join__enumValue(graph: PROJECTS)
+  advanced @join__enumValue(graph: PROJECTS)
+  unknown @join__enumValue(graph: PROJECTS)
+}
+
+enum ImpactCategoryKey
+  @join__type(graph: PROJECTS)
+{
+  gwp @join__enumValue(graph: PROJECTS)
+  gwp_fos @join__enumValue(graph: PROJECTS)
+  gwp_bio @join__enumValue(graph: PROJECTS)
+  gwp_lul @join__enumValue(graph: PROJECTS)
+  odp @join__enumValue(graph: PROJECTS)
+  ap @join__enumValue(graph: PROJECTS)
+  ep @join__enumValue(graph: PROJECTS)
+  ep_fw @join__enumValue(graph: PROJECTS)
+  ep_mar @join__enumValue(graph: PROJECTS)
+  ep_ter @join__enumValue(graph: PROJECTS)
+  pocp @join__enumValue(graph: PROJECTS)
+  adpe @join__enumValue(graph: PROJECTS)
+  adpf @join__enumValue(graph: PROJECTS)
+  penre @join__enumValue(graph: PROJECTS)
+  pere @join__enumValue(graph: PROJECTS)
+  perm @join__enumValue(graph: PROJECTS)
+  pert @join__enumValue(graph: PROJECTS)
+  penrt @join__enumValue(graph: PROJECTS)
+  penrm @join__enumValue(graph: PROJECTS)
+  sm @join__enumValue(graph: PROJECTS)
+  pm @join__enumValue(graph: PROJECTS)
+  wdp @join__enumValue(graph: PROJECTS)
+  irp @join__enumValue(graph: PROJECTS)
+  etp_fw @join__enumValue(graph: PROJECTS)
+  htp_c @join__enumValue(graph: PROJECTS)
+  htp_nc @join__enumValue(graph: PROJECTS)
+  sqp @join__enumValue(graph: PROJECTS)
+  rsf @join__enumValue(graph: PROJECTS)
+  nrsf @join__enumValue(graph: PROJECTS)
+  fw @join__enumValue(graph: PROJECTS)
+  hwd @join__enumValue(graph: PROJECTS)
+  nhwd @join__enumValue(graph: PROJECTS)
+  rwd @join__enumValue(graph: PROJECTS)
+  cru @join__enumValue(graph: PROJECTS)
+  mrf @join__enumValue(graph: PROJECTS)
+  mer @join__enumValue(graph: PROJECTS)
+  eee @join__enumValue(graph: PROJECTS)
+  eet @join__enumValue(graph: PROJECTS)
+}
+
+type ImpactCategoryResults
+  @join__type(graph: PROJECTS)
+{
+  a0: Float
+  a1a3: Float
+  a4: Float
+  a5: Float
+  b1: Float
+  b2: Float
+  b3: Float
+  b4: Float
+  b5: Float
+  b6: Float
+  b7: Float
+  b8: Float
+  c1: Float
+  c2: Float
+  c3: Float
+  c4: Float
+  d: Float
+  total: Float
+}
+
+input InputAggregation
+  @join__type(graph: PROJECTS)
+{
+  method: AggregationMethod!
+  field: String!
+  field2: String = null
+}
+
+input InputAreaType
+  @join__type(graph: PROJECTS)
+{
+  definition: String!
+  unit: Unit!
+  value: Float!
+}
+
+input InputAssembly
+  @join__type(graph: PROJECTS)
+{
+  category: String = null
+  classification: [InputClassification!] = null
+  comment: String = null
+  description: String = null
+  id: UUID
+  metaData: JSON = null
+  name: String!
+  products: [InputProduct!]!
+  quantity: Float!
+  results: JSON = null
+  type: String!
+  unit: Unit!
+}
+
+input InputClassification
+  @join__type(graph: PROJECTS)
+{
+  code: String!
+  name: String!
+  system: String!
+}
+
+input InputContribution
+  @join__type(graph: PROJECTS)
+{
+  project: InputProject!
+  public: Boolean! = false
+}
+
+input InputConversion
+  @join__type(graph: PROJECTS)
+{
+  metaData: String
+  to: Unit!
+  value: Float!
+}
+
+input InputImpactData
+  @join__type(graph: PROJECTS)
+{
+  type: String!
+  comment: String = null
+  conversions: [InputConversion!] = null
+  declaredUnit: Unit!
+  formatVersion: String!
+  id: UUID = null
+  impacts: JSON!
+  location: Country!
+  metaData: JSON = null
+  name: String!
+  publishedDate: Date = null
+  referenceServiceLife: Int = null
+  source: InputSource = null
+  standard: Standard = null
+  subtype: SubType = null
+  validUntil: Date = null
+  version: String = null
+}
+
+input InputLocation
+  @join__type(graph: PROJECTS)
+{
+  address: String = null
+  city: String = null
+  country: Country!
+}
+
+input InputOrganization
+  @join__type(graph: ORGANIZATION)
+{
+  id: UUID! = "annotation=NoneType required=False default_factory=uuid4"
+  name: String!
+  address: String!
+  city: String!
+  country: CountryCodes!
+  metaData: InputOrganizationMetaData! = {stakeholders: []}
+}
+
+input InputOrganizationMetaData
+  @join__type(graph: ORGANIZATION)
+{
+  stakeholders: [StakeholderEnum!]! = []
+}
+
+input InputProduct
+  @join__type(graph: PROJECTS)
+{
+  description: String = null
+  id: UUID
+  impactData: InputImpactData!
+  metaData: JSON = null
+  name: String!
+  quantity: Float!
+  referenceServiceLife: Int!
+  results: JSON = null
+  transport: JSON = null
+  type: String!
+  unit: Unit!
+}
+
+input InputProject
+  @join__type(graph: PROJECTS)
+{
+  assemblies: [InputAssembly!]!
+  classificationSystem: String = null
+  comment: String = null
+  description: String = null
+  formatVersion: String!
+  id: UUID
+  impactCategories: [ImpactCategoryKey!]!
+  lciaMethod: String = null
+  lifeCycleStages: [LifeCycleStage!]!
+  location: InputLocation!
+  metaData: JSON = null
+  name: String!
+  owner: String = null
+  projectInfo: InputProjectInfo = null
+  projectPhase: ProjectPhase!
+  referenceStudyPeriod: Int = null
+  results: JSON = null
+  softwareInfo: InputSoftwareInfo!
+}
+
+input InputProjectInfo
+  @join__type(graph: PROJECTS)
+{
+  buildingCompletionYear: Int = null
+  buildingFootprint: InputValueUnit = null
+  buildingHeight: InputValueUnit = null
+  buildingMass: InputValueUnit = null
+  buildingModelScope: [BuildingModelScope!] = null
+  buildingPermitYear: Int = null
+  buildingType: BuildingType
+  buildingTypology: [BuildingTypology!]
+  buildingUsers: Int = null
+  certifications: [String!] = null
+  energyDemandElectricity: Float = null
+  energyDemandHeating: Float = null
+  energySupplyElectricity: Float = null
+  energySupplyHeating: Float = null
+  exportedElectricity: Float = null
+  floorsAboveGround: Int!
+  floorsBelowGround: Int = null
+  frameType: String = null
+  generalEnergyClass: GeneralEnergyClass
+  grossFloorArea: InputAreaType!
+  heatedFloorArea: InputAreaType = null
+  localEnergyClass: String = null
+  roofType: RoofType
+  type: String!
+}
+
+input InputSoftwareInfo
+  @join__type(graph: PROJECTS)
+{
+  calculationType: String = null
+  goalAndScopeDefinition: String = null
+  lcaSoftware: String!
+}
+
+input InputSource
+  @join__type(graph: PROJECTS)
+{
+  name: String!
+  url: String = null
+}
+
+input InputValueUnit
+  @join__type(graph: PROJECTS)
+{
+  unit: Unit!
+  value: Float!
+}
+
+type InviteResult
+  @join__type(graph: AUTH)
+{
+  email: String!
+  status: String!
+  message: String!
+}
+
+enum InviteStatus
+  @join__type(graph: AUTH)
+{
+  ACCEPTED @join__enumValue(graph: AUTH)
+  PENDING @join__enumValue(graph: AUTH)
+  REJECTED @join__enumValue(graph: AUTH)
+  NONE @join__enumValue(graph: AUTH)
+}
+
+input InviteUsersInput
+  @join__type(graph: AUTH)
+{
+  emails: [String!]!
+}
+
+scalar join__DirectiveArguments
+
+scalar join__FieldSet
+
+enum join__Graph {
+  AUTH @join__graph(name: "auth", url: "http://localhost:7001/api/graphql")
+  ORGANIZATION @join__graph(name: "organization", url: "http://localhost:7002/api/graphql")
+  PROJECTS @join__graph(name: "projects", url: "http://localhost:7003/api/graphql")
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).
+"""
+scalar JSON
+  @join__type(graph: AUTH)
+  @join__type(graph: ORGANIZATION)
+  @join__type(graph: PROJECTS)
+  @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
+
+enum LifeCycleStage
+  @join__type(graph: PROJECTS)
+{
+  a0 @join__enumValue(graph: PROJECTS)
+  a1a3 @join__enumValue(graph: PROJECTS)
+  a4 @join__enumValue(graph: PROJECTS)
+  a5 @join__enumValue(graph: PROJECTS)
+  b1 @join__enumValue(graph: PROJECTS)
+  b2 @join__enumValue(graph: PROJECTS)
+  b3 @join__enumValue(graph: PROJECTS)
+  b4 @join__enumValue(graph: PROJECTS)
+  b5 @join__enumValue(graph: PROJECTS)
+  b6 @join__enumValue(graph: PROJECTS)
+  b7 @join__enumValue(graph: PROJECTS)
+  b8 @join__enumValue(graph: PROJECTS)
+  c1 @join__enumValue(graph: PROJECTS)
+  c2 @join__enumValue(graph: PROJECTS)
+  c3 @join__enumValue(graph: PROJECTS)
+  c4 @join__enumValue(graph: PROJECTS)
+  d @join__enumValue(graph: PROJECTS)
+}
+
+scalar link__Import
+
+enum link__Purpose {
+  """
+  `SECURITY` features provide metadata necessary to securely resolve fields.
+  """
+  SECURITY
+
+  """
+  `EXECUTION` features provide metadata necessary for operation execution.
+  """
+  EXECUTION
+}
+
+type Location
+  @join__type(graph: PROJECTS)
+{
+  countryName: String!
+  longitude: Float!
+  latitude: Float!
+  address: String
+  city: String
+  country: Country!
+}
+
+type Mutation
+  @join__type(graph: AUTH)
+  @join__type(graph: ORGANIZATION)
+  @join__type(graph: PROJECTS)
+{
+  """Update user details"""
+  updateUser(userInput: UpdateUserInput!): User! @join__field(graph: AUTH)
+
+  """Invite users to the organization"""
+  inviteUsers(input: InviteUsersInput!): [InviteResult!]! @join__field(graph: AUTH)
+
+  """Accept an invitation"""
+  acceptInvitation(user: AcceptInvitationInput!): Boolean! @join__field(graph: AUTH)
+
+  """Reject an invitation"""
+  rejectInvitation(userId: String!): Boolean! @join__field(graph: AUTH)
+
+  """Resend an invitation"""
+  resendInvitation(userId: String!): InviteResult! @join__field(graph: AUTH)
+
+  """Impersonate a different user"""
+  impersonate(userId: String!): Boolean! @join__field(graph: AUTH)
+
+  """Assign admin role to a user"""
+  makeAdmin(userId: String!): Boolean! @join__field(graph: AUTH)
+
+  """
+  Creates multiple organizations and associates them with the current user
+  """
+  createOrganizations(organizations: [InputOrganization!]!): [Organization!]! @join__field(graph: ORGANIZATION)
+
+  """Updates an existing Organization"""
+  updateOrganizations(organizations: [InputOrganization!]!): [Organization!]! @join__field(graph: ORGANIZATION)
+
+  """
+  Deletes a list of Organizations by their IDs and returns a list of deleted IDs
+  """
+  deleteOrganizations(ids: [UUID!]!): [UUID!]! @join__field(graph: ORGANIZATION)
+
+  """Creates new Contributions"""
+  addContributions(contributions: [InputContribution!]!): [Contribution!]! @join__field(graph: PROJECTS)
+
+  """Deletes Contributions"""
+  deleteContributions(contributions: [UUID!]!): [UUID!]! @join__field(graph: PROJECTS)
+
+  """Updates Contributions"""
+  updateContributions(contributions: [UpdateContribution!]!): [Contribution!]! @join__field(graph: PROJECTS)
+}
+
+type Organization
+  @join__type(graph: ORGANIZATION, key: "id")
+{
+  id: UUID!
+  name: String!
+  address: String!
+  city: String!
+  country: CountryCodes!
+  metaData: OrganizationMetaData!
+}
+
+type OrganizationGraphQLResponse
+  @join__type(graph: ORGANIZATION)
+{
+  """The list of items in this pagination window."""
+  items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int): [Organization!]
+
+  """Total number of items in the filtered dataset."""
+  count(filterBy: FilterBy = null): Int!
+}
+
+type OrganizationMetaData
+  @join__type(graph: ORGANIZATION)
+{
+  stakeholders: [StakeholderEnum!]!
+}
+
+type Owner
+  @join__type(graph: PROJECTS)
+{
+  contact: String
+  web: String
+  country: String
+  email: String
+  type: String
+  representative: String
+}
+
+enum Permission
+  @join__type(graph: AUTH)
+{
+  CONTRIBUTIONS_READ @join__enumValue(graph: AUTH)
+  CONTRIBUTIONS_CREATE @join__enumValue(graph: AUTH)
+  CONTRIBUTIONS_UPDATE @join__enumValue(graph: AUTH)
+  CONTRIBUTIONS_DELETE @join__enumValue(graph: AUTH)
+  MEMBERS_READ @join__enumValue(graph: AUTH)
+  MEMBERS_CREATE @join__enumValue(graph: AUTH)
+  MEMBERS_UPDATE @join__enumValue(graph: AUTH)
+  MEMBERS_DELETE @join__enumValue(graph: AUTH)
+  ORGANIZATIONS_CREATE @join__enumValue(graph: AUTH)
+  ORGANIZATIONS_READ @join__enumValue(graph: AUTH)
+  ORGANIZATIONS_UPDATE @join__enumValue(graph: AUTH)
+  ORGANIZATIONS_DELETE @join__enumValue(graph: AUTH)
+}
+
+type Product
+  @join__type(graph: PROJECTS)
+{
+  description: String
+  id: UUID!
+  impactData: EPDTechFlow!
+  metaData: ProductMetaData
+  name: String!
+  quantity: Float!
+  referenceServiceLife: Int!
+  results: Results
+  unit: Unit!
+}
+
+type ProductMetaData
+  @join__type(graph: PROJECTS)
+{
+  productClass: String
+  strength: ValueUnit
+  density: ValueUnit
+  exposureClasses: String
+  concretePrecast: String
+  brickType: String
+  brickGroutIncluded: Boolean
+  timberType: String
+  groutType: String
+}
+
+type Project
+  @join__type(graph: PROJECTS)
+{
+  assemblies: [Assembly!]!
+  classificationSystem: String
+  comment: String
+  description: String
+  formatVersion: String!
+  id: UUID!
+  impactCategories: [ImpactCategoryKey!]!
+  lciaMethod: String
+  lifeCycleStages: [LifeCycleStage!]!
+  location: Location!
+  metaData: ProjectMetaData
+  name: String!
+  owner: String
+  projectInfo: ProjectInfo!
+  projectPhase: ProjectPhase!
+  referenceStudyPeriod: Int
+  results: Results
+  softwareInfo: SoftwareInfo!
+}
+
+type ProjectGraphQLGroupResponse
+  @join__type(graph: PROJECTS)
+{
+  group: String!
+  count: Int!
+  items(limit: Int = null): [Project!]!
+  aggregation(apply: [InputAggregation!]!): [AggregationResult!]!
+}
+
+type ProjectGraphQLResponse
+  @join__type(graph: PROJECTS)
+{
+  """The list of items in this pagination window."""
+  items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int): [Project!]
+
+  """Total number of items in the filtered dataset."""
+  count(filterBy: FilterBy = null): Int!
+  groups(groupBy: String!, limit: Int! = 50): [ProjectGraphQLGroupResponse!]!
+
+  """
+  Apply aggregation to the items. The aggregation should be specified in the 'apply' argument, which should be provided in MongoDB aggregation syntax.
+  """
+  aggregation(apply: JSON!): JSON!
+}
+
+type ProjectInfo
+  @join__type(graph: PROJECTS)
+{
+  buildingCompletionYear: Int
+  buildingFootprint: ValueUnit
+  buildingHeight: ValueUnit
+  buildingMass: ValueUnit
+  buildingModelScope: [BuildingModelScope!]
+  buildingPermitYear: Int
+  buildingType: BuildingType!
+  buildingTypology: [BuildingTypology!]!
+  buildingUsers: Int
+  certifications: [String!]
+  energyDemandElectricity: Float
+  energyDemandHeating: Float
+  energySupplyElectricity: Float
+  energySupplyHeating: Float
+  exportedElectricity: Float
+  floorsAboveGround: Int!
+  floorsBelowGround: Int
+  frameType: String
+  generalEnergyClass: GeneralEnergyClass!
+  grossFloorArea: AreaType
+  heatedFloorArea: AreaType
+  localEnergyClass: String
+  roofType: RoofType!
+}
+
+type ProjectMetaData
+  @join__type(graph: PROJECTS)
+{
+  source: Source
+  productClassificationSystem: String
+  image: Base64
+  climateZone: String
+  owner: Owner
+  assessment: AssessmentMetaData
+  lcaSoftwareVersion: String
+  lcaDatabase: String
+  lcaDatabaseVersion: String
+  lcaDatabaseOther: String
+  lcaModelType: String
+  interstitialFloors: String
+  newlyBuiltArea: ValueUnit
+  retrofittedArea: ValueUnit
+  demolishedArea: ValueUnit
+  existingArea: ValueUnit
+  builtFloorArea: ValueUnit
+  buildingProjectConstructionType2: String
+  infrastructureProjectConstructionType: String
+  infrastructureSectorType: String
+  buildingUseType: String
+  infrastructureUseType: String
+  projectWorkArea: ValueUnit
+  projectSiteArea: ValueUnit
+  conditionedFloorArea: ValueUnit
+  unconditionedFloorArea: ValueUnit
+  enclosedParkingArea: ValueUnit
+  detachedParkingArea: ValueUnit
+  surfaceParkingArea: ValueUnit
+  detachedParkingStructureArea: ValueUnit
+  ibcConstructionType: String
+  projectSurroundings: String
+  projectHistoric: Boolean
+  fullTimeEquivalent: Float
+  occupantLoad: Float
+  meanRoofHeight: ValueUnit
+  windowWallRatio: Float
+  thermalEnvelopeArea: ValueUnit
+  residentialUnits: Int
+  bedroomCount: Int
+  projectExpectedLife: Int
+  resultsValidatedAsBuilt: Boolean
+  resultsValidatedAsBuiltDescription: String
+  assessmentCutoffType: String
+  assessmentCutoff: String
+  assessmentCostCutoff: String
+  heritageStatus: String
+  omniclassConstructionEntity: String
+  energy: Energy
+  architectOfRecord: String
+  projectUserStudio: String
+  generalContractor: String
+  mepEngineer: String
+  sustainabilityConsultant: String
+  structuralEngineer: String
+  civilEngineer: String
+  landscapeConsultant: String
+  interiorDesigner: String
+  otherProjectTeam: String
+  workCompletionYear: Int
+  constructionStart: String
+  constructionYearExistingBuilding: Int
+  buildingOccupancyStart: String
+  cost: Cost
+  structural: Structural
+  publication: Publication
+}
+
+enum ProjectPhase
+  @join__type(graph: PROJECTS)
+{
+  strategic_design @join__enumValue(graph: PROJECTS)
+  concept_design @join__enumValue(graph: PROJECTS)
+  technical_design @join__enumValue(graph: PROJECTS)
+  construction @join__enumValue(graph: PROJECTS)
+  post_completion @join__enumValue(graph: PROJECTS)
+  in_use @join__enumValue(graph: PROJECTS)
+  other @join__enumValue(graph: PROJECTS)
+}
+
+type Publication
+  @join__type(graph: PROJECTS)
+{
+  authors: String
+  year: Int
+  doi: String
+  title: String
+  publisher: String
+}
+
+type Query
+  @join__type(graph: AUTH)
+  @join__type(graph: ORGANIZATION)
+  @join__type(graph: PROJECTS)
+{
+  """Returns all Roles and their permissions"""
+  roles: [RolePermission!]! @join__field(graph: AUTH)
+
+  """Returns all Users"""
+  users: UserGraphQLResponse! @join__field(graph: AUTH)
+
+  """Returns all Organizations"""
+  organizations: OrganizationGraphQLResponse! @join__field(graph: ORGANIZATION)
+
+  """Returns all projects of a user's organization"""
+  projects: ProjectGraphQLResponse! @join__field(graph: PROJECTS)
+
+  """Returns all contributions of a user's organization"""
+  contributions: ContributionGraphQLResponse! @join__field(graph: PROJECTS)
+}
+
+type Results
+  @join__type(graph: PROJECTS)
+{
+  gwp: ImpactCategoryResults
+  gwpFos: ImpactCategoryResults
+  gwpBio: ImpactCategoryResults
+  gwpLul: ImpactCategoryResults
+  odp: ImpactCategoryResults
+  ap: ImpactCategoryResults
+  ep: ImpactCategoryResults
+  epFw: ImpactCategoryResults
+  epMar: ImpactCategoryResults
+  epTer: ImpactCategoryResults
+  pocp: ImpactCategoryResults
+  adpe: ImpactCategoryResults
+  adpf: ImpactCategoryResults
+  penre: ImpactCategoryResults
+  pere: ImpactCategoryResults
+  perm: ImpactCategoryResults
+  pert: ImpactCategoryResults
+  penrt: ImpactCategoryResults
+  penrm: ImpactCategoryResults
+  sm: ImpactCategoryResults
+  pm: ImpactCategoryResults
+  wdp: ImpactCategoryResults
+  irp: ImpactCategoryResults
+  etpFw: ImpactCategoryResults
+  htpC: ImpactCategoryResults
+  htpNc: ImpactCategoryResults
+  sqp: ImpactCategoryResults
+  rsf: ImpactCategoryResults
+  nrsf: ImpactCategoryResults
+  fw: ImpactCategoryResults
+  hwd: ImpactCategoryResults
+  nhwd: ImpactCategoryResults
+  rwd: ImpactCategoryResults
+  cru: ImpactCategoryResults
+  mrf: ImpactCategoryResults
+  mer: ImpactCategoryResults
+  eee: ImpactCategoryResults
+  eet: ImpactCategoryResults
+}
+
+enum Role
+  @join__type(graph: AUTH)
+{
+  OWNER @join__enumValue(graph: AUTH)
+  MEMBER @join__enumValue(graph: AUTH)
+  ADMIN @join__enumValue(graph: AUTH)
+}
+
+type RolePermission
+  @join__type(graph: AUTH)
+{
+  name: Role!
+  permissions: [Permission!]!
+}
+
+enum RoofType
+  @join__type(graph: PROJECTS)
+{
+  flat @join__enumValue(graph: PROJECTS)
+  pitched @join__enumValue(graph: PROJECTS)
+  saddle @join__enumValue(graph: PROJECTS)
+  pyramid @join__enumValue(graph: PROJECTS)
+  unknown @join__enumValue(graph: PROJECTS)
+  other @join__enumValue(graph: PROJECTS)
+}
+
+type SoftwareInfo
+  @join__type(graph: PROJECTS)
+{
+  calculationType: String
+  goalAndScopeDefinition: String
+  lcaSoftware: String!
+}
+
+input SortBy
+  @join__type(graph: AUTH)
+  @join__type(graph: ORGANIZATION)
+  @join__type(graph: PROJECTS)
+{
+  asc: String
+  dsc: String
+}
+
+type Source
+  @join__type(graph: PROJECTS)
+{
+  name: String!
+  url: String
+}
+
+enum StakeholderEnum
+  @join__type(graph: ORGANIZATION)
+{
+  BUILDING_DATA_OWNERS @join__enumValue(graph: ORGANIZATION)
+  DESIGN_PROFESSIONALS @join__enumValue(graph: ORGANIZATION)
+  LCA_TOOL_DEVELOPERS @join__enumValue(graph: ORGANIZATION)
+  LCA_CONSULTANTS @join__enumValue(graph: ORGANIZATION)
+  BUILDING_USERS @join__enumValue(graph: ORGANIZATION)
+  CIVIL_SOCIETY @join__enumValue(graph: ORGANIZATION)
+  CLIENTS_INVESTORS_OWNERS @join__enumValue(graph: ORGANIZATION)
+  CONSTRUCTION_COMPANIES @join__enumValue(graph: ORGANIZATION)
+  CONSTRUCTION_PRODUCT_MANUFACTURERS @join__enumValue(graph: ORGANIZATION)
+  FACILITY_MANAGERS @join__enumValue(graph: ORGANIZATION)
+  FINANCIAL_SERVICE_PROVIDERS @join__enumValue(graph: ORGANIZATION)
+  FUNDING_SYSTEM_DEVELOPERS @join__enumValue(graph: ORGANIZATION)
+  STANDARDIZATION_BODIES @join__enumValue(graph: ORGANIZATION)
+  MEDIA_REPRESENTATIVES @join__enumValue(graph: ORGANIZATION)
+  POLICY_LAW_MAKERS @join__enumValue(graph: ORGANIZATION)
+  PRODUCT_LCA_DATABASE_DEVELOPERS @join__enumValue(graph: ORGANIZATION)
+  PRODUCT_LCA_EPD_DATA_DEVELOPERS @join__enumValue(graph: ORGANIZATION)
+  RESEARCHERS @join__enumValue(graph: ORGANIZATION)
+  SURVEYORS_VALUATION_PROFESSIONALS @join__enumValue(graph: ORGANIZATION)
+  SUSTAINABILITY_ASSESSMENT_SYSTEM_DEVELOPERS @join__enumValue(graph: ORGANIZATION)
+  SUSTAINABILITY_AUDITORS @join__enumValue(graph: ORGANIZATION)
+  ESG_CONSULTANTS @join__enumValue(graph: ORGANIZATION)
+}
+
+enum Standard
+  @join__type(graph: PROJECTS)
+{
+  en15804a1 @join__enumValue(graph: PROJECTS)
+  en15804a2 @join__enumValue(graph: PROJECTS)
+  unknown @join__enumValue(graph: PROJECTS)
+}
+
+type Structural
+  @join__type(graph: PROJECTS)
+{
+  riskCategory: String
+  earthquakeImportanceFactor: Float
+  seismicDesignCategory: String
+  horizontalGravitySystem: String
+  secondaryHorizontalGravitySystem: String
+  verticalGravitySystem: String
+  secondaryVerticalGravitySystem: String
+  lateralSystem: String
+  podium: String
+  foundationType: String
+  columnGridLong: ValueUnit
+  liveLoad: ValueUnit
+  snowLoad: ValueUnit
+  windSpeed: ValueUnit
+  allowableSoilBearingPressure: ValueUnit
+}
+
+enum SubType
+  @join__type(graph: PROJECTS)
+{
+  generic @join__enumValue(graph: PROJECTS)
+  specific @join__enumValue(graph: PROJECTS)
+  industry @join__enumValue(graph: PROJECTS)
+  representative @join__enumValue(graph: PROJECTS)
+}
+
+type TechFlow
+  @join__type(graph: PROJECTS)
+{
+  comment: String
+  conversions: [Conversion!]
+  declaredUnit: Unit!
+  formatVersion: String!
+  id: UUID!
+  impacts: Results!
+  location: Country!
+  metaData: JSON!
+  name: String!
+  source: Source
+}
+
+enum Unit
+  @join__type(graph: PROJECTS)
+{
+  m @join__enumValue(graph: PROJECTS)
+  m2 @join__enumValue(graph: PROJECTS)
+  m3 @join__enumValue(graph: PROJECTS)
+  kg @join__enumValue(graph: PROJECTS)
+  tones @join__enumValue(graph: PROJECTS)
+  pcs @join__enumValue(graph: PROJECTS)
+  kwh @join__enumValue(graph: PROJECTS)
+  l @join__enumValue(graph: PROJECTS)
+  m2r1 @join__enumValue(graph: PROJECTS)
+  km @join__enumValue(graph: PROJECTS)
+  tones_km @join__enumValue(graph: PROJECTS)
+  kgm3 @join__enumValue(graph: PROJECTS)
+  unknown @join__enumValue(graph: PROJECTS)
+}
+
+input UpdateContribution
+  @join__type(graph: PROJECTS)
+{
+  id: UUID!
+  public: Boolean
+}
+
+input UpdateUserInput
+  @join__type(graph: AUTH)
+{
+  id: UUID!
+  firstName: String
+  lastName: String
+  email: EmailAddress
+  currentPassword: String
+  newPassword: String
+  invited: Boolean
+  inviteStatus: InviteStatus
+  inviterName: String
+  role: Role
+  organizationId: UUID
+}
+
+type User
+  @join__type(graph: AUTH, key: "id")
+  @join__type(graph: ORGANIZATION, key: "id")
+  @join__type(graph: PROJECTS, key: "id")
+{
+  id: UUID!
+  firstName: String @join__field(graph: AUTH)
+  lastName: String @join__field(graph: AUTH)
+  email: String! @join__field(graph: AUTH)
+  timeJoined: DateTime! @join__field(graph: AUTH)
+  organizationId: UUID @join__field(graph: AUTH) @join__field(graph: ORGANIZATION)
+  invited: Boolean! @join__field(graph: AUTH)
+  inviteStatus: InviteStatus! @join__field(graph: AUTH)
+  inviterName: String @join__field(graph: AUTH)
+  roles: [Role!] @join__field(graph: AUTH)
+  organization: Organization @join__field(graph: ORGANIZATION)
+}
+
+type UserGraphQLResponse
+  @join__type(graph: AUTH)
+{
+  """The list of items in this pagination window."""
+  items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int): [User!]
+
+  """Total number of items in the filtered dataset."""
+  count(filterBy: FilterBy = null): Int!
+}
+
+scalar UUID
+  @join__type(graph: AUTH)
+  @join__type(graph: ORGANIZATION)
+  @join__type(graph: PROJECTS)
+
+type ValueUnit
+  @join__type(graph: PROJECTS)
+{
+  unit: Unit!
+  value: Float!
+}

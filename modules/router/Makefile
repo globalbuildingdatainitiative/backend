@@ -20,7 +20,7 @@ run: build-graph ## Run the router locally
 	PROJECTS_URL=http://localhost:7003/api/graphql \
 	CLIENT_ORIGIN=http://localhost:8000 \
 	ENABLE_INTROSPECTION=true \
-	rover dev --supergraph-config config/supergraph-config.yaml --router-config config/router.yaml --supergraph-port 7000
+	rover dev --supergraph-config config/supergraph-config.yaml --router-config config/router.yaml --supergraph-port 4000
 
 .PHONY: clean
 clean: ## Clean up generated files

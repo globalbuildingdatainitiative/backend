@@ -22,60 +22,136 @@ The deployment is managed using Kubernetes, Helm, and Skaffold.
 
 # Getting Started
 
-To get started please make sure that the following pieces of software are installed on your machine.
+To get started, please make sure that the following pieces of software are installed on your machine.
 
-## Windows
+## Prerequisites
 
-* [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
-* [Docker](https://docs.docker.com/desktop/windows/install/)
-* [Minikube](https://minikube.sigs.k8s.io/docs/start/)
-* [Skaffold](https://skaffold.dev/docs/install/#standalone-binary)
-* Python 3.12
+### All Platforms
+
+* [Docker](https://docs.docker.com/get-docker/) and Docker Compose
+* Python 3.12+
 * [pipenv](https://pipenv.pypa.io/en/latest/#install-pipenv-today)
+* [Apollo Rover](https://www.apollographql.com/docs/rover/getting-started) - GraphQL CLI tool
 
-## Linux
+### Installing Rover
 
-* [Docker](https://docs.docker.com/engine/install/ubuntu/)
-* [Minikube](https://minikube.sigs.k8s.io/docs/start/)
-* [Skaffold](https://skaffold.dev/docs/install/#standalone-binary)
-* Python 3.12
-* [pipenv](https://pipenv.pypa.io/en/latest/#install-pipenv-today)
+**macOS/Linux:**
+```bash
+curl -sSL https://rover.apollo.dev/nix/latest | sh
+```
 
-### Initial Setup
+**Windows (PowerShell):**
+```powershell
+iwr 'https://rover.apollo.dev/win/latest' | iex
+```
 
-Copy `template.skaffold.env` to `skaffold.env` and populate the env vars
+**Alternative (npm):**
+```bash
+npm install -g @apollo/rover
+```
 
-### Environment Variables
+Verify installation:
+```bash
+rover --version
+```
 
-For local development, each service requires specific environment variables to be set. These will be automatically loaded from `.env` files when running locally. Please refer to the [Environment Setup Guide](../ENVIRONMENT_SETUP.md) for detailed instructions on configuring these variables.
+### Windows-Specific
 
-Each module also contains its own `.env.example` file with the required variables:
-* [auth .env.example](./modules/auth/.env.example)
-* [organization .env.example](./modules/organization/.env.example)
-* [projects .env.example](./modules/projects/.env.example)
+* [WSL2](https://docs.microsoft.com/en-us/windows/wsl/install) (recommended for running Docker)
+
+## Quick Start
+
+1. **Clone the repository and install dependencies:**
+   ```bash
+   make install
+   ```
+
+2. **Set up environment variables:**
+   
+   Copy the example env files and configure them:
+   ```bash
+   cp modules/auth/.env.example modules/auth/.env
+   cp modules/organization/.env.example modules/organization/.env
+   cp modules/projects/.env.example modules/projects/.env
+   ```
+
+3. **Start all services:**
+   ```bash
+   make run
+   ```
+
+   This will:
+   - Start databases (PostgreSQL, MongoDB, SuperTokens) in Docker
+   - Initialize databases and run migrations
+   - Start all backend services (auth, organization, projects, router)
+
+4. **Access the services:**
+   - Auth API: http://localhost:7001
+   - Organization API: http://localhost:7002
+   - Projects API: http://localhost:7003
+   - **GraphQL Router: http://localhost:4000/graphql** ← Main entry point
+   - Health Check: http://localhost:8088
+
+## Development Commands
+
+```bash
+make help           # Show all available commands
+make db-up          # Start only database services
+make db-down        # Stop database services
+make run-auth       # Run only auth service
+make run-organization  # Run only organization service
+make run-projects   # Run only projects service
+make run-router     # Run only router service
+make test           # Run tests for all modules
+make lint           # Run linting for all modules
+make format         # Format code for all modules
+make clean          # Clean up generated files
+```
 
 # Folder Structure
 
 ```
 ├── .github           # GitHub Actions workflows
 ├── modules
-│   ├── auth          # Auth module for authentication and user management.
-│   ├── organization  # Organization module for organization management.
+│   ├── auth          # Auth module for authentication and user management
+│   ├── organization  # Organization module for organization management
 │   ├── projects      # Projects module for contribution management
-│   └── router        # Router module for GraphQL supergraph and API gateway.
-├── skaffold.yaml     # Skaffold config for running all services
+│   └── router        # Router module for GraphQL supergraph (Apollo Router)
+├── docker-compose.yml  # Docker Compose config for databases
+├── Makefile          # Root Makefile with common commands
 ├── LICENSE           # Project license
 └── README.md         # Project documentation
 ```
 
+# Architecture
+
+This backend uses a **federated GraphQL architecture** with Apollo Router:
+
+- **Microservices**: Each module (auth, organization, projects) is an independent FastAPI service with its own GraphQL schema
+- **Apollo Router**: Composes all subgraph schemas into a unified supergraph accessible at `localhost:4000/graphql`
+- **Local Development**: Services run on your host machine, databases run in Docker
+- **Hot Reload**: Changes to schemas or code automatically reload the services
+
 # Running the Services
 
-```shell
-# Make sure Minikube is running
-minikube start
+## Local Development (Recommended)
 
-# Start Skaffold
-skaffold dev
+```bash
+# Start all services (databases + backend services + router)
+make run
+```
+
+## Running Individual Components
+
+```bash
+# Start only databases
+make db-up
+
+# Run a specific service (after db-up)
+make run-auth
+make run-organization  
+make run-projects
+make run-router
 ```
 
 ## Test
