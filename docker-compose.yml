@@ -1,0 +1,96 @@
+services:
+  # PostgreSQL for Auth module
+  postgres-auth:
+    image: postgres:15-alpine
+    container_name: gbdi-postgres-auth
+    env_file:
+      - ./modules/auth/.env
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-auth-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgresuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gbdi-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres-auth
+    networks:
+      - gbdi-network
+
+  # SuperTokens for Auth module
+  supertokens:
+    image: registry.supertokens.io/supertokens/supertokens-postgresql:10.1
+    container_name: gbdi-supertokens
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+    env_file:
+      - ./modules/auth/.env
+    ports:
+      - "3567:3567"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3567/hello"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gbdi-network
+
+  # MongoDB for Projects module
+  mongo-projects:
+    image: mongo:7
+    container_name: gbdi-mongo-projects
+    env_file:
+      - ./modules/projects/.env
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-projects-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gbdi-network
+
+  # MongoDB for Organization module
+  mongo-organization:
+    image: mongo:7
+    container_name: gbdi-mongo-organization
+    env_file:
+      - ./modules/organization/.env
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo-organization-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gbdi-network
+
+networks:
+  gbdi-network:
+    driver: bridge
+
+volumes:
+  postgres-auth-data:
+  mongo-projects-data:
+  mongo-organization-data:

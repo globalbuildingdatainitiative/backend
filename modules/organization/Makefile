@@ -43,13 +43,19 @@ test: ## Run tests
 test-cov: ## Run tests with coverage
 	$(UV) run $(PYTEST) tests/ --cov=src --cov-report=html --cov-report=term
 
+.PHONY: init
+init: ## Initialize the service (wait for DB)
+	@echo "Initializing organization service..."
+	@$(UV) run --env-file=.env python ./src/initialize.py
+	@echo "✓ Organization service initialized"
+
 .PHONY: run
 run: ## Run the application locally
-	$(UV) run --env-file=.env uvicorn main:app --host 0.0.0.0 --port 7001 --reload --app-dir ./src
+	$(UV) run --env-file=.env uvicorn main:app --host 0.0.0.0 --port 7002 --reload --app-dir ./src
 
 .PHONY: run-prod
 run-prod: ## Run the application in production mode
-	$(UV) run --env-file=.env uvicorn main:app --host 0.0.0.0 --port 7001 --app-dir ./src
+	$(UV) run --env-file=.env uvicorn main:app --host 0.0.0.0 --port 7002 --app-dir ./src
 
 .PHONY: schema
 schema: ## Export GraphQL schema

@@ -1,0 +1,15 @@
+federation_version: =2.9.0
+subgraphs:
+  auth:
+    routing_url: "http://localhost:7001/api/graphql"
+    schema:
+      file: ../../auth/graphql/schema.graphql
+  organization:
+    routing_url: "http://localhost:7002/api/graphql"
+    schema:
+      file: ../../organization/graphql/schema.graphql
+  projects:
+    routing_url: "http://localhost:7003/api/graphql"
+    schema:
+      file: ../../projects/graphql/schema.graphql
+
