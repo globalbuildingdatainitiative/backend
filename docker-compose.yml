@@ -3,10 +3,8 @@ services:
   postgres-auth:
     image: postgres:15-alpine
     container_name: gbdi-postgres-auth
-    environment:
-      POSTGRES_USER: postgresuser
-      POSTGRES_PASSWORD: adgakj2354jhsklh78354
-      POSTGRES_DB: auth
+    env_file:
+      - ./modules/auth/.env
     ports:
       - "5434:5432"
     volumes:
@@ -19,6 +17,20 @@ services:
     networks:
       - gbdi-network
 
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres-auth
+    networks:
+      - gbdi-network
+
   # SuperTokens for Auth module
   supertokens:
     image: registry.supertokens.io/supertokens/supertokens-postgresql:11.1
@@ -26,9 +38,8 @@ services:
     depends_on:
       postgres-auth:
         condition: service_healthy
-    environment:
-      POSTGRESQL_CONNECTION_URI: postgresql://postgresuser:adgakj2354jhsklh78354@postgres-auth:5432/auth
-      POSTGRESQL_TABLE_SCHEMA: supertokens
+    env_file:
+      - ./modules/auth/.env
     ports:
       - "3567:3567"
     healthcheck:
@@ -43,10 +54,8 @@ services:
   mongo-projects:
     image: mongo:7
     container_name: gbdi-mongo-projects
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: postgresuser
-      MONGO_INITDB_ROOT_PASSWORD: adgakj2354jhsklh78354
-      MONGO_INITDB_DATABASE: projects
+    env_file:
+      - ./modules/projects/.env
     ports:
       - "27017:27017"
     volumes:
@@ -63,10 +72,8 @@ services:
   mongo-organization:
     image: mongo:7
     container_name: gbdi-mongo-organization
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: postgresuser
-      MONGO_INITDB_ROOT_PASSWORD: adgakj2354jhsklh78354
-      MONGO_INITDB_DATABASE: organization
+    env_file:
+      - ./modules/organization/.env
     ports:
       - "27018:27017"
     volumes:

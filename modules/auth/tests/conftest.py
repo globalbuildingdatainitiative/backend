@@ -136,11 +136,10 @@ async def app(supertokens) -> FastAPI:
 @pytest.fixture
 async def create_user(app, db) -> AsyncGenerator[SuperTokensUser, Any]:
     response = await sign_up("public", "my@email.com", "currentPassword123")
-    await create_user_meta_data(
-        response.user.id, {"email": response.user.emails[0], "time_joined": response.user.time_joined}
-    )
+    user_id = response.user.login_methods[0].recipe_user_id.get_as_string()
+    await create_user_meta_data(user_id, {})
 
-    _user = SuperTokensUser(id=UUID(response.user.id), organization_id=uuid4())
+    _user = SuperTokensUser(id=UUID(user_id), organization_id=uuid4())
     yield _user
 
     await delete_user(str(_user.id))
@@ -149,10 +148,9 @@ async def create_user(app, db) -> AsyncGenerator[SuperTokensUser, Any]:
 @pytest.fixture
 async def create_admin_user(app, db) -> AsyncGenerator[SuperTokensUser, Any]:
     response = await sign_up("public", "admin@email.com", "currentPassword123")
-    await create_user_meta_data(
-        response.user.id, {"email": response.user.emails[0], "time_joined": response.user.time_joined}
-    )
-    _user = SuperTokensUser(id=UUID(response.user.id), organization_id=uuid4())
+    user_id = response.user.login_methods[0].recipe_user_id.get_as_string()
+    await create_user_meta_data(user_id, {})
+    _user = SuperTokensUser(id=UUID(user_id), organization_id=uuid4())
     await assign_role(_user.id, Role.ADMIN)
 
     yield _user
@@ -202,7 +200,7 @@ async def users(app, db):
         response = await sign_up("public", user.get("email"), "currentPassword123")
         if isinstance(response, EmailAlreadyExistsError):
             continue
-        user_id = response.user.id
+        user_id = response.user.login_methods[0].recipe_user_id.get_as_string()
         await create_user_meta_data(
             user_id,
             {
@@ -213,8 +211,6 @@ async def users(app, db):
                 "invited": user.get("invited"),
                 "invite_status": user.get("invite_status"),
                 "inviter_name": user.get("inviter_name"),
-                "time_joined": response.user.time_joined,
-                "email": user.get("email"),
             },
         )
         for role in user.get("roles", []):

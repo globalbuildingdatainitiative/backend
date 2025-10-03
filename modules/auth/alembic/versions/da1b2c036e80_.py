@@ -31,7 +31,8 @@ async def migrate_supertokens_metadata(connection):
         # Try to query the old user_metadata table in SuperTokens schema
         # If it doesn't exist (fresh install), return empty list
         try:
-            result = await _connection.execute(sa.text("SELECT * FROM supertokens.user_metadata"))
+            # result = await _connection.execute(sa.text("SELECT * FROM supertokens.user_metadata"))
+            result = await _connection.execute(sa.text("SELECT * FROM user_metadata"))
             rows = result.fetchall()
             return rows
         except sa.exc.ProgrammingError:

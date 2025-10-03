@@ -325,13 +325,21 @@ def override_email_password_apis(original_implementation: APIInterface):
             first_name = next(f.value for f in form_fields if f.id == "firstName")
             last_name = next(f.value for f in form_fields if f.id == "lastName")
 
+            # Use recipe_user_id to match SuperTokens' emailpassword_users table
+            # Root Cause
+            # SuperTokens v14+ has two types of user IDs:
+
+            # App User ID (response.user.id) - Used for account linking across multiple login methods
+            # Recipe User ID (response.user.login_methods[0].recipe_user_id) - The actual ID in the emailpassword_users table
+            # The code was using the App User ID when it should have been using the Recipe User ID to match SuperTokens' database tables.
+            user_id = response.user.login_methods[0].recipe_user_id.get_as_string()
+
+            # Store only custom business logic fields, not email/time_joined (those come from SuperTokens)
             await create_user_meta_data(
-                response.user.id,
+                user_id,
                 {
                     "first_name": first_name,
                     "last_name": last_name,
-                    "email": str(response.user.emails[0]),
-                    "time_joined": response.user.time_joined,
                 },
             )
         return response

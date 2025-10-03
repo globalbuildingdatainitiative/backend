@@ -18,10 +18,11 @@ db-up: ## Start all database services (postgres, supertokens, mongo)
 	@echo "Starting database services..."
 	docker-compose up -d
 	@echo "✓ Services started"
-	@echo "  - PostgreSQL (auth): localhost:5434"
-	@echo "  - SuperTokens: localhost:3567"
-	@echo "  - MongoDB (projects): localhost:27017"
-	@echo "  - MongoDB (organization): localhost:27018"
+	@echo "  - PostgreSQL (auth): psql://localhost:5434"
+	@echo "  - SuperTokens: http://localhost:3567"
+	@echo "  - MongoDB (projects): mongodb://localhost:27017"
+	@echo "  - MongoDB (organization): mongodb://localhost:27018"
+	@echo "  - pgadmin: http://localhost:5050 (user: admin@admin.com, password: admin) cf docker-compose.yml for username passwords"
 
 .PHONY: db-down
 db-down: ## Stop all database services

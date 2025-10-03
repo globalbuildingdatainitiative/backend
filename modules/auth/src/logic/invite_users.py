@@ -57,19 +57,18 @@ async def invite_users(emails: List[str], inviter_id: UUID, request: Request) ->
                 if not isinstance(sign_up_result, SignUpOkResult):
                     raise InvitationFailed("Failed to sign up user", "Auth")
 
-                user_id = sign_up_result.user.id
+                # Use recipe_user_id to match SuperTokens' emailpassword_users table
+                user_id = sign_up_result.user.login_methods[0].recipe_user_id.get_as_string()
 
-                # Updating the user-metadata with invitation details
+                # Store only custom business logic fields (email/time_joined come from SuperTokens)
                 await create_user_meta_data(
                     user_id,
                     {
-                        "email": str(email),
                         "invited": True,
                         "invite_status": InviteStatus.PENDING.value,
                         "inviter_id": str(inviter_id),
                         "inviter_name": inviter_name,
                         "pending_org_id": str(inviter_org_id),
-                        "time_joined": sign_up_result.user.time_joined,
                     },
                 )
             await send_reset_password_email(

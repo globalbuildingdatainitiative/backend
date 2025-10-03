@@ -71,15 +71,82 @@ class GraphQLUser:
 
     @classmethod
     async def from_sqlmodel(cls, user: "UserMetadata") -> Self:
+        """
+        Construct a GraphQLUser from the custom UserMetadata SQLModel.
+        
+        For optimal performance and compatibility with old users:
+        - Prioritize data from our custom metadata table
+        - Only fetch from SuperTokens if data is missing
+        - As last resort, query SuperTokens database directly
+        """
+        from supertokens_python.asyncio import get_user as get_st_user
+        from supertokens_python.recipe.usermetadata.asyncio import get_user_metadata
+        from sqlmodel import select
+        from sqlmodel.ext.asyncio.session import AsyncSession
+        from core.connection import get_postgres_engine
+        
         invited = user.meta_data.get("invited", False)
         effective_org_id = (
             user.meta_data.get("organization_id") if not invited else user.meta_data.get("pending_org_id")
         )
 
+        # Try to get email and time_joined from our custom metadata first
+        email = user.meta_data.get("email")
+        time_joined_ms = user.meta_data.get("time_joined")
+        time_joined = None
+        
+        if time_joined_ms is not None:
+            time_joined = datetime.fromtimestamp(round(time_joined_ms / 1000))
+        
+        # Only fetch from SuperTokens if we're missing email or time_joined
+        if not email or not time_joined:
+            st_user = await get_st_user(user.id)
+            
+            if st_user:
+                # Found user in SuperTokens - use that data
+                if not email and st_user.emails:
+                    email = st_user.emails[0]
+                if not time_joined:
+                    time_joined = datetime.fromtimestamp(round(st_user.time_joined / 1000))
+            else:
+                # User not found by get_user() - try SuperTokens user_metadata table
+                # This can happen for old users where the ID mapping is different
+                try:
+                    st_metadata = await get_user_metadata(user.id)
+                    if not email:
+                        email = st_metadata.metadata.get("email")
+                    if not time_joined and st_metadata.metadata.get("time_joined"):
+                        time_joined = datetime.fromtimestamp(round(st_metadata.metadata["time_joined"] / 1000))
+                except Exception:
+                    pass  # Ignore errors from user_metadata lookup
+                
+                # Last resort: query SuperTokens database directly for emailpassword users  
+                if not email or not time_joined:
+                    try:
+                        from sqlalchemy import text as sql_text
+                        async with AsyncSession(get_postgres_engine()) as st_session:
+                            # Query emailpassword_users table directly
+                            query = sql_text("SELECT email, time_joined FROM emailpassword_users WHERE user_id = :user_id")
+                            result = await st_session.execute(query, {"user_id": user.id})
+                            row = result.first()
+                            if row:
+                                if not email:
+                                    email = row[0]
+                                if not time_joined:
+                                    time_joined = datetime.fromtimestamp(round(row[1] / 1000))
+                    except Exception as e:
+                        logger.warning(f"Failed to query SuperTokens database directly for user {user.id}: {e}")
+        
+        # Final validation
+        if not email:
+            raise ValueError(f"No email found for user {user.id}")
+        if not time_joined:
+            raise ValueError(f"No time_joined found for user {user.id}")
+
         return cls(
             id=UUID(user.id),
-            email=user.meta_data.get("email"),
-            time_joined=datetime.fromtimestamp(round(user.meta_data.get("time_joined") / 1000)),
+            email=email,
+            time_joined=time_joined,
             first_name=user.meta_data.get("first_name"),
             last_name=user.meta_data.get("last_name"),
             organization_id=effective_org_id,

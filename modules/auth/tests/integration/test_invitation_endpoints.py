@@ -94,14 +94,8 @@ async def test_accept_invitation_mutation(client: AsyncClient):
     """Test accepting an invitation"""
     # Create a new user with FAKE_PASSWORD
     response = await sign_up("public", "testuser@epfl.ch", FAKE_PASSWORD)
-    user_id = response.user.id
-    await create_user_meta_data(
-        user_id,
-        {
-            "email": str(response.user.emails[0]),
-            "time_joined": response.user.time_joined,
-        },
-    )
+    user_id = response.user.login_methods[0].recipe_user_id.get_as_string()
+    await create_user_meta_data(user_id, {})
 
     # Set up the test user with correct metadata
     await update_user_metadata(
@@ -147,14 +141,8 @@ async def test_reject_invitation_mutation(client: AsyncClient):
     """Test rejecting an invitation"""
     # Create a new user
     response = await sign_up("public", "rejectuser@epfl.ch", FAKE_PASSWORD)
-    user_id = response.user.id
-    await create_user_meta_data(
-        user_id,
-        {
-            "email": str(response.user.emails[0]),
-            "time_joined": response.user.time_joined,
-        },
-    )
+    user_id = response.user.login_methods[0].recipe_user_id.get_as_string()
+    await create_user_meta_data(user_id, {})
 
     # Set up the test user with correct metadata
     await update_user_metadata(
@@ -194,7 +182,7 @@ async def test_resend_invitation_mutation(mock_send_email, client: AsyncClient):
     # Create a new user
     email = "resenduser@epfl.ch"
     response = await sign_up("public", email, FAKE_PASSWORD)
-    user_id = response.user.id
+    user_id = response.user.login_methods[0].recipe_user_id.get_as_string()
 
     # Mock the send_reset_password_email function to accept both user_id and email
     mock_send_email.return_value = None

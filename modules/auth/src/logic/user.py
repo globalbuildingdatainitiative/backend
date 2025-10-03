@@ -96,14 +96,18 @@ async def get_users(
 
         users = (await session.exec(query)).all()
 
-    logger.debug(f"Found {len(users)} users")
+    # logger.debug(f"Found {len(users)} users")
     gql_users = []
     for user in users:
         try:
+            # logger.debug(f"Constructing GraphQLUser for user {user.id}, metadata: {user}")
             gql_user = await GraphQLUser.from_sqlmodel(user)
             gql_users.append(gql_user)
+        except ValueError as e:
+            logger.error(f"Failed to construct GraphQLUser for user {user.id}: {e}")
+            continue
         except Exception as e:
-            logger.warning(f"Failed to construct GraphQLUser for user {user.id}: {e}")
+            logger.exception(f"Unexpected error constructing GraphQLUser for user {user.id}: {e}")
             continue
     return gql_users
 
@@ -200,7 +204,7 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
             raise exceptions.UpdateEmailOrPasswordError(email_update_result.reason)
         if isinstance(email_update_result, EmailAlreadyExistsError):
             raise exceptions.EmailAlreadyInUseError("Email is already in use by another user")
-        await update_user_metadata(user_id, {"email": str(new_email)})
+        # Email is now updated in SuperTokens, no need to store it in our custom metadata
         # Refresh user object after email update to ensure we have the latest email for password verification
         user = await get_user(user_id)
 
@@ -425,6 +429,23 @@ async def update_user_metadata(user_id: str, metadata: dict):
 
 
 async def create_user_meta_data(user_id: str, meta_data: dict) -> UserMetadata:
+    """
+    Creates a user metadata record in the custom UserMetadata table and syncs to SuperTokens.
+    
+    IMPORTANT: This function should only be called AFTER the user has been created in SuperTokens.
+    The user_id parameter MUST be the recipe_user_id (from response.user.login_methods[0].recipe_user_id.get_as_string())
+    to ensure it matches the ID in SuperTokens' emailpassword_users and user_metadata tables.
+    
+    NOTE: Do NOT store email or time_joined here - those come from SuperTokens as the single source of truth.
+    Only store custom business logic fields like: first_name, last_name, organization_id, invited, etc.
+    
+    Args:
+        user_id: The SuperTokens recipe_user_id (NOT the app user ID)
+        meta_data: The custom metadata to store (excluding email/time_joined)
+    
+    Returns:
+        UserMetadata: The created database record
+    """
     logger.info(f"Creating user metadata for {user_id}")
     async with AsyncSession(get_postgres_engine()) as session:
         user = UserMetadata(id=user_id, meta_data=meta_data)
