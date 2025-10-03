@@ -43,6 +43,14 @@ test: ## Run tests
 test-cov: ## Run tests with coverage
 	$(UV) run $(PYTEST) tests/ --cov=src --cov-report=html --cov-report=term
 
+.PHONY: init
+init: ## Initialize the service (wait for DB, run migrations)
+	@echo "Initializing auth service..."
+	@$(UV) run --env-file=.env python ./src/initialize.py
+# 	@echo "Running database migrations..."
+# 	@$(UV) run --env-file=.env alembic upgrade head
+	@echo "✓ Auth service initialized"
+
 .PHONY: run
 run: ## Run the application locally
 	$(UV) run --env-file=.env uvicorn main:app --host 0.0.0.0 --port 7001 --reload --app-dir ./src
@@ -54,6 +62,18 @@ run-prod: ## Run the application in production mode
 .PHONY: schema
 schema: ## Export GraphQL schema
 	$(UV) run ./export_schema.sh
+
+.PHONY: revision
+revision: ## Create a new database migration
+	$(UV) run alembic revision --autogenerate
+
+.PHONY: upgrade
+upgrade: ## Run database migrations (upgrade to head)
+	$(UV) run --env-file=.env alembic upgrade head
+
+.PHONY: downgrade
+downgrade: ## Downgrade database migration by one step
+	$(UV) run --env-file=.env alembic downgrade -1
 
 .PHONY: clean
 clean: ## Clean up generated files

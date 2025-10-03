@@ -868,21 +868,6 @@ dependencies = [
     { name = "uvicorn", extra = ["standard"] },
 ]
 
-[package.optional-dependencies]
-dev = [
-    { name = "asgi-lifespan" },
-    { name = "docker" },
-    { name = "jsonschema" },
-    { name = "mongomock-motor" },
-    { name = "pre-commit" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-datafixtures" },
-    { name = "pytest-env" },
-    { name = "pytest-mock" },
-    { name = "ruff" },
-]
-
 [package.dev-dependencies]
 dev = [
     { name = "asgi-lifespan" },
@@ -901,31 +886,19 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "aiocache" },
-    { name = "asgi-lifespan", marker = "extra == 'dev'" },
     { name = "async-lru" },
     { name = "beanie", specifier = "==1.29.0" },
-    { name = "docker", marker = "extra == 'dev'" },
     { name = "fastapi", extras = ["all"] },
     { name = "httpx" },
     { name = "iso3166" },
-    { name = "jsonschema", marker = "extra == 'dev'" },
     { name = "lcax", specifier = "==2.6.0" },
-    { name = "mongomock-motor", marker = "extra == 'dev'" },
     { name = "motor" },
-    { name = "pre-commit", marker = "extra == 'dev'" },
-    { name = "pytest", marker = "extra == 'dev'" },
-    { name = "pytest-asyncio", marker = "extra == 'dev'" },
-    { name = "pytest-datafixtures", marker = "extra == 'dev'" },
-    { name = "pytest-env", marker = "extra == 'dev'" },
-    { name = "pytest-mock", marker = "extra == 'dev'" },
     { name = "pyyaml" },
-    { name = "ruff", marker = "extra == 'dev'" },
     { name = "strawberry-graphql", extras = ["fastapi", "cli"], specifier = ">=0.134.0" },
     { name = "supertokens-python", specifier = "==0.27.0" },
     { name = "tenacity" },
     { name = "uvicorn", extras = ["standard"] },
 ]
-provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
 dev = [

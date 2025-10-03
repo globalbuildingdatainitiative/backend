@@ -1,0 +1,34 @@
+supergraph:
+  path: /graphql
+  listen: 0.0.0.0:4000
+  introspection: ${env.ENABLE_INTROSPECTION:-true}
+sandbox:
+  enabled: true # sandbox environment for the gateway
+health_check:
+  listen: 0.0.0.0:8088
+cors:
+  origins:
+    - ${env.CLIENT_ORIGIN:-http://localhost:8000}
+  allow_credentials: true
+headers:
+  all:
+    request:
+      - propagate:
+          matching: origin
+      - propagate:
+          named: cookie
+      - propagate:
+          matching: authorization
+include_subgraph_errors:
+  all: true
+override_subgraph_url:
+  auth: ${env.AUTH_URL:-http://localhost:7001/api/graphql}
+  organization: ${env.ORGANIZATION_URL:-http://localhost:7002/api/graphql}
+  projects: ${env.PROJECTS_URL:-http://localhost:7003/api/graphql}
+limits:
+  # Network-based limits
+  http_max_request_bytes: 20000000
+
+rhai:
+  scripts: "config"
+  main: "main.rhai"
