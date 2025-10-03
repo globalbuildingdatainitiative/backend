@@ -16,7 +16,7 @@ install: ## Install dependencies for all modules
 .PHONY: db-up
 db-up: ## Start all database services (postgres, supertokens, mongo)
 	@echo "Starting database services..."
-	docker-compose up -d
+	docker compose up -d
 	@echo "✓ Services started"
 	@echo "  - PostgreSQL (auth): psql://localhost:5434"
 	@echo "  - SuperTokens: http://localhost:3567"
@@ -27,7 +27,7 @@ db-up: ## Start all database services (postgres, supertokens, mongo)
 .PHONY: db-down
 db-down: ## Stop all database services
 	@echo "Stopping database services..."
-	docker-compose down
+	docker compose down
 	@echo "✓ Database services stopped"
 
 .PHONY: db-clean
@@ -36,7 +36,7 @@ db-clean: ## Stop database services and remove volumes (WARNING: deletes all dat
 	@read -p "Are you sure? [y/N] " -n 1 -r; \
 	echo; \
 	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
-		docker-compose down -v; \
+		docker compose down -v; \
 		echo "✓ Database services stopped and volumes removed"; \
 	else \
 		echo "Cancelled."; \
@@ -44,7 +44,7 @@ db-clean: ## Stop database services and remove volumes (WARNING: deletes all dat
 
 .PHONY: db-logs
 db-logs: ## Show logs from database services
-	docker-compose logs -f
+	docker compose logs -f
 
 .PHONY: init
 init: ## Initialize all modules (wait for databases, run migrations)
@@ -144,4 +144,4 @@ clean: ## Clean up generated files in all modules
 
 .PHONY: status
 status: ## Show status of database services
-	@docker-compose ps
+	@docker compose ps
