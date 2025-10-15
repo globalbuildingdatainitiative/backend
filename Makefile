@@ -159,6 +159,8 @@ admin: ## make user admin using ARGS
 		curl --location --request PUT 'http://localhost:3567/recipe/user/role' \
 			--header 'Content-Type: application/json; charset=utf-8' \
 			--data-raw '{"userId":"$(firstword $(ARGS))","role":"admin"}'; \
+	else \
+		echo "No userId specified. Usage: make admin <userId>"; \
 	fi
 
 # Catch-all target to prevent "No rule to make target" errors
