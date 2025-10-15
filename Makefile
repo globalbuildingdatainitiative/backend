@@ -1,4 +1,4 @@
-# Root Makefile for GBDI Backend
+# Root Makefile for GBDI Back
 
 .PHONY: help
 help: ## Show this help message
@@ -90,7 +90,7 @@ run: db-up init ## Start all services (databases + router + all backend modules)
 	@$(MAKE) run-services
 
 .PHONY: run-services
-run-services:
+run-services: ## Run all backend services in parallel (internal target)
 	@trap 'kill 0' SIGINT; \
 	cd modules/auth && $(MAKE) run & \
 	cd modules/organization && $(MAKE) run & \
@@ -149,3 +149,18 @@ clean: ## Clean up generated files in all modules
 .PHONY: status
 status: ## Show status of database services
 	@docker compose ps
+
+
+ARGS = $(filter-out $@,$(MAKECMDGOALS))
+
+.PHONY: admin
+admin: ## make user admin using ARGS
+	@if [ -n "$(ARGS)" ]; then \
+		curl --location --request PUT 'http://localhost:3567/recipe/user/role' \
+			--header 'Content-Type: application/json; charset=utf-8' \
+			--data-raw '{"userId":"$(firstword $(ARGS))","role":"admin"}'; \
+	fi
+
+# Catch-all target to prevent "No rule to make target" errors
+%:
+	@:
