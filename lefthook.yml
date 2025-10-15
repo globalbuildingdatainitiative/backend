@@ -1,0 +1,17 @@
+#   Refer for explanation to following link:
+#   https://lefthook.dev/configuration/
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: ruff lint
+      glob: 'modules/*/{src,tests}/**/*.py'
+      run: uvx ruff check {staged_files}
+    - name: ruff formatting
+      glob: 'modules/*/{src,tests}/**/*.py'
+      run: uvx ruff format --check {staged_files}
+
+commit-msg:
+  commands:
+    commitlint:
+      run: uvx commitlint --file {1}

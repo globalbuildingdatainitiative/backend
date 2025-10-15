@@ -29,6 +29,7 @@ To get started, please make sure that the following pieces of software are insta
 ### All Platforms
 
 * [Docker](https://docs.docker.com/get-docker/) and Docker Compose
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) - Python environment and dependency manager
 * Python 3.12+
 * [pipenv](https://pipenv.pypa.io/en/latest/#install-pipenv-today)
 * [Apollo Rover](https://www.apollographql.com/docs/rover/getting-started) - GraphQL CLI tool

@@ -12,6 +12,10 @@ install: ## Install dependencies for all modules
 	@cd modules/organization && $(MAKE) install
 	@cd modules/projects && $(MAKE) install
 	@echo "✓ All dependencies installed"
+	@echo "Installing git hooks with lefthook..."
+	uv tool install lefthook
+	lefthook install
+	@echo "✓ Setup complete!"
 
 .PHONY: db-up
 db-up: ## Start all database services (postgres, supertokens, mongo)
