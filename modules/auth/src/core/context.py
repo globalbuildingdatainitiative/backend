@@ -7,6 +7,7 @@ from supertokens_python.recipe.usermetadata.asyncio import get_user_metadata
 from jwt.exceptions import PyJWTError
 from core.verify_jwt import verify_jwt
 from models import SuperTokensUser
+from core.cache import user_cache
 
 logger = logging.getLogger("main")
 
@@ -30,9 +31,9 @@ async def get_context(request: Request):
                 "user": SuperTokensUser(id=uuid.uuid5(uuid.NAMESPACE_URL, token.get("source")), organization_id=None)
             }
 
-    user_id = session.get_user_id()
-    metadata = await get_user_metadata(user_id)
-    organization_id = metadata.metadata.get("organization_id", None)
+    user_id = uuid.UUID(session.get_user_id())
+    user = await user_cache.get_user(user_id)
+    organization_id = user.organization_id
 
     return {"user": SuperTokensUser(id=user_id, organization_id=organization_id)}
 

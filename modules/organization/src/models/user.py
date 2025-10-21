@@ -11,25 +11,32 @@ logger = logging.getLogger("main")
 
 
 async def get_user_organization(root: "GraphQLUser") -> GraphQLOrganization | None:
+    """Resolve the organization for a user. Returns None if not found or on error."""
     from logic import get_organizations
     from models import FilterBy
 
-    if root.organizationId is None:
+    try:
+        if root.organizationId is None:
+            logger.debug(f"User {root.id} has no organizationId, returning None")
+            return None
+
+        logger.debug(f"Resolving user organization reference: {root.organizationId}")
+
+        org_id = root.organizationId if isinstance(root.organizationId, UUID) else UUID(root.organizationId)
+        organizations = await get_organizations(filter_by=FilterBy(equal={"id": org_id}))
+
+        logger.debug(f"Found {len(organizations)} organizations for user {root.id}")
+
+        # Handle case where organization is not found to prevent "list index out of range" error
+        if not organizations:
+            logger.warning(f"No organization found for user {root.id} with organizationId {org_id}")
+            return None
+
+        return organizations[0]
+    except Exception as e:
+        # Catch any exception to prevent the entire User object from becoming null
+        logger.error(f"Error resolving organization for user {root.id}: {e}", exc_info=True)
         return None
-
-    logger.debug(f"Resolving user organization reference: {root.organizationId}")
-
-    org_id = root.organizationId if isinstance(root.organizationId, UUID) else UUID(root.organizationId)
-    organizations = await get_organizations(filter_by=FilterBy(equal={"id": org_id}))
-
-    logger.debug(f"Found {len(organizations)} organizations for user {root.id}")
-
-    # Handle case where organization is not found to prevent "list index out of range" error
-    if not organizations:
-        logger.warning(f"No organization found for user {root.id} with organizationId {org_id}")
-        return None
-
-    return organizations[0]
 
 
 @strawberry.federation.type(name="User", keys=["id"])

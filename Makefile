@@ -163,6 +163,33 @@ admin: ## make user admin using ARGS
 		echo "No userId specified. Usage: make admin <userId>"; \
 	fi
 
+.PHONY: run-except-auth
+run-except-auth: ## Run organization and projects services (for debugging auth)
+	@echo "Starting organization and projects services..."
+	@trap 'kill 0' SIGINT; \
+	cd modules/organization && $(MAKE) run & \
+	cd modules/projects && $(MAKE) run & \
+	cd modules/router && $(MAKE) run & \
+	wait
+
+.PHONY: run-except-organization
+run-except-organization: ## Run auth and projects services (for debugging organization)
+	@echo "Starting auth and projects services..."
+	@trap 'kill 0' SIGINT; \
+	cd modules/auth && $(MAKE) run & \
+	cd modules/projects && $(MAKE) run & \
+	cd modules/router && $(MAKE) run & \
+	wait
+
+.PHONY: run-except-projects
+run-except-projects: ## Run auth and organization services (for debugging projects)
+	@echo "Starting auth and organization services..."
+	@trap 'kill 0' SIGINT; \
+	cd modules/auth && $(MAKE) run & \
+	cd modules/organization && $(MAKE) run & \
+	cd modules/router && $(MAKE) run & \
+	wait
+
 # Catch-all target to prevent "No rule to make target" errors
 %:
 	@:

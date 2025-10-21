@@ -6,7 +6,7 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "fastapi[all]",
     "uvicorn[standard]",
-    "strawberry-graphql[fastapi,cli]>=0.134.0",
+    "strawberry-graphql[fastapi,cli]>=0.283.0",
     "supertokens-python==0.27.0",
     "pyyaml",
     "aiocache",

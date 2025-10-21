@@ -3,18 +3,20 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import yaml
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from supertokens_python.framework.fastapi import get_middleware
 from supertokens_python.recipe.session.exceptions import UnauthorisedError, TryRefreshTokenError
+from uuid import UUID
 
 from core.auth import supertokens_init
 from core.config import settings
 from logic.roles import create_roles
 from routes import graphql_app
-from routes.heatlth import health_router
+from routes.health import health_router
+from core.cache import user_cache
 
 log_config = yaml.safe_load((Path(__file__).parent / "logging.yaml").read_text())
 log_config["loggers"]["main"]["level"] = settings.LOG_LEVEL
@@ -30,7 +32,16 @@ async def lifespan(app: FastAPI):
     try:
         await create_roles()
     except Exception as e:
-        logger.error(e)
+        logger.exception(e)
+
+    # Load user cache on startup
+    logger.info("Loading user cache...")
+    try:
+        await user_cache.load_all()
+        logger.info("User cache loaded successfully")
+    except Exception as e:
+        logger.exception(f"Failed to load user cache: {e}")
+
     yield
 
 
@@ -57,7 +68,7 @@ app.include_router(health_router, prefix=settings.API_STR)
 
 @app.exception_handler(Exception)
 async def exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unknown Error {type(exc)} - {exc}")
+    logger.exception(f"Unknown Error {type(exc)} - {exc}")
 
     return JSONResponse(
         status_code=500,
@@ -65,9 +76,34 @@ async def exception_handler(request: Request, exc: Exception):
     )
 
 
+@app.get("/users")
+async def get_all_users():
+    return list(user_cache.cache.values())
+
+
+@app.get("/users/{user_id}")
+async def get_user(user_id: UUID):
+    user = await user_cache.get_user(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+@app.post("/users/reload", status_code=204)
+async def reload_user(user_id: UUID):
+    await user_cache.reload_user(user_id)
+    return None
+
+
+@app.delete("/users/{user_id}", status_code=204)
+async def delete_user(user_id: UUID):
+    await user_cache.remove_user(user_id)
+    return None
+
+
 @app.exception_handler(TryRefreshTokenError)
 async def refresh_exception_handler(request: Request, exc: TryRefreshTokenError):
-    logger.error(exc)
+    logger.exception(exc)
 
     return JSONResponse(
         status_code=401,
@@ -77,7 +113,7 @@ async def refresh_exception_handler(request: Request, exc: TryRefreshTokenError)
 
 @app.exception_handler(UnauthorisedError)
 async def unauthorised_exception_handler(request: Request, exc: UnauthorisedError):
-    logger.error(exc)
+    logger.exception(exc)
 
     return JSONResponse(
         status_code=401,
@@ -87,9 +123,20 @@ async def unauthorised_exception_handler(request: Request, exc: UnauthorisedErro
 
 @app.exception_handler(ValidationError)
 async def validation_exception_handler(request: Request, exc: ValidationError):
-    logger.error(exc)
+    logger.exception(exc)
 
     return JSONResponse(
         status_code=400,
         content={"data": "Invalid request data"},
     )
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize caches on application startup"""
+    logger.info("Starting up Auth service...")
+
+    # Load user cache
+    await user_cache.load_all()
+
+    logger.info("✅ Auth service ready")

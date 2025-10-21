@@ -4,8 +4,6 @@ import strawberry
 from strawberry.permission import BasePermission
 
 from core.context import get_user
-from logic.roles import check_is_admin
-
 
 class IsAuthenticated(BasePermission):
     message = "User is not authenticated"

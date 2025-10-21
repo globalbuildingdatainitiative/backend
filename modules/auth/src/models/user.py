@@ -16,7 +16,6 @@ from models.roles import Role
 from .scalers import EmailAddress
 from .sort_filter import FilterBy
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -40,29 +39,31 @@ class GraphQLUser:
     last_name: str | None
     email: str
     time_joined: datetime
-    organization_id: UUID | None = strawberry.field(directives=[Shareable()])
+    organization_id: UUID | None = strawberry.field(name="organizationId", directives=[Shareable()])
+    roles: list[Role] | None
+    # optional fields for invited users
     invited: bool = False
     invite_status: InviteStatus = InviteStatus.NONE
     inviter_name: str | None = None
-    roles: list[Role] | None
+    pending_org_id: UUID | None = None
 
-    @classmethod
-    async def from_supertokens(cls, user: User, metadata: dict) -> Self:
-        invited = metadata.get("invited", False)
-        effective_org_id = metadata.get("organization_id") if not invited else metadata.get("pending_org_id")
+    # @classmethod
+    # async def from_supertokens(cls, user: User, metadata: dict) -> Self:
+    #     invited = metadata.get("invited", False)
+    #     effective_org_id = metadata.get("organization_id") if not invited else metadata.get("pending_org_id")
 
-        return cls(
-            id=UUID(user.id),
-            email=user.emails[0],
-            time_joined=datetime.fromtimestamp(round(user.time_joined / 1000)),
-            first_name=metadata.get("first_name"),
-            last_name=metadata.get("last_name"),
-            organization_id=effective_org_id,
-            invited=invited,
-            invite_status=InviteStatus(metadata.get("invite_status", InviteStatus.NONE)),
-            inviter_name=metadata.get("inviter_name"),
-            roles=[Role(role) for role in (await get_roles_for_user("public", user.id)).roles],
-        )
+    #     return cls(
+    #         id=UUID(user.id),
+    #         email=user.emails[0],
+    #         time_joined=datetime.fromtimestamp(round(user.time_joined / 1000)),
+    #         first_name=metadata.get("first_name"),
+    #         last_name=metadata.get("last_name"),
+    #         organization_id=effective_org_id,
+    #         invited=invited,
+    #         invite_status=InviteStatus(metadata.get("invite_status", InviteStatus.NONE)),
+    #         inviter_name=metadata.get("inviter_name"),
+    #         roles=[Role(role) for role in (await get_roles_for_user("public", user.id)).roles],
+    #     )
 
     @classmethod
     async def resolve_reference(cls, id: UUID) -> "GraphQLUser":
