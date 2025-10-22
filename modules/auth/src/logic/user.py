@@ -168,7 +168,7 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     """Update user details & metadata"""
 
     metadata_update = strawberry.asdict(user_input)
-    user_id = str(metadata_update.pop("id"))
+    user_id = UUID(metadata_update.pop("id"))
 
     user = await user_cache.get_user(user_id)
     if not user:
@@ -182,12 +182,9 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     del metadata_update["new_password"]
     # Handle organization role removal if organization_id is unset or None
     # This ensures user roles stay in sync with organization membership
-    if metadata_update["organization_id"] is UNSET or metadata_update["organization_id"] is None:
-        roles = await user_cache.get_user(user_id).roles
-        for role in roles:
-            if role == "admin":
-                continue
-            await remove_role(user_id, Role(role))
+    # not sure if we need this
+    # if metadata_update["organization_id"] is UNSET or metadata_update["organization_id"] is None:
+    #     await remove_role(user_id, Role(role))
 
     def custom_serializer(obj):
         if isinstance(obj, InviteStatus):

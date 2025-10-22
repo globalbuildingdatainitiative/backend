@@ -6,6 +6,7 @@ import strawberry
 from strawberry.federation.schema_directives import Shareable
 
 from models import GraphQLOrganization
+from core.cache import organization_cache
 
 logger = logging.getLogger("main")
 
@@ -23,16 +24,15 @@ async def get_user_organization(root: "GraphQLUser") -> GraphQLOrganization | No
         logger.debug(f"Resolving user organization reference: {root.organizationId}")
 
         org_id = root.organizationId if isinstance(root.organizationId, UUID) else UUID(root.organizationId)
-        organizations = await get_organizations(filter_by=FilterBy(equal={"id": org_id}))
+        # Use cache instead of database query
+        organization = await organization_cache.get_organization(org_id)
 
-        logger.debug(f"Found {len(organizations)} organizations for user {root.id}")
-
-        # Handle case where organization is not found to prevent "list index out of range" error
-        if not organizations:
+        if not organization:
             logger.warning(f"No organization found for user {root.id} with organizationId {org_id}")
             return None
 
-        return organizations[0]
+        logger.debug(f"Found organization {organization.id} for user {root.id}")
+        return organization
     except Exception as e:
         # Catch any exception to prevent the entire User object from becoming null
         logger.error(f"Error resolving organization for user {root.id}: {e}", exc_info=True)

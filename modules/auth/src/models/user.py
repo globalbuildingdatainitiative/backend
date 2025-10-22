@@ -48,36 +48,18 @@ class GraphQLUser:
     pending_org_id: UUID | None = None
 
     # @classmethod
-    # async def from_supertokens(cls, user: User, metadata: dict) -> Self:
-    #     invited = metadata.get("invited", False)
-    #     effective_org_id = metadata.get("organization_id") if not invited else metadata.get("pending_org_id")
+    # async def resolve_reference(cls, id: UUID) -> "GraphQLUser":
+    #     from logic import get_users
+    #     from core.exceptions import EntityNotFound
 
-    #     return cls(
-    #         id=UUID(user.id),
-    #         email=user.emails[0],
-    #         time_joined=datetime.fromtimestamp(round(user.time_joined / 1000)),
-    #         first_name=metadata.get("first_name"),
-    #         last_name=metadata.get("last_name"),
-    #         organization_id=effective_org_id,
-    #         invited=invited,
-    #         invite_status=InviteStatus(metadata.get("invite_status", InviteStatus.NONE)),
-    #         inviter_name=metadata.get("inviter_name"),
-    #         roles=[Role(role) for role in (await get_roles_for_user("public", user.id)).roles],
-    #     )
+    #     users, _ = await get_users(filter_by=FilterBy(equal={"id": id}))
 
-    @classmethod
-    async def resolve_reference(cls, id: UUID) -> "GraphQLUser":
-        from logic import get_users
-        from core.exceptions import EntityNotFound
+    #     # Handle case where user is not found to prevent "list index out of range" error
+    #     if not users:
+    #         logger.warning(f"No user found with id {id}")
+    #         raise EntityNotFound("User Not Found", str(id))
 
-        users = await get_users(filter_by=FilterBy(equal={"id": id}))
-
-        # Handle case where user is not found to prevent "list index out of range" error
-        if not users:
-            logger.warning(f"No user found with id {id}")
-            raise EntityNotFound("User Not Found", str(id))
-
-        return users[0]
+    #     return users[0]
 
 
 @strawberry.input

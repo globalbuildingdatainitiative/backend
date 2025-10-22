@@ -11,6 +11,7 @@ from core.cache import user_cache
 
 logger = logging.getLogger("main")
 
+MICROSERVICE_USER_ID = uuid.uuid5(uuid.NAMESPACE_URL, "microservice")
 
 async def get_context(request: Request):
     from supertokens_python.recipe.session.asyncio import get_session
@@ -26,16 +27,15 @@ async def get_context(request: Request):
             except PyJWTError as error:
                 logger.error(f"Error verifying JWT: {error}")
                 raise
-
+            if token.get("source") == "microservice":
+                return {"user": SuperTokensUser(id=MICROSERVICE_USER_ID, organization_id=None)}
             return {
                 "user": SuperTokensUser(id=uuid.uuid5(uuid.NAMESPACE_URL, token.get("source")), organization_id=None)
             }
 
-    user_id = uuid.UUID(session.get_user_id())
-    user = await user_cache.get_user(user_id)
-    organization_id = user.organization_id
-
-    return {"user": SuperTokensUser(id=user_id, organization_id=organization_id)}
+    user = await user_cache.get_user(uuid.UUID(session.get_user_id()))
+    
+    return {"user": SuperTokensUser(id=user.id, organization_id=user.organization_id)}
 
 
 def get_user(info: Info) -> SuperTokensUser:

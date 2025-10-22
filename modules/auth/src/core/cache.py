@@ -2,19 +2,20 @@ import os
 from typing import Optional, List
 from uuid import UUID
 from sqlalchemy import create_engine, text
-from cachetools import TTLCache
 import asyncio
 from models import GraphQLUser, InviteStatus, Role
 from datetime import datetime
+
+
 class UserCache:
-    def __init__(self, db_url: str, cache_size: int = 1000, ttl: int = 300):
+    def __init__(self, db_url: str, cache_size: int = 15000):
         self.db_url = db_url
         self.cache_size = cache_size
-        self.ttl = ttl
-        # Use TTLCache for automatic expiration, with LRU eviction policy
-        self.cache: TTLCache[UUID, GraphQLUser] = TTLCache(maxsize=cache_size, ttl=ttl)
+        # Use a regular dict for the cache - no TTL per item
+        self.cache: dict[UUID, GraphQLUser] = {}
         self.engine = create_engine(db_url)
         self.lock = asyncio.Lock()
+        self._reload_task = None
 
     def _safe_uuid(self, value: str | None) -> UUID | None:
         """Convert string to UUID, returning None if value is None or empty."""
@@ -52,6 +53,23 @@ class UserCache:
                         import traceback
 
                         traceback.print_exc()
+
+    async def _periodic_reload(self):
+        """Reload all users every 12 hours"""
+        while True:
+            try:
+                await asyncio.sleep(12 * 60 * 60)  # 12 hours in seconds
+                print("Performing periodic cache reload (12 hour interval)")
+                await self.load_all()
+            except Exception as e:
+                print(f"Error during periodic cache reload: {e}")
+                import traceback
+                traceback.print_exc()
+
+    def start_periodic_reload(self):
+        """Start the periodic reload task"""
+        if self._reload_task is None:
+            self._reload_task = asyncio.create_task(self._periodic_reload())
 
     async def get_user(self, id: UUID) -> Optional[GraphQLUser]:
         async with self.lock:
@@ -103,5 +121,5 @@ class UserCache:
 
 # Use LOCAL for development, fallback to regular for production/Docker
 db_url = os.getenv("POSTGRESQL_CONNECTION_URI_LOCAL") or os.getenv("POSTGRESQL_CONNECTION_URI", "FAILURE")
-# Singleton instance
-user_cache = UserCache(db_url, cache_size=1000, ttl=300)
+# Singleton instance with increased cache size
+user_cache = UserCache(db_url, cache_size=15000)

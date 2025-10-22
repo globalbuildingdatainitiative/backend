@@ -139,4 +139,7 @@ async def startup_event():
     # Load user cache
     await user_cache.load_all()
 
+    # Start periodic reload task (every 12 hours)
+    user_cache.start_periodic_reload()
+
     logger.info("✅ Auth service ready")

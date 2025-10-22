@@ -14,6 +14,8 @@ from core.auth import supertokens_init
 from core.config import settings
 from core.connection import get_database
 from core.exceptions import MicroServiceConnectionError
+from core.cache import organization_cache
+
 from routes import graphql_app
 
 log_config = yaml.safe_load((Path(__file__).parent / "logging.yaml").read_text())
@@ -29,6 +31,16 @@ async def lifespan(app: FastAPI):
 
     db = get_database()
     await init_beanie(database=db, document_models=[DBOrganization])
+
+
+    # Load organization cache on startup
+    
+    logger.info("Loading organization cache...")
+    await organization_cache.load_all()
+    
+    # Start periodic reload
+    organization_cache.start_periodic_reload()
+    
     yield
 
 

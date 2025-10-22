@@ -5,6 +5,8 @@ from strawberry import Info
 
 # from core.context import get_user
 from core.cache import user_cache
+from core.context import MICROSERVICE_USER_ID
+
 from logic import get_users
 from models import GraphQLUser, FilterBy, SortBy, Role
 logger = logging.getLogger("main")
@@ -34,8 +36,22 @@ class UserResponse:
             self._cache_key = None
 
         user_id = info.context.get('user').id
-        user = await user_cache.get_user(user_id)
-        is_admin = Role.ADMIN in user.roles
+
+        # Check if this is a microservice request
+        if user_id == MICROSERVICE_USER_ID:
+            logger.info(f"Microservice request detected (UUID: {user_id}). Treating as admin access.")
+            is_admin = True
+        else:
+            # Regular user - fetch from cache
+            user = await user_cache.get_user(user_id)
+            
+            # Handle case where user is not found in cache
+            if user is None:
+                logger.warning(f"User {user_id} not found in cache during query")
+                return [], 0
+                
+            is_admin = Role.ADMIN in user.roles
+
         # Generate cache key (without limit/offset for count queries)
         cache_key = self._get_cache_key(user_id, is_admin, filter_by, sort_by)
 
@@ -52,13 +68,14 @@ class UserResponse:
             users, total_count = await get_users(filter_by, sort_by, limit=None, offset=0)
             logger.info(f"Got {len(users)} users as admin (total: {total_count})")
         else:
+            # Add organization filter for non-admin users
+            # Goal: only fetch users from the same organization as the requester
             filters = filter_by or FilterBy()
-            user_organization_id = info.context.get('user').organization_id
 
             # Ensure filters.equal exists and add organization filter
             if not filters.equal:
                 filters.equal = {}
-            filters.equal["organization_id"] = user_organization_id
+            filters.equal["organization_id"] = user.organization_id
 
             users, total_count = await get_users(filters, sort_by, limit=None, offset=0)
             logger.info(f"Got {len(users)} users (total: {total_count})")
