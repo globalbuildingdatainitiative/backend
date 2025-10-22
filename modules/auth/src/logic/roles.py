@@ -103,4 +103,3 @@ async def remove_role(user_id: str | UUID, role: Role):
         logger.info(f"User: {user_id} did have role of {role.value}.")
     else:
         logger.info(f"Successfully removed role of {role.value} to user: {user_id}.")
-

@@ -1,6 +1,6 @@
 directive @oneOf on INPUT_OBJECT
 
-schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key", "@shareable"]) {
+schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key"]) {
   query: Query
   mutation: Mutation
 }
@@ -141,18 +141,19 @@ type User @key(fields: "id") {
   lastName: String
   email: String!
   timeJoined: DateTime!
-  organizationId: UUID @shareable
+  organizationId: UUID
+  roles: [Role!]
   invited: Boolean!
   inviteStatus: InviteStatus!
   inviterName: String
-  roles: [Role!]
+  pendingOrgId: UUID
 }
 
 type UserGraphQLResponse {
-  """The list of items in this pagination window."""
-  items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int): [User!]
+  """The list of users in this pagination window."""
+  items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int! = 50): [User!]!
 
-  """Total number of items in the filtered dataset."""
+  """Total number of users in the filtered dataset."""
   count(filterBy: FilterBy = null): Int!
 }
 

@@ -1,15 +1,12 @@
 from datetime import datetime
 from enum import Enum
-from typing import Self, List
+from typing import List
 from uuid import UUID
 
 import logging
 import strawberry
 from pydantic import BaseModel
 from strawberry import UNSET
-from strawberry.federation.schema_directives import Shareable
-from supertokens_python.recipe.userroles.asyncio import get_roles_for_user
-from supertokens_python.types import User
 
 from core.auth import FAKE_PASSWORD
 from models.roles import Role
@@ -39,7 +36,7 @@ class GraphQLUser:
     last_name: str | None
     email: str
     time_joined: datetime
-    organization_id: UUID | None = strawberry.field(name="organizationId", directives=[Shareable()])
+    organization_id: UUID | None = strawberry.field(name="organizationId")
     roles: list[Role] | None
     # optional fields for invited users
     invited: bool = False
@@ -47,19 +44,19 @@ class GraphQLUser:
     inviter_name: str | None = None
     pending_org_id: UUID | None = None
 
-    # @classmethod
-    # async def resolve_reference(cls, id: UUID) -> "GraphQLUser":
-    #     from logic import get_users
-    #     from core.exceptions import EntityNotFound
+    @classmethod
+    async def resolve_reference(cls, id: UUID) -> "GraphQLUser":
+        from logic import get_users
+        from core.exceptions import EntityNotFound
 
-    #     users, _ = await get_users(filter_by=FilterBy(equal={"id": id}))
+        users, _ = await get_users(filter_by=FilterBy(equal={"id": id}))
 
-    #     # Handle case where user is not found to prevent "list index out of range" error
-    #     if not users:
-    #         logger.warning(f"No user found with id {id}")
-    #         raise EntityNotFound("User Not Found", str(id))
+        # Handle case where user is not found to prevent "list index out of range" error
+        if not users:
+            logger.warning(f"No user found with id {id}")
+            raise EntityNotFound("User Not Found", str(id))
 
-    #     return users[0]
+        return users[0]
 
 
 @strawberry.input

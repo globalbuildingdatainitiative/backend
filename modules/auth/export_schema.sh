@@ -12,6 +12,7 @@ export SMTP_EMAIL=noreply@noreply.io
 export SMTP_NAME=Test
 export SMTP_PASSWORD=BEPr8mQV7A/jtUv/MGIGherhrye789hyr9ehabrgPMJF
 export SMTP_USERNAME=AKIAW3MEGUGUE7NP
+export POSTGRESQL_CONNECTION_URI=postgresql+asyncpg://supertokens:supertokens@auth-database:5432/supertokens
 
 mkdir -p graphql
 strawberry export-schema --app-dir ./src schema > graphql/schema.graphql

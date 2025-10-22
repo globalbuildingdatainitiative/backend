@@ -10,7 +10,7 @@ from models import (
     SuperTokensUser,
     OrganizationMetaDataModel,
 )
-from models.sort_filter import filter_model_query, FilterBy, SortBy, sort_model_query
+from models.sort_filter import FilterBy, SortBy
 
 logger = logging.getLogger("main")
 
@@ -23,7 +23,7 @@ async def get_organizations(
 ) -> list[DBOrganization]:
     # Get from cache first
     organizations = await organization_cache.get_all_organizations()
-    
+
     # Apply filters if needed
     if filter_by:
         # Simple implementation - you may want to optimize this further
@@ -34,16 +34,22 @@ async def get_organizations(
                     org = await organization_cache.get_organization(org_id)
                     return [org] if org else []
                 # Add other field filters as needed
-    
-    # Apply sorting if needed
-    # ... (your existing sorting logic)
-    
+
+    # TODO: implement filtering and sorting
+    # query = filter_model_query(DBOrganization, filter_by, query)
+
+    # if sort_by:
+    #     query = sort_model_query(DBOrganization, sort_by, query)
+
+    # if limit is not None:
+    #     query = query.limit(limit)
+
     # Apply pagination
     if offset:
         organizations = organizations[offset:]
     if limit is not None:
         organizations = organizations[:limit]
-    
+
     logger.debug(f"Found {len(organizations)} organizations")
     return organizations
 
@@ -68,7 +74,7 @@ async def create_organizations_mutation(
         )
         await new_organization.insert()
         new_organizations.append(new_organization)
-        
+
         # Add to cache immediately
         await organization_cache.add_organization(new_organization)
 
@@ -110,7 +116,7 @@ async def update_organizations_mutation(organizations: list[InputOrganization]) 
             }
             await organization.update(update_doc)
             updated_organizations.append(organization)
-            
+
             # Reload in cache
             await organization_cache.reload_organization(organization_id)
         else:
@@ -128,7 +134,7 @@ async def delete_organizations_mutation(ids: list[UUID]) -> list[UUID]:
         if organization:
             await organization.delete()
             deleted_ids.append(organization_id)
-            
+
             # Remove from cache
             await organization_cache.remove_organization(organization_id)
         else:

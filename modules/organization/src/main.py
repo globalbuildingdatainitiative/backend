@@ -32,15 +32,14 @@ async def lifespan(app: FastAPI):
     db = get_database()
     await init_beanie(database=db, document_models=[DBOrganization])
 
-
     # Load organization cache on startup
-    
+
     logger.info("Loading organization cache...")
     await organization_cache.load_all()
-    
+
     # Start periodic reload
     organization_cache.start_periodic_reload()
-    
+
     yield
 
 

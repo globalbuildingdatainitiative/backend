@@ -64,6 +64,7 @@ class UserCache:
             except Exception as e:
                 print(f"Error during periodic cache reload: {e}")
                 import traceback
+
                 traceback.print_exc()
 
     def start_periodic_reload(self):

@@ -9,6 +9,7 @@ from core.context import MICROSERVICE_USER_ID
 
 from logic import get_users
 from models import GraphQLUser, FilterBy, SortBy, Role
+
 logger = logging.getLogger("main")
 
 
@@ -35,7 +36,7 @@ class UserResponse:
             self._cache_count = None
             self._cache_key = None
 
-        user_id = info.context.get('user').id
+        user_id = info.context.get("user").id
 
         # Check if this is a microservice request
         if user_id == MICROSERVICE_USER_ID:
@@ -44,12 +45,12 @@ class UserResponse:
         else:
             # Regular user - fetch from cache
             user = await user_cache.get_user(user_id)
-            
+
             # Handle case where user is not found in cache
             if user is None:
                 logger.warning(f"User {user_id} not found in cache during query")
                 return [], 0
-                
+
             is_admin = Role.ADMIN in user.roles
 
         # Generate cache key (without limit/offset for count queries)

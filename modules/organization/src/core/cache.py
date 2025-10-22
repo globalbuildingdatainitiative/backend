@@ -19,19 +19,20 @@ class OrganizationCache:
     async def load_all(self):
         """Load all organizations into cache"""
         from models import DBOrganization
-        
+
         async with self.lock:
             try:
                 organizations = await DBOrganization.find_all().to_list()
                 logger.info(f"Loading {len(organizations)} organizations into cache")
-                
+
                 for org in organizations:
                     self.cache[org.id] = org
-                    
+
                 logger.info(f"Successfully loaded {len(self.cache)} organizations")
             except Exception as e:
                 logger.error(f"Failed to load organizations into cache: {e}")
                 import traceback
+
                 traceback.print_exc()
 
     async def _periodic_reload(self):
@@ -44,6 +45,7 @@ class OrganizationCache:
             except Exception as e:
                 logger.error(f"Error during periodic cache reload: {e}")
                 import traceback
+
                 traceback.print_exc()
 
     def start_periodic_reload(self):
@@ -65,7 +67,7 @@ class OrganizationCache:
     async def reload_organization(self, id: UUID):
         """Reload a single organization from database"""
         from models import DBOrganization
-        
+
         async with self.lock:
             try:
                 org = await DBOrganization.get(id)

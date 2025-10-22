@@ -19,7 +19,7 @@ from supertokens_python.recipe.usermetadata.asyncio import update_user_metadata
 
 from core import exceptions
 from core.exceptions import EntityNotFound
-from logic.roles import assign_role, remove_role
+from logic.roles import assign_role
 from models import GraphQLUser, UpdateUserInput, InviteStatus, Role, AcceptInvitationInput
 from models.sort_filter import FilterBy, SortBy
 from core.cache import user_cache
@@ -74,15 +74,16 @@ field_mapping = {
     "roles": "roles",
 }
 
+
 def filter_users(users: list[GraphQLUser], filters: FilterBy) -> list[GraphQLUser]:
     filtered_users = users
-    
+
     SUPPORTED_FILTERS = {"equal", "contains", "is_true"}
 
     for _filter, fields in filters.items():
         if not fields:
             continue
-        
+
         # Raise error for unsupported filter types
         if _filter not in SUPPORTED_FILTERS:
             raise ValueError(
@@ -96,8 +97,7 @@ def filter_users(users: list[GraphQLUser], filters: FilterBy) -> list[GraphQLUse
 
             model_field = field_mapping.get(_field, _field)
             filtered_users = [
-                user for user in filtered_users
-                if _matches_filter(getattr(user, model_field, None), value, _filter)
+                user for user in filtered_users if _matches_filter(getattr(user, model_field, None), value, _filter)
             ]
 
     return filtered_users
@@ -105,35 +105,36 @@ def filter_users(users: list[GraphQLUser], filters: FilterBy) -> list[GraphQLUse
 
 def _matches_filter(field_value, filter_value, filter_type: str) -> bool:
     """
-        Check if field value matches the filter.
-        Supports 'equal', 'contains', and 'is_true' filter types.
-        Handles UUIDs, Enums, Lists, and basic string comparisons.
+    Check if field value matches the filter.
+    Supports 'equal', 'contains', and 'is_true' filter types.
+    Handles UUIDs, Enums, Lists, and basic string comparisons.
     """
     if field_value is None:
         return False
-    
+
     # Handle is_true for boolean fields
     if filter_type == "is_true":
         return bool(field_value) == filter_value
-    
+
     # Handle UUID - exact match
     if isinstance(field_value, UUID):
         return str(field_value) == str(filter_value)
-    
+
     # Handle enum (InviteStatus, Role) - case-insensitive value comparison
-    if hasattr(field_value, 'value'):
+    if hasattr(field_value, "value"):
         field_str = field_value.value.lower()
         filter_str = str(filter_value).lower()
         return filter_str in field_str if filter_type == "contains" else field_str == filter_str
-    
+
     # Handle list (roles field) - check if any item matches
     if isinstance(field_value, list):
         return any(_matches_filter(item, filter_value, filter_type) for item in field_value)
-    
+
     # Default: case-insensitive string comparison
     field_str = str(field_value).lower()
     filter_str = str(filter_value).lower()
     return filter_str in field_str if filter_type == "contains" else field_str == filter_str
+
 
 def sort_users(users: list[GraphQLUser], sort_by: SortBy | None = None) -> list[GraphQLUser]:
     if not sort_by:
@@ -146,12 +147,11 @@ def sort_users(users: list[GraphQLUser], sort_by: SortBy | None = None) -> list[
     return sorted(
         users,
         key=lambda u: (getattr(u, sort_field, None) is None, str(getattr(u, sort_field, "") or "")),
-        reverse=reverse
+        reverse=reverse,
     )
 
 
-async def _apply_id_filter_cached(
-    filter_by: FilterBy) -> tuple[list[GraphQLUser], int]:
+async def _apply_id_filter_cached(filter_by: FilterBy) -> tuple[list[GraphQLUser], int]:
     """Optimized user retrieval when filtering by ID using cache"""
     user_id = filter_by.equal.get("id")
     try:
