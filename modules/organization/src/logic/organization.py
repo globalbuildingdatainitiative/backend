@@ -11,8 +11,19 @@ from models import (
     OrganizationMetaDataModel,
 )
 from models.sort_filter import FilterBy, SortBy
+from strawberry import UNSET
 
 logger = logging.getLogger("main")
+
+
+# Map frontend field names to model attributes
+field_mapping = {
+    "id": "id",
+    "name": "name",
+    "address": "address",
+    "city": "city",
+    "country": "country",
+}
 
 
 async def get_organizations(
@@ -20,38 +31,119 @@ async def get_organizations(
     sort_by: SortBy | None = None,
     limit: int | None = None,
     offset: int = 0,
-) -> list[DBOrganization]:
-    # Get from cache first
+) -> tuple[list[DBOrganization], int]:
+    """Returns all Organizations with total count
+    filter
+    sort
+    offset
+    limit
+    """
+    # Handle special case: ID filter with direct lookup
+    # This optimizes performance for ID-based queries
+    if filter_by and filter_by.equal and filter_by.equal.get("id"):
+        return await _apply_id_filter_cached(filter_by)
+
+    # Else fetch all organizations from cache and apply filters/sorting/pagination
     organizations = await organization_cache.get_all_organizations()
 
-    # Apply filters if needed
     if filter_by:
-        # Simple implementation - you may want to optimize this further
-        if filter_by.equal:
-            for field, value in filter_by.equal.items():
-                if field == "id":
-                    org_id = UUID(value) if isinstance(value, str) else value
-                    org = await organization_cache.get_organization(org_id)
-                    return [org] if org else []
-                # Add other field filters as needed
+        organizations = filter_organizations(organizations, filter_by)
+    if sort_by:
+        organizations = sort_organizations(organizations, sort_by)
 
-    # TODO: implement filtering and sorting
-    # query = filter_model_query(DBOrganization, filter_by, query)
-
-    # if sort_by:
-    #     query = sort_model_query(DBOrganization, sort_by, query)
-
-    # if limit is not None:
-    #     query = query.limit(limit)
+    # Store total count before pagination
+    total_count = len(organizations)
 
     # Apply pagination
-    if offset:
-        organizations = organizations[offset:]
     if limit is not None:
-        organizations = organizations[:limit]
+        organizations = organizations[offset : offset + limit]
+    else:
+        organizations = organizations[offset:]
 
-    logger.debug(f"Found {len(organizations)} organizations")
-    return organizations
+    logger.debug(f"Found {len(organizations)} organizations (total: {total_count})")
+    return organizations, total_count
+
+
+def filter_organizations(organizations: list[DBOrganization], filters: FilterBy) -> list[DBOrganization]:
+    filtered_organizations = organizations
+
+    SUPPORTED_FILTERS = {"equal", "contains", "is_true"}
+
+    for _filter, fields in filters.items():
+        if not fields:
+            continue
+
+        # Raise error for unsupported filter types
+        if _filter not in SUPPORTED_FILTERS:
+            raise ValueError(
+                f"Filter type '{_filter}' is not supported for in-memory organization filtering. "
+                f"Supported filters: {', '.join(SUPPORTED_FILTERS)}"
+            )
+
+        for _field, value in fields.items():
+            if not _field or value is UNSET:
+                continue
+
+            model_field = field_mapping.get(_field, _field)
+            filtered_organizations = [
+                org
+                for org in filtered_organizations
+                if _matches_filter(getattr(org, model_field, None), value, _filter)
+            ]
+
+    return filtered_organizations
+
+
+def _matches_filter(field_value, filter_value, filter_type: str) -> bool:
+    """
+    Check if field value matches the filter.
+    Supports 'equal', 'contains', and 'is_true' filter types.
+    Handles UUIDs and basic string comparisons.
+    """
+    if field_value is None:
+        return False
+
+    # Handle is_true for boolean fields
+    if filter_type == "is_true":
+        return bool(field_value) == filter_value
+
+    # Handle UUID - exact match
+    if isinstance(field_value, UUID):
+        return str(field_value) == str(filter_value)
+
+    # Default: case-insensitive string comparison
+    field_str = str(field_value).lower()
+    filter_str = str(filter_value).lower()
+    return filter_str in field_str if filter_type == "contains" else field_str == filter_str
+
+
+def sort_organizations(organizations: list[DBOrganization], sort_by: SortBy | None = None) -> list[DBOrganization]:
+    if not sort_by:
+        return organizations
+
+    field = sort_by.asc if sort_by.asc is not UNSET else sort_by.dsc
+    reverse = sort_by.dsc is not UNSET
+    sort_field = field_mapping.get(field, field)
+
+    return sorted(
+        organizations,
+        key=lambda o: (getattr(o, sort_field, None) is None, str(getattr(o, sort_field, "") or "")),
+        reverse=reverse,
+    )
+
+
+async def _apply_id_filter_cached(filter_by: FilterBy) -> tuple[list[DBOrganization], int]:
+    """Optimized organization retrieval when filtering by ID using cache"""
+    org_id = filter_by.equal.get("id")
+    try:
+        org_uuid = UUID(org_id) if isinstance(org_id, str) else org_id
+        if org := await organization_cache.get_organization(org_uuid):
+            return [org], 1
+        else:
+            return [], 0
+    except EntityNotFound as e:
+        logger.warning(f"Organization not found in cache: {e}")
+        raise e
 
 
 async def create_organizations_mutation(

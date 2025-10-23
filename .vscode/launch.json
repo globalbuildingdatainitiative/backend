@@ -1,0 +1,73 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Auth Service",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/modules/auth/.venv/bin/uvicorn",
+      "args": [
+        "main:app",
+        "--host", "0.0.0.0",
+        "--port", "7001",
+        "--reload",
+        "--log-level", "debug"
+      ],
+      "cwd": "${workspaceFolder}/modules/auth/src",
+      "envFile": "${workspaceFolder}/modules/auth/.env",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "python": "${workspaceFolder}/modules/auth/.venv/bin/python"
+    },
+    {
+      "name": "Debug Organization Service",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/modules/organization/.venv/bin/uvicorn",
+      "args": [
+        "main:app",
+        "--host", "0.0.0.0",
+        "--port", "7002",
+        "--reload",
+        "--log-level", "debug"
+      ],
+      "cwd": "${workspaceFolder}/modules/organization/src",
+      "envFile": "${workspaceFolder}/modules/organization/.env",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "python": "${workspaceFolder}/modules/organization/.venv/bin/python"
+    },
+    {
+      "name": "Debug Projects Service",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/modules/projects/.venv/bin/uvicorn",
+      "args": [
+        "main:app",
+        "--host", "0.0.0.0",
+        "--port", "7003",
+        "--reload",
+        "--log-level", "debug"
+      ],
+      "cwd": "${workspaceFolder}/modules/projects/src",
+      "envFile": "${workspaceFolder}/modules/projects/.env",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "python": "${workspaceFolder}/modules/projects/.venv/bin/python"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug All Services",
+      "configurations": [
+        "Debug Auth Service",
+        "Debug Organization Service",
+        "Debug Projects Service"
+      ],
+      "stopAll": true
+    }
+  ]
+}

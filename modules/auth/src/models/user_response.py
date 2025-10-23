@@ -17,6 +17,11 @@ logger = logging.getLogger("main")
 class UserResponse:
     """Response type for user queries with pagination support"""
 
+    def __init__(self):
+        # Store query parameters from items() to reuse in count()
+        self._items_filter_by: FilterBy | None = None
+        self._items_sort_by: SortBy | None = None
+
     def _get_cache_key(self, user_id: str, is_admin: bool, filter_by: FilterBy | None, sort_by: SortBy | None) -> str:
         """Generate a cache key for the current query parameters"""
         return f"{user_id}:{is_admin}:{filter_by}:{sort_by}"
@@ -40,7 +45,6 @@ class UserResponse:
 
         # Check if this is a microservice request
         if user_id == MICROSERVICE_USER_ID:
-            logger.info(f"Microservice request detected (UUID: {user_id}). Treating as admin access.")
             is_admin = True
         else:
             # Regular user - fetch from cache
@@ -58,16 +62,13 @@ class UserResponse:
 
         # Return cached result if available and cache key matches
         if self._cache is not None and self._cache_key == cache_key:
-            logger.debug("Using cached user query result")
             if limit is not None:
                 return self._cache[offset : offset + limit], self._cache_count
             return self._cache[offset:], self._cache_count
 
         # Fetch fresh data
-        logger.debug("Fetching users from database")
         if is_admin:
             users, total_count = await get_users(filter_by, sort_by, limit=None, offset=0)
-            logger.info(f"Got {len(users)} users as admin (total: {total_count})")
         else:
             # Add organization filter for non-admin users
             # Goal: only fetch users from the same organization as the requester
@@ -79,7 +80,6 @@ class UserResponse:
             filters.equal["organization_id"] = user.organization_id
 
             users, total_count = await get_users(filters, sort_by, limit=None, offset=0)
-            logger.info(f"Got {len(users)} users (total: {total_count})")
 
         # Cache the full result
         self._cache = users
@@ -100,11 +100,21 @@ class UserResponse:
         offset: int = 0,
         limit: int = 50,
     ) -> list[GraphQLUser]:
+        # Store parameters for use by count() method
+        self._items_filter_by = filter_by
+        self._items_sort_by = sort_by
         users, _ = await self._fetch_users(info, filter_by, sort_by, limit, offset)
         return users
 
     @strawberry.field(description="Total number of users in the filtered dataset.")
-    async def count(self, info: Info, filter_by: FilterBy | None = None) -> int:
-        # Fetch users (will use cache if items was already called)
-        _, total_count = await self._fetch_users(info, filter_by=filter_by, limit=None, offset=0)
+    async def count(self, info: Info, filter_by: FilterBy | None = None, sort_by: SortBy | None = None) -> int:
+        # If filter_by/sort_by not provided, use the ones from items() call
+        # This ensures count uses the same filters as items when called in the same query
+        effective_filter_by = filter_by if filter_by is not None else self._items_filter_by
+        effective_sort_by = sort_by if sort_by is not None else self._items_sort_by
+
+        # Fetch users (will use cache if items was already called with same parameters)
+        _, total_count = await self._fetch_users(
+            info, filter_by=effective_filter_by, sort_by=effective_sort_by, limit=None, offset=0
+        )
         return total_count
