@@ -72,9 +72,9 @@ class UserCache:
         if self._reload_task is None:
             self._reload_task = asyncio.create_task(self._periodic_reload())
 
-    async def get_user(self, id: UUID) -> Optional[GraphQLUser]:
+    async def get_user(self, id: UUID | str) -> Optional[GraphQLUser]:
         async with self.lock:
-            return self.cache.get(id)
+            return self.cache.get(UUID(id) if isinstance(id, str) else id)
 
     async def get_all_users(self) -> List[GraphQLUser]:
         async with self.lock:

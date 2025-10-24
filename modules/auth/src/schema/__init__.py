@@ -5,7 +5,7 @@ import strawberry
 from models import GraphQLUser, InviteResult, RolePermission
 from models.user_response import UserResponse
 from schema.permissions import IsAuthenticated, IsAdmin
-from schema.roles import make_admin_mutation, roles_query
+from schema.roles import make_admin_mutation, unmake_admin_mutation, roles_query
 from schema.user import (
     update_user_mutation,
     invite_users_mutation,
@@ -51,6 +51,10 @@ class Mutation:
     )
     make_admin: bool = strawberry.field(
         resolver=make_admin_mutation, description=getdoc(make_admin_mutation), permission_classes=[IsAdmin]
+    )
+    # unmake admin mutation can be added here similarly
+    unmake_admin: bool = strawberry.field(
+        resolver=unmake_admin_mutation, description=getdoc(unmake_admin_mutation), permission_classes=[IsAdmin]
     )
 
 

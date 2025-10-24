@@ -5,6 +5,7 @@ from uuid import UUID
 import strawberry
 from fastapi.requests import Request
 from strawberry import UNSET
+from supertokens_python import RecipeUserId
 from supertokens_python.recipe.emailpassword.asyncio import update_email_or_password, verify_credentials
 from supertokens_python.recipe.emailpassword.interfaces import (
     WrongCredentialsError,
@@ -96,9 +97,21 @@ def filter_users(users: list[GraphQLUser], filters: FilterBy) -> list[GraphQLUse
                 continue
 
             model_field = field_mapping.get(_field, _field)
-            filtered_users = [
-                user for user in filtered_users if _matches_filter(getattr(user, model_field, None), value, _filter)
-            ]
+            if _field == "name":
+                # special case for name which is not a field but a combination of first_name and last_name
+                filtered_users = [
+                    user
+                    for user in filtered_users
+                    if _matches_filter(
+                        f"{getattr(user, 'first_name', '')} {getattr(user, 'last_name', '')}".strip().lower(),
+                        value,
+                        _filter,
+                    )
+                ]
+            else:
+                filtered_users = [
+                    user for user in filtered_users if _matches_filter(getattr(user, model_field, None), value, _filter)
+                ]
 
     return filtered_users
 
@@ -290,10 +303,9 @@ async def impersonate_user(request: Request, user_id: str) -> SessionContainer:
     if not user:
         raise EntityNotFound(f"No user found with the provided ID: {user_id}", "Auth")
 
-    # not working, let's fix that
     return await create_new_session(
         request,
         "public",
-        user.login_methods[0].recipe_user_id,
+        RecipeUserId(str(user.id)),
         {"isImpersonation": True},
     )

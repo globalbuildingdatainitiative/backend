@@ -75,6 +75,9 @@ type Mutation {
 
   """Assign admin role to a user"""
   makeAdmin(userId: String!): Boolean!
+
+  """Remove admin role from a user"""
+  unmakeAdmin(userId: String!): Boolean!
 }
 
 enum Permission {
@@ -154,7 +157,7 @@ type UserGraphQLResponse {
   items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int! = 50): [User!]!
 
   """Total number of users in the filtered dataset."""
-  count(filterBy: FilterBy = null): Int!
+  count(filterBy: FilterBy = null, sortBy: SortBy = null): Int!
 }
 
 scalar _Any
