@@ -29,6 +29,7 @@ env = [
     "ROUTER_URL=http://localhost:7000",
     "CONNECTION_URI=http://localhost:3568",
     "BACKEND_CORS_ORIGINS=http://localhost:9000",
+    "POSTGRESQL_CONNECTION_URI=postgresql://testuser:testpass@localhost:5433/auth_test",
     "API_KEY=",
     "SMTP_HOST=epfl.ch",
     "SMTP_PORT=3131",

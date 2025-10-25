@@ -15,7 +15,7 @@ from supertokens_python.types import AccountInfo
 from core.auth import FAKE_PASSWORD
 from core.exceptions import UserHasNoOrganization, InvitationFailed
 from models import InviteStatus, InviteResult
-
+from core.cache import get_user_cache
 
 logger = logging.getLogger("main")
 
@@ -56,9 +56,12 @@ async def invite_users(emails: List[str], inviter_id: UUID, request: Request) ->
                     "pending_org_id": str(inviter_org_id),
                 },
             )
+            user_cache = get_user_cache()
+            await user_cache.reload_user(user_id)
             await send_reset_password_email(
                 "public", user_id, email, user_context={"user_id": user_id, "request": request}
             )
+            await user_cache.reload_user(user_id)
             results.append(InviteResult(email=email, status="invited", message=""))
 
         except Exception as e:

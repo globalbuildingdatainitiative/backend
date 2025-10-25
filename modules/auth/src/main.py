@@ -3,20 +3,19 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import yaml
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from supertokens_python.framework.fastapi import get_middleware
 from supertokens_python.recipe.session.exceptions import UnauthorisedError, TryRefreshTokenError
-from uuid import UUID
 
 from core.auth import supertokens_init
 from core.config import settings
 from logic.roles import create_roles
 from routes import graphql_app
 from routes.health import health_router
-from core.cache import user_cache
+from core.cache import init_user_cache
 
 log_config = yaml.safe_load((Path(__file__).parent / "logging.yaml").read_text())
 log_config["loggers"]["main"]["level"] = settings.LOG_LEVEL
@@ -34,11 +33,19 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.exception(e)
 
+    # Initialize user cache with the correct database URL
+    user_cache = init_user_cache(settings.database_url, cache_size=15000)
+    logger.info(f"User cache initialized with database URL: {settings.database_url}")
+
     # Load user cache on startup
     logger.info("Loading user cache...")
     try:
         await user_cache.load_all()
         logger.info("User cache loaded successfully")
+
+        # Start periodic reload task (every 12 hours)
+        user_cache.start_periodic_reload()
+        logger.info("Auth service ready")
     except Exception as e:
         logger.exception(f"Failed to load user cache: {e}")
 
@@ -76,31 +83,6 @@ async def exception_handler(request: Request, exc: Exception):
     )
 
 
-@app.get("/users")
-async def get_all_users():
-    return list(user_cache.cache.values())
-
-
-@app.get("/users/{user_id}")
-async def get_user(user_id: UUID):
-    user = await user_cache.get_user(user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
-
-
-@app.post("/users/reload", status_code=204)
-async def reload_user(user_id: UUID):
-    await user_cache.reload_user(user_id)
-    return None
-
-
-@app.delete("/users/{user_id}", status_code=204)
-async def delete_user(user_id: UUID):
-    await user_cache.remove_user(user_id)
-    return None
-
-
 @app.exception_handler(TryRefreshTokenError)
 async def refresh_exception_handler(request: Request, exc: TryRefreshTokenError):
     logger.exception(exc)
@@ -129,17 +111,3 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
         status_code=400,
         content={"data": "Invalid request data"},
     )
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize caches on application startup"""
-    logger.info("Starting up Auth service...")
-
-    # Load user cache
-    await user_cache.load_all()
-
-    # Start periodic reload task (every 12 hours)
-    user_cache.start_periodic_reload()
-
-    logger.info("✅ Auth service ready")

@@ -23,7 +23,7 @@ from core.exceptions import EntityNotFound
 from logic.roles import assign_role
 from models import GraphQLUser, UpdateUserInput, InviteStatus, Role, AcceptInvitationInput
 from models.sort_filter import FilterBy, SortBy
-from core.cache import user_cache
+from core.cache import get_user_cache
 
 
 logger = getLogger("main")
@@ -44,6 +44,7 @@ async def get_users(
     if filter_by and filter_by.equal and filter_by.equal.get("id"):
         return await _apply_id_filter_cached(filter_by)
 
+    user_cache = get_user_cache()
     # Else fetch all users from cache and apply filters/sorting/pagination
     gql_users = await user_cache.get_all_users()
 
@@ -77,6 +78,8 @@ field_mapping = {
 
 
 def filter_users(users: list[GraphQLUser], filters: FilterBy) -> list[GraphQLUser]:
+    if not filters:
+        return users
     filtered_users = users
 
     SUPPORTED_FILTERS = {"equal", "contains", "is_true"}
@@ -131,14 +134,23 @@ def _matches_filter(field_value, filter_value, filter_type: str) -> bool:
 
     # Handle UUID - exact match
     if isinstance(field_value, UUID):
-        return str(field_value) == str(filter_value)
+        field_str = str(field_value).lower()
+        filter_str = str(filter_value).lower()
+        if filter_type == "equal":
+            return field_str == filter_str
+        elif filter_type == "contains":
+            return filter_str in field_str
+        return False
 
     # Handle enum (InviteStatus, Role) - case-insensitive value comparison
     if hasattr(field_value, "value"):
         field_str = field_value.value.lower()
         filter_str = str(filter_value).lower()
-        return filter_str in field_str if filter_type == "contains" else field_str == filter_str
-
+        if filter_type == "equal":
+            return field_str == filter_str
+        elif filter_type == "contains":
+            return filter_str in field_str
+        return False
     # Handle list (roles field) - check if any item matches
     if isinstance(field_value, list):
         return any(_matches_filter(item, filter_value, filter_type) for item in field_value)
@@ -146,7 +158,11 @@ def _matches_filter(field_value, filter_value, filter_type: str) -> bool:
     # Default: case-insensitive string comparison
     field_str = str(field_value).lower()
     filter_str = str(filter_value).lower()
-    return filter_str in field_str if filter_type == "contains" else field_str == filter_str
+    if filter_type == "equal":
+        return field_str == filter_str
+    elif filter_type == "contains":
+        return filter_str in field_str
+    return False
 
 
 def sort_users(users: list[GraphQLUser], sort_by: SortBy | None = None) -> list[GraphQLUser]:
@@ -167,6 +183,7 @@ def sort_users(users: list[GraphQLUser], sort_by: SortBy | None = None) -> list[
 async def _apply_id_filter_cached(filter_by: FilterBy) -> tuple[list[GraphQLUser], int]:
     """Optimized user retrieval when filtering by ID using cache"""
     user_id = filter_by.equal.get("id")
+    user_cache = get_user_cache()
     try:
         if gql_user := await user_cache.get_user(UUID(user_id)):
             return [gql_user], 1
@@ -183,6 +200,7 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     metadata_update = strawberry.asdict(user_input)
     user_id = UUID(metadata_update.pop("id"))
 
+    user_cache = get_user_cache()
     user = await user_cache.get_user(user_id)
     if not user:
         raise EntityNotFound(f"No user found with the provided ID: {user_input.id}", "Auth")
@@ -259,7 +277,8 @@ async def accept_invitation(user: AcceptInvitationInput) -> bool:
     """Updates user metadata when invitation is accepted"""
 
     await update_user(UpdateUserInput(**strawberry.asdict(user)))
-
+    user_cache = get_user_cache()
+    user_cache.reload_user(user.id)
     user = await user_cache.get_user(user.id)
     update_data = {
         "invite_status": InviteStatus.ACCEPTED.value,
@@ -280,7 +299,7 @@ async def accept_invitation(user: AcceptInvitationInput) -> bool:
 
 async def reject_invitation(user_id: str) -> bool:
     """Updates user metadata when invitation is rejected"""
-
+    user_cache = get_user_cache()
     user = await user_cache.get_user(UUID(user_id))
     update_data = {
         "invite_status": InviteStatus.REJECTED.value,
@@ -294,10 +313,12 @@ async def reject_invitation(user_id: str) -> bool:
         update_data["inviter_name"] = user.inviter_name
 
     await update_user_metadata(user_id, update_data)
+    await user_cache.reload_user(UUID(user_id))
     return True
 
 
 async def impersonate_user(request: Request, user_id: str) -> SessionContainer:
+    user_cache = get_user_cache()
     user = await user_cache.get_user(user_id)
 
     if not user:

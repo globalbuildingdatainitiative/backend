@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from typing import Iterator
 from uuid import uuid4, UUID
+import os
 
 import docker
 import httpx
@@ -20,9 +21,14 @@ from supertokens_python.recipe.userroles.asyncio import add_role_to_user
 from tenacity import stop_after_attempt, wait_fixed, retry_if_exception, retry
 from time import sleep
 
-from core.config import settings
+from alembic.config import Config
+from alembic import command
+from sqlalchemy import create_engine, text
+
 from logic.roles import assign_role
 from models import SuperTokensUser, Role
+from core.cache import get_user_cache
+from core.config import settings
 
 
 @pytest.fixture(scope="session")
@@ -31,7 +37,64 @@ def docker_client():
 
 
 @pytest.fixture(scope="session")
-async def supertokens(docker_client):
+def postgres_db(docker_client):
+    """Spin up a test PostgreSQL database WITHOUT running migrations yet"""
+    # Clean up any existing test containers
+    try:
+        _container = docker_client.containers.get("postgres_auth_test")
+        _container.kill()
+        sleep(0.2)
+    except NotFound:
+        pass
+
+    db_user = "testuser"
+    db_password = "testpass"
+    db_name = "auth_test"
+    host_port = "5433"
+    container_port = "5432"
+
+    container = docker_client.containers.run(
+        image="postgres:15",
+        environment={"POSTGRES_USER": db_user, "POSTGRES_PASSWORD": db_password, "POSTGRES_DB": db_name},
+        ports={container_port: host_port},
+        name="postgres_auth_test",
+        detach=True,
+        auto_remove=True,
+    )
+
+    test_db_url = f"postgresql://{db_user}:{db_password}@localhost:{host_port}/{db_name}"
+
+    # Wait for PostgreSQL to be ready
+    @retry(
+        stop=stop_after_attempt(30),
+        wait=wait_fixed(0.5),
+        retry=retry_if_exception(lambda e: isinstance(e, Exception)),
+    )
+    def wait_for_postgres():
+        engine = create_engine(test_db_url)
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        engine.dispose()
+        return True
+
+    wait_for_postgres()
+
+    try:
+        yield {
+            "container": container,
+            "url": test_db_url,
+            "host_port": host_port,
+            "container_port": container_port,
+            "user": db_user,
+            "password": db_password,
+            "database": db_name,
+        }
+    finally:
+        container.stop()
+
+
+@pytest.fixture(scope="session")
+async def supertokens(docker_client, postgres_db):
     # Clean up any existing containers with conflicting names
     for container_name in ["supertokens", "supertokens_auth"]:
         try:
@@ -41,9 +104,15 @@ async def supertokens(docker_client):
         except NotFound:
             pass
 
+    # Use the postgres_db fixture info
+    postgres_url = f"postgresql://{postgres_db['user']}:{postgres_db['password']}@host.docker.internal:{postgres_db['host_port']}/{postgres_db['database']}"
+
     container = docker_client.containers.run(
         image="registry.supertokens.io/supertokens/supertokens-postgresql",
         ports={"3567": "3568"},
+        environment={
+            "POSTGRESQL_CONNECTION_URI": postgres_url,
+        },
         name="supertokens_auth",
         detach=True,
         auto_remove=True,
@@ -55,6 +124,9 @@ async def supertokens(docker_client):
         retry=retry_if_exception(lambda e: isinstance(e, httpx.HTTPError)),
     )
     def wait_for_container():
+        # Import settings here, after env vars are set
+        from core.config import settings
+
         response = httpx.get(f"{settings.CONNECTION_URI}/hello")
         if response.status_code == 200 and response.text.strip() == "Hello":
             return True
@@ -62,6 +134,7 @@ async def supertokens(docker_client):
     while True:
         if wait_for_container():
             break
+
     try:
         yield container
     finally:
@@ -69,7 +142,43 @@ async def supertokens(docker_client):
 
 
 @pytest.fixture(scope="session")
-async def app(supertokens) -> FastAPI:
+def run_migrations(supertokens, postgres_db):
+    """Run Alembic migrations AFTER SuperTokens has initialized"""
+
+    # Run Alembic migrations using Python API
+    auth_module_root = Path(__file__).parent.parent
+    alembic_cfg = Config(str(auth_module_root / "alembic.ini"))
+    alembic_cfg.set_main_option("sqlalchemy.url", postgres_db["url"])
+
+    # Run migrations
+    command.upgrade(alembic_cfg, "head")
+
+    yield
+
+    # Optional: downgrade migrations before cleanup
+    try:
+        command.downgrade(alembic_cfg, "base")
+    except Exception:
+        pass  # Ignore errors during cleanup
+
+
+@pytest.fixture(scope="session", autouse=True)
+def set_test_environment(postgres_db):
+    """Set environment variables BEFORE any application code is imported"""
+    # Override BOTH database URLs for tests
+    os.environ["POSTGRESQL_CONNECTION_URI"] = postgres_db["url"]
+    os.environ["POSTGRESQL_CONNECTION_URI_LOCAL"] = postgres_db["url"]
+
+    yield
+
+    # Cleanup (optional)
+    # del os.environ["POSTGRESQL_CONNECTION_URI"]
+    # del os.environ["POSTGRESQL_CONNECTION_URI_LOCAL"]
+
+
+@pytest.fixture(scope="session")
+async def app(supertokens, postgres_db, run_migrations, set_test_environment) -> FastAPI:
+    # Now import the app AFTER environment variables are set
     from main import app
 
     @app.get("/login/{user_id}")
@@ -84,6 +193,8 @@ async def app(supertokens) -> FastAPI:
 @pytest.fixture(scope="session")
 async def create_user(app) -> SuperTokensUser:
     response = await sign_up("public", "my@email.com", "currentPassword123")
+    await get_user_cache().load_all()
+    # should be a call to create_user from logic.users but avoiding circular import
     yield SuperTokensUser(id=UUID(response.user.id), organization_id=uuid4())
 
 
@@ -96,6 +207,7 @@ async def create_admin_user(app) -> SuperTokensUser:
     yield _user
 
     await delete_user(str(_user.id))
+    await get_user_cache().remove_user(_user.id)
 
 
 @pytest.fixture()
@@ -154,7 +266,9 @@ async def users(app):
             await add_role_to_user("public", user_id, role)
         user.update({"id": user_id})
         created_users.append(user_id)
-
+    user_cache = get_user_cache()
+    await user_cache.load_all()
+    _temp_users = user_cache.get_all_users()
     yield users
 
     # Clean up created users
@@ -163,6 +277,7 @@ async def users(app):
             await delete_user(user_id)
         except Exception:
             pass  # Ignore errors during cleanup
+    await user_cache.clear_cache()
 
 
 @pytest.fixture()

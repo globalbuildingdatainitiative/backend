@@ -11,10 +11,13 @@
       "program": "${workspaceFolder}/modules/auth/.venv/bin/uvicorn",
       "args": [
         "main:app",
-        "--host", "0.0.0.0",
-        "--port", "7001",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "7001",
         "--reload",
-        "--log-level", "debug"
+        "--log-level",
+        "debug"
       ],
       "cwd": "${workspaceFolder}/modules/auth/src",
       "envFile": "${workspaceFolder}/modules/auth/.env",
@@ -29,10 +32,13 @@
       "program": "${workspaceFolder}/modules/organization/.venv/bin/uvicorn",
       "args": [
         "main:app",
-        "--host", "0.0.0.0",
-        "--port", "7002",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "7002",
         "--reload",
-        "--log-level", "debug"
+        "--log-level",
+        "debug"
       ],
       "cwd": "${workspaceFolder}/modules/organization/src",
       "envFile": "${workspaceFolder}/modules/organization/.env",
@@ -47,16 +53,31 @@
       "program": "${workspaceFolder}/modules/projects/.venv/bin/uvicorn",
       "args": [
         "main:app",
-        "--host", "0.0.0.0",
-        "--port", "7003",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "7003",
         "--reload",
-        "--log-level", "debug"
+        "--log-level",
+        "debug"
       ],
       "cwd": "${workspaceFolder}/modules/projects/src",
       "envFile": "${workspaceFolder}/modules/projects/.env",
       "console": "integratedTerminal",
       "justMyCode": false,
       "python": "${workspaceFolder}/modules/projects/.venv/bin/python"
+    },
+    {
+      "name": "Debug Current Auth Pytest File",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["${file}", "-v", "-s"],
+      "cwd": "${workspaceFolder}/modules/auth",
+      "envFile": "${workspaceFolder}/modules/auth/.env",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "python": "${workspaceFolder}/modules/auth/.venv/bin/python"
     }
   ],
   "compounds": [

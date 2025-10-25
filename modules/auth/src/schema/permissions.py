@@ -5,7 +5,7 @@ from strawberry.permission import BasePermission
 
 from core.context import MICROSERVICE_USER_ID
 from models.roles import Role
-from core.cache import user_cache
+from core.cache import get_user_cache
 import logging
 
 
@@ -33,6 +33,7 @@ class IsAdmin(BasePermission):
             logger.info(f"Microservice request detected (UUID: {user_id}). Treating as admin access.")
             is_admin = True
         else:
+            user_cache = get_user_cache()
             # Regular user - fetch from cache
             user = await user_cache.get_user(user_id)
 

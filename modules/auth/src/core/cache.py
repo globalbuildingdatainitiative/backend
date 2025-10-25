@@ -1,4 +1,3 @@
-import os
 from typing import Optional, List
 from uuid import UUID
 from sqlalchemy import create_engine, text
@@ -116,11 +115,24 @@ class UserCache:
         async with self.lock:
             self.cache.pop(user_id, None)
 
+    async def clear_cache(self):
+        async with self.lock:
+            self.cache.clear()
 
-# Get database URL from environment variable
-# WARNING: This is a sensitive operation, ensure the environment variable is set correctly
 
-# Use LOCAL for development, fallback to regular for production/Docker
-db_url = os.getenv("POSTGRESQL_CONNECTION_URI_LOCAL") or os.getenv("POSTGRESQL_CONNECTION_URI", "FAILURE")
-# Singleton instance with increased cache size
-user_cache = UserCache(db_url, cache_size=15000)
+# Global cache instance - will be initialized in lifespan
+_user_cache: Optional[UserCache] = None
+
+
+def get_user_cache() -> UserCache:
+    """Get the user cache instance"""
+    if _user_cache is None:
+        raise RuntimeError("UserCache not initialized. Call init_user_cache() first.")
+    return _user_cache
+
+
+def init_user_cache(db_url: str, cache_size: int = 15000) -> UserCache:
+    """Initialize the user cache with the given database URL"""
+    global _user_cache
+    _user_cache = UserCache(db_url, cache_size)
+    return _user_cache

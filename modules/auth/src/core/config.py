@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     ]
     LOG_LEVEL: str = "INFO"
 
+    # Database Configuration
+    POSTGRESQL_CONNECTION_URI: str | None = None
+    POSTGRESQL_CONNECTION_URI_LOCAL: str | None = None
+
     SMTP_HOST: str
     SMTP_PORT: int
     SMTP_EMAIL: str
@@ -58,8 +62,25 @@ class Settings(BaseSettings):
     ) -> Tuple[PydanticBaseSettingsSource, ...]:
         return (dotenv_settings, ParsingValues(settings_cls))
 
+    @property
+    def database_url(self) -> str:
+        """Get the appropriate database URL, preferring LOCAL for development"""
+        return self.POSTGRESQL_CONNECTION_URI_LOCAL or self.POSTGRESQL_CONNECTION_URI
+
     class Config:
         case_sensitive = True
 
 
-settings = Settings()
+class _SettingsProxy:
+    """Proxy that delays Settings() until first access."""
+
+    _instance: Settings | None = None
+
+    def __getattr__(self, name: str):
+        if self._instance is None:
+            self._instance = Settings()
+        return getattr(self._instance, name)
+
+
+# Use everywhere instead of Settings()
+settings = _SettingsProxy()

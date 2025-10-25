@@ -3,8 +3,7 @@ import logging
 import strawberry
 from strawberry import Info
 
-# from core.context import get_user
-from core.cache import user_cache
+from core.cache import get_user_cache
 from core.context import MICROSERVICE_USER_ID
 
 from logic import get_users
@@ -48,6 +47,7 @@ class UserResponse:
             is_admin = True
         else:
             # Regular user - fetch from cache
+            user_cache = get_user_cache()
             user = await user_cache.get_user(user_id)
 
             # Handle case where user is not found in cache

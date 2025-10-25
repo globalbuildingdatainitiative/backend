@@ -1,7 +1,7 @@
 import logging
 
 from logic.roles import get_roles, assign_role, remove_role
-from core.cache import user_cache
+from core.cache import get_user_cache
 from models import RolePermission, Role
 import uuid
 
@@ -21,8 +21,7 @@ async def make_admin_mutation(user_id: str) -> bool:
     """Assign admin role to a user"""
 
     await assign_role(user_id, Role.ADMIN)
-    # await assign_role(user_id, Role.OWNER)
-    # await assign_role(user_id, Role.MEMBER)
+    user_cache = get_user_cache()
     await user_cache.reload_user(user_id)
     logger.info(f"User {user_id} became admin")
 
@@ -33,6 +32,7 @@ async def unmake_admin_mutation(user_id: str) -> bool:
     """Remove admin role from a user"""
 
     await remove_role(user_id, Role.ADMIN)
+    user_cache = get_user_cache()
     await user_cache.reload_user(user_id)
     # just to be sure, we do not remove other roles check if roles empty
     user = await user_cache.get_user(uuid.UUID(user_id))
