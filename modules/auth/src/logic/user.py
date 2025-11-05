@@ -24,7 +24,7 @@ from logic.roles import assign_role
 from models import GraphQLUser, UpdateUserInput, InviteStatus, Role, AcceptInvitationInput
 from models.sort_filter import FilterBy, SortBy
 from core.cache import get_user_cache
-
+from core.config import settings
 
 logger = getLogger("main")
 
@@ -41,8 +41,19 @@ async def get_users(
     gql_users = []
     # Handle special case: ID filter with direct lookup
     # This optimizes performance for ID-based queries
-    if filter_by and filter_by.equal and filter_by.equal.get("id"):
-        return await _apply_id_filter_cached(filter_by)
+    if filter_by and hasattr(filter_by, "equal"):
+        equal_filter = filter_by.equal
+        if equal_filter is not UNSET and isinstance(equal_filter, dict) and len(equal_filter.keys()) >= 1:
+            if equal_filter.get("id"):
+                return await _apply_id_filter_cached(filter_by)
+            if equal_filter.get("email"):
+                return await _apply_email_filter_cached(filter_by)
+    # if filter_by and hasattr(filter_by, 'equal') and len(filter_by.equal.keys()) >= 1:
+    #     if filter_by and filter_by.equal and filter_by.equal.get("id"):
+    #         return await _apply_id_filter_cached(filter_by)
+
+    #     if filter_by and filter_by.equal and filter_by.equal.get("email"):
+    #         return await _apply_email_filter_cached(filter_by)
 
     user_cache = get_user_cache()
     # Else fetch all users from cache and apply filters/sorting/pagination
@@ -194,11 +205,27 @@ async def _apply_id_filter_cached(filter_by: FilterBy) -> tuple[list[GraphQLUser
         raise e
 
 
+async def _apply_email_filter_cached(filter_by: FilterBy) -> tuple[list[GraphQLUser], int]:
+    """Optimized user retrieval when filtering by email using cache"""
+    email = filter_by.equal.get("email")
+    user_cache = get_user_cache()
+    all_users = await user_cache.get_all_users()
+    matched_users = [user for user in all_users if user.email.lower() == email.lower()]
+
+    # hard coded filter for organization_id
+    org_id = filter_by.equal.get("organizationId")
+    if org_id:
+        matched_users = [user for user in matched_users if str(user.organization_id) == str(org_id)]
+    return matched_users, len(matched_users)
+
+
 async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
     """Update user details & metadata"""
-
     metadata_update = strawberry.asdict(user_input)
-    user_id = UUID(metadata_update.pop("id"))
+    user_id = metadata_update.pop("id")
+    # Ensure UUID instance
+    if isinstance(user_id, str):
+        user_id = UUID(user_id)
 
     user_cache = get_user_cache()
     user = await user_cache.get_user(user_id)
@@ -211,29 +238,29 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
 
     del metadata_update["current_password"]
     del metadata_update["new_password"]
-    # Handle organization role removal if organization_id is unset or None
-    # This ensures user roles stay in sync with organization membership
-    # not sure if we need this
-    # if metadata_update["organization_id"] is UNSET or metadata_update["organization_id"] is None:
-    #     await remove_role(user_id, Role(role))
 
     def custom_serializer(obj):
         if isinstance(obj, InviteStatus):
             return obj.value
+        if isinstance(obj, UUID):  # Handle UUIDs for JSON
+            return str(obj)
 
+    # Only include non-UNSET values
     metadata_update = json.dumps(
-        {key: value for key, value in metadata_update.items() if value is not UNSET}, default=custom_serializer
+        {key: value for key, value in metadata_update.items() if value is not UNSET},
+        default=custom_serializer,
     )
 
-    if metadata_update:
-        await update_user_metadata(user_id, json.loads(metadata_update))
+    if metadata_update and metadata_update != "{}":
+        await update_user_metadata(str(user_id), json.loads(metadata_update))
+        user = await user_cache.reload_user(user_id)
 
     # Update email if provided and different from current
     if new_email is not UNSET and new_email != current_email:
         email_update_result = await update_email_or_password(
-            recipe_user_id=user.login_methods[0].recipe_user_id,
+            recipe_user_id=RecipeUserId(str(user.id)),
             email=str(new_email),
-            tenant_id_for_password_policy=user.tenant_ids[0],
+            tenant_id_for_password_policy=settings.SUPERTOKENS_TENANT_ID,
         )
         if isinstance(email_update_result, UnknownUserIdError):
             raise exceptions.UnknownUserError("User not found")
@@ -242,21 +269,18 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
         if isinstance(email_update_result, EmailAlreadyExistsError):
             raise exceptions.EmailAlreadyInUseError("Email is already in use by another user")
 
-        user_cache.reload_user(user_id)
-        # Refresh user object after email update to ensure we have the latest email for password verification
-        user = await user_cache.get_user(user_id)
+        user = await user_cache.reload_user(user_id)
 
     # Update password if current password and new password are provided
     if user_input.current_password and user_input.new_password:
-        # Use the latest user object for password verification
-        is_password_valid = await verify_credentials("public", str(user.emails[0]), str(user_input.current_password))
+        is_password_valid = await verify_credentials("public", str(user.email), str(user_input.current_password))
         if isinstance(is_password_valid, WrongCredentialsError):
             raise exceptions.WrongCredentialsError("Current password is incorrect")
 
         password_update_result = await update_email_or_password(
-            recipe_user_id=user.login_methods[0].recipe_user_id,
+            recipe_user_id=RecipeUserId(str(user.id)),
             password=user_input.new_password,
-            tenant_id_for_password_policy=user.tenant_ids[0],
+            tenant_id_for_password_policy=settings.SUPERTOKENS_TENANT_ID,
         )
         if isinstance(password_update_result, UnknownUserIdError):
             raise exceptions.UnknownUserError("User not found")
@@ -265,10 +289,7 @@ async def update_user(user_input: UpdateUserInput) -> GraphQLUser:
         if isinstance(password_update_result, PasswordPolicyViolationError):
             raise exceptions.PasswordRequirementsViolationError(password_update_result.failure_reason)
 
-        # Refresh user object after password update
-        user_cache.reload_user(user_id)
-        # Refresh user object after email update to ensure we have the latest email for password verification
-        user = await user_cache.get_user(user_id)
+        user = await user_cache.reload_user(user_id)
 
     return user
 
@@ -278,22 +299,25 @@ async def accept_invitation(user: AcceptInvitationInput) -> bool:
 
     await update_user(UpdateUserInput(**strawberry.asdict(user)))
     user_cache = get_user_cache()
-    user_cache.reload_user(user.id)
-    user = await user_cache.get_user(user.id)
+    user = await user_cache.reload_user(user.id)
+
     update_data = {
         "invite_status": InviteStatus.ACCEPTED.value,
         "invited": None,
-        "pending_org_id": None,
+        "pending_org_id": None,  # align key with cache loader
     }
     await assign_role(user.id, Role.MEMBER)
 
-    if "pending_org_id" in user:
-        update_data["organization_id"] = user.pending_org_id
+    pending_org_id = getattr(user, "pending_org_id", None)
+    if pending_org_id:
+        update_data["organization_id"] = str(pending_org_id)  # ensure JSON serializable
 
-    if "inviter_name" in user:
-        update_data["inviter_name"] = user.inviter_name
+    inviter_name = getattr(user, "inviter_name", None)
+    if inviter_name:
+        update_data["inviter_name"] = inviter_name
 
     await update_user_metadata(str(user.id), update_data)
+    await user_cache.reload_user(user.id)
     return True
 
 
@@ -301,18 +325,23 @@ async def reject_invitation(user_id: str) -> bool:
     """Updates user metadata when invitation is rejected"""
     user_cache = get_user_cache()
     user = await user_cache.get_user(UUID(user_id))
+
     update_data = {
         "invite_status": InviteStatus.REJECTED.value,
         "invited": True,
+        # keep pending_org_id as-is (informational), or null it out:
+        # "pending_org_id": None,
     }
 
-    if "pending_org_id" in user:
-        update_data["pending_org_id"] = user.pending_org_id
+    pending_org_id = getattr(user, "pending_org_id", None)
+    if pending_org_id:
+        update_data["pending_org_id"] = str(pending_org_id)
 
-    if "inviter_name" in user:
-        update_data["inviter_name"] = user.inviter_name
+    inviter_name = getattr(user, "inviter_name", None)
+    if inviter_name:
+        update_data["inviter_name"] = inviter_name
 
-    await update_user_metadata(user_id, update_data)
+    await update_user_metadata(str(user_id), update_data)
     await user_cache.reload_user(UUID(user_id))
     return True
 

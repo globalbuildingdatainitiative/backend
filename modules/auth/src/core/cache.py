@@ -36,7 +36,7 @@ class UserCache:
                             first_name=row.metadata.get("first_name"),
                             last_name=row.metadata.get("last_name"),
                             organization_id=self._safe_uuid(row.metadata.get("organization_id")),
-                            pending_org_id=self._safe_uuid(row.metadata.get("pending_organization_id")),
+                            pending_org_id=self._safe_uuid(row.metadata.get("pending_org_id")),
                             invited=row.metadata.get("invited") or False,
                             invite_status=InviteStatus(row.metadata.get("invite_status"))
                             if row.metadata.get("invite_status")
@@ -44,7 +44,7 @@ class UserCache:
                             inviter_name=row.metadata.get("inviter_name"),
                             roles=[Role(role) for role in (row.roles or [])],
                         )
-                        self.cache[UUID(row.user_id)] = user
+                        self.cache[self._safe_uuid(row.user_id)] = user
                     except Exception as e:
                         print(f"Failed to load user {row.user_id}: {e}")
                         print(f"  Metadata: {row.metadata}")
@@ -84,12 +84,16 @@ class UserCache:
             print(f"get_all_users() returning {len(users)} users from cache")
             return users
 
-    async def reload_user(self, id: UUID):
+    async def reload_user(self, id: UUID | str) -> Optional[GraphQLUser]:
+        if isinstance(id, UUID):
+            uuid_id = id
+            id = str(id)
+        if isinstance(id, str):
+            uuid_id = UUID(id)
+
         async with self.lock:
             with self.engine.connect() as conn:
-                result = conn.execute(
-                    text("SELECT * FROM user_full_view WHERE user_id = :user_id"), {"user_id": str(id)}
-                )
+                result = conn.execute(text("SELECT * FROM user_full_view WHERE user_id = :user_id"), {"user_id": id})
                 row = result.fetchone()
                 if row:
                     user = GraphQLUser(
@@ -99,7 +103,7 @@ class UserCache:
                         first_name=row.metadata.get("first_name"),
                         last_name=row.metadata.get("last_name"),
                         organization_id=self._safe_uuid(row.metadata.get("organization_id")),
-                        pending_org_id=self._safe_uuid(row.metadata.get("pending_organization_id")),
+                        pending_org_id=self._safe_uuid(row.metadata.get("pending_org_id")),
                         invited=row.metadata.get("invited") or False,
                         invite_status=InviteStatus(row.metadata.get("invite_status"))
                         if row.metadata.get("invite_status")
@@ -108,10 +112,14 @@ class UserCache:
                         roles=[Role(role) for role in (row.roles or [])],
                     )
                     self.cache[UUID(row.user_id)] = user
+                    return user
                 else:
-                    self.cache.pop(id, None)
+                    self.cache.pop(uuid_id, None)
+                    return None
 
     async def remove_user(self, user_id: UUID):
+        if not isinstance(user_id, UUID):
+            user_id = UUID(user_id)
         async with self.lock:
             self.cache.pop(user_id, None)
 

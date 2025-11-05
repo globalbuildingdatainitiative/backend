@@ -7,6 +7,19 @@ from core.auth import FAKE_PASSWORD
 from core.config import settings
 from models import InviteStatus
 
+# NOTE: InviteStatus casing across layers
+# - Python enum: InviteStatus.value is lowercase ('pending', 'accepted', 'rejected', 'none').
+# - GraphQL enum: serializes as the NAME, i.e. uppercase ('PENDING', 'ACCEPTED', 'REJECTED', 'NONE').
+# Rules of thumb:
+#   • When asserting GraphQL responses -> compare to InviteStatus.<X>.name (UPPERCASE).
+#   • When sending inviteStatus in GraphQL variables -> use UPPERCASE names (e.g. "PENDING").
+#   • When writing to user metadata (DB/cache) -> use InviteStatus.<X>.value (lowercase).
+#
+# Supertokens + cache gotcha:
+#   • user_cache.reload_user(...) expects a UUID, but SuperTokens returns string IDs.
+#     Always wrap with UUID(user_id) when reloading a user created via SuperTokens.
+# THANKS TO WHOEVER DECIDED THIS WAS A GOOD IDEA. :)
+
 
 @pytest.mark.asyncio
 @patch("logic.invite_users.send_reset_password_email")
@@ -75,8 +88,8 @@ async def test_accept_invitation_mutation(mock_send_email, client: AsyncClient):
     # Get the user ID by querying users
     query_users = """
         query($filterBy: FilterBy) {
-            users(filterBy: $filterBy) {
-                users {
+            users {
+                items(filterBy: $filterBy, limit: 50, offset: 0) {
                     id
                     email
                     inviteStatus
@@ -89,15 +102,14 @@ async def test_accept_invitation_mutation(mock_send_email, client: AsyncClient):
         f"{settings.API_STR}/graphql",
         json={"query": query_users, "variables": {"filterBy": {"equal": {"email": email}}}},
     )
-
     assert users_response.status_code == 200
     users_data = users_response.json()
     assert not users_data.get("errors")
 
-    users = users_data["data"]["users"]["users"]
+    users = users_data["data"]["users"]["items"]
     assert len(users) == 1
     user_id = users[0]["id"]
-    assert users[0]["inviteStatus"] == InviteStatus.PENDING.value
+    assert users[0]["inviteStatus"] == InviteStatus.PENDING.name
 
     # Now accept the invitation
     accept_mutation = """
@@ -135,8 +147,8 @@ async def test_accept_invitation_mutation(mock_send_email, client: AsyncClient):
     )
 
     verify_data = verify_response.json()
-    verified_user = verify_data["data"]["users"]["users"][0]
-    assert verified_user["inviteStatus"] == InviteStatus.ACCEPTED.value
+    verified_user = verify_data["data"]["users"]["items"][0]
+    assert verified_user["inviteStatus"] == InviteStatus.ACCEPTED.name
 
 
 @pytest.mark.asyncio
@@ -166,8 +178,8 @@ async def test_reject_invitation_mutation(mock_send_email, client: AsyncClient):
     # Get the user ID
     query_users = """
         query($filterBy: FilterBy) {
-            users(filterBy: $filterBy) {
-                users {
+            users {
+                items(filterBy: $filterBy, limit: 50, offset: 0) {
                     id
                     email
                     inviteStatus
@@ -182,7 +194,7 @@ async def test_reject_invitation_mutation(mock_send_email, client: AsyncClient):
     )
 
     users_data = users_response.json()
-    user_id = users_data["data"]["users"]["users"][0]["id"]
+    user_id = users_data["data"]["users"]["items"][0]["id"]
 
     # Reject the invitation
     reject_mutation = """
@@ -212,8 +224,8 @@ async def test_reject_invitation_mutation(mock_send_email, client: AsyncClient):
     )
 
     verify_data = verify_response.json()
-    verified_user = verify_data["data"]["users"]["users"][0]
-    assert verified_user["inviteStatus"] == InviteStatus.REJECTED.value
+    verified_user = verify_data["data"]["users"]["items"][0]
+    assert verified_user["inviteStatus"] == InviteStatus.REJECTED.name
 
 
 @pytest.mark.asyncio
@@ -243,8 +255,8 @@ async def test_resend_invitation_mutation(mock_send_email, client: AsyncClient):
     # Get the user ID
     query_users = """
         query($filterBy: FilterBy) {
-            users(filterBy: $filterBy) {
-                users {
+            users {
+                items(filterBy: $filterBy, limit: 50, offset: 0) {
                     id
                     email
                     inviteStatus
@@ -259,9 +271,9 @@ async def test_resend_invitation_mutation(mock_send_email, client: AsyncClient):
     )
 
     users_data = users_response.json()
-    user = users_data["data"]["users"]["users"][0]
+    user = users_data["data"]["users"]["items"][0]
     user_id = user["id"]
-    assert user["inviteStatus"] == InviteStatus.PENDING.value
+    assert user["inviteStatus"] == InviteStatus.PENDING.name
 
     # Resend the invitation
     resend_mutation = """

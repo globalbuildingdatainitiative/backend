@@ -6,5 +6,5 @@ graphql_app = GraphQLRouter(
     schema,
     context_getter=get_context,
     path="/graphql",
-    graphiql=True,
+    graphql_ide=True,
 )

@@ -42,7 +42,6 @@ async def lifespan(app: FastAPI):
     try:
         await user_cache.load_all()
         logger.info("User cache loaded successfully")
-
         # Start periodic reload task (every 12 hours)
         user_cache.start_periodic_reload()
         logger.info("Auth service ready")

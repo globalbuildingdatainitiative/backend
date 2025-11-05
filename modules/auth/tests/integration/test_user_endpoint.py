@@ -2,6 +2,8 @@ import pytest
 from httpx import AsyncClient
 
 from core.config import settings
+from models import InviteStatus
+from models import Role
 
 
 @pytest.mark.asyncio
@@ -58,6 +60,7 @@ async def test_admin_get_users_query(client_admin: AsyncClient):
             users {
                 items {
                     id
+                    roles
                 }
             }
         }
@@ -74,8 +77,9 @@ async def test_admin_get_users_query(client_admin: AsyncClient):
     assert not data.get("errors")
     _users = data.get("data", {}).get("users", {}).get("items")
 
-    assert _users
-    assert len(_users) > 1
+    assert _users is not None
+    admins = [u for u in _users if Role.ADMIN.name in (u.get("roles") or [])]
+    assert len(admins) == 1
 
 
 @pytest.mark.asyncio
@@ -108,7 +112,7 @@ async def test_update_user_mutation(
             "lastName": "UpdatedLastName",
             "email": "updated@epfl.ch",
             "invited": True,
-            "inviteStatus": "ACCEPTED",
+            "inviteStatus": InviteStatus.ACCEPTED.name,
             "inviterName": "John Doe",
             "role": "MEMBER",
         }
@@ -349,7 +353,7 @@ async def test_update_user_email_and_password_mutation(
 
 
 @pytest.mark.asyncio
-async def test_user_with_pending_organization_id(
+async def test_user_with_pending_org_id(
     client_user: AsyncClient,
     users,
 ):
@@ -377,7 +381,7 @@ async def test_user_with_pending_organization_id(
             "id": user_id,
             "organizationId": str(users[1].get("organization_id")),  # Use another user's org ID
             "invited": True,
-            "inviteStatus": "PENDING",
+            "inviteStatus": InviteStatus.PENDING.name,
         }
     }
 

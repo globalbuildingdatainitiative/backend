@@ -35,6 +35,17 @@ async def get_context(request: Request):
     user_cache = get_user_cache()
     user = await user_cache.get_user(uuid.UUID(session.get_user_id()))
 
+    # if not user:
+    #     user = await user_cache.get_user(uuid.UUID(session.get_user_id()))
+    # if not user:
+    #     return {"user": None}
+    if not user:
+        logger.warning(f"User {session.get_user_id()} not found in cache, reloading cache")
+        await user_cache.load_all()
+        user = await user_cache.get_user(uuid.UUID(session.get_user_id()))
+        if not user:
+            logger.error(f"User {session.get_user_id()} still not found after cache reload")
+            return {"user": None}
     return {"user": SuperTokensUser(id=user.id, organization_id=user.organization_id)}
 
 

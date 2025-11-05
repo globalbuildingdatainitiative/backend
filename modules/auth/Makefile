@@ -47,8 +47,8 @@ test-cov: ## Run tests with coverage
 init: ## Initialize the service (wait for DB, run migrations)
 	@echo "Initializing auth service..."
 	@$(UV) run --env-file=.env python ./src/initialize.py
-# 	@echo "Running database migrations..."
-# 	@$(UV) run --env-file=.env alembic upgrade head
+	@echo "Running database migrations..."
+	@$(UV) run --env-file=.env alembic upgrade head
 	@echo "✓ Auth service initialized"
 
 .PHONY: run
@@ -64,16 +64,24 @@ schema: ## Export GraphQL schema
 	$(UV) run ./export_schema.sh
 
 .PHONY: revision
-revision: ## Create a new database migration
+db-revision: ## Create a new database migration
 	$(UV) run alembic revision --autogenerate
 
 .PHONY: upgrade
-upgrade: ## Run database migrations (upgrade to head)
+db-upgrade: ## Run database migrations (upgrade to head)
 	$(UV) run --env-file=.env alembic upgrade head
 
 .PHONY: downgrade
-downgrade: ## Downgrade database migration by one step
+db-downgrade: ## Downgrade database migration by one step
 	$(UV) run --env-file=.env alembic downgrade -1
+
+.PHONY: db-reset
+db-reset: ## Reset database (drop + migrate + seed)
+	@echo "Resetting database..."
+	$(UV) run --env-file=.env alembic downgrade base
+	$(UV) run --env-file=.env alembic upgrade head
+	@echo "Database reset complete!"
+
 
 .PHONY: clean
 clean: ## Clean up generated files

@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Iterator
+from typing import AsyncGenerator
 from uuid import uuid4, UUID
 import os
 
@@ -26,9 +26,8 @@ from alembic import command
 from sqlalchemy import create_engine, text
 
 from logic.roles import assign_role
-from models import SuperTokensUser, Role
+from models import SuperTokensUser, Role, InviteStatus
 from core.cache import get_user_cache
-from core.config import settings
 
 
 @pytest.fixture(scope="session")
@@ -47,22 +46,30 @@ def postgres_db(docker_client):
     except NotFound:
         pass
 
-    db_user = "testuser"
-    db_password = "testpass"
-    db_name = "auth_test"
-    host_port = "5433"
-    container_port = "5432"
+    from core.config import settings
+
+    db_user = settings.DB_USER
+    db_password = settings.DB_PASSWORD
+    db_name = settings.DB_NAME
+
+    container_port = 5432  # Default PostgreSQL port
+    host_port = settings.DB_HOST_PORT
+    db_hostname = settings.DB_HOST
 
     container = docker_client.containers.run(
         image="postgres:15",
-        environment={"POSTGRES_USER": db_user, "POSTGRES_PASSWORD": db_password, "POSTGRES_DB": db_name},
+        environment={
+            "POSTGRES_USER": db_user,
+            "POSTGRES_PASSWORD": db_password,
+            "POSTGRES_DB": db_name,
+        },
         ports={container_port: host_port},
         name="postgres_auth_test",
         detach=True,
         auto_remove=True,
     )
 
-    test_db_url = f"postgresql://{db_user}:{db_password}@localhost:{host_port}/{db_name}"
+    test_db_url = f"postgresql://{db_user}:{db_password}@{db_hostname}:{host_port}/{db_name}"
 
     # Wait for PostgreSQL to be ready
     @retry(
@@ -190,16 +197,51 @@ async def app(supertokens, postgres_db, run_migrations, set_test_environment) ->
         yield app
 
 
-@pytest.fixture(scope="session")
-async def create_user(app) -> SuperTokensUser:
+@pytest.fixture()
+async def create_user_old(app) -> SuperTokensUser:
     response = await sign_up("public", "my@email.com", "currentPassword123")
     await get_user_cache().load_all()
     # should be a call to create_user from logic.users but avoiding circular import
     yield SuperTokensUser(id=UUID(response.user.id), organization_id=uuid4())
 
+    await delete_user(response.user.id)
+    await get_user_cache().remove_user(UUID(response.user.id))
+
+
+@pytest.fixture()
+async def create_user(app) -> SuperTokensUser:
+    """Create a regular user using sign_up and update_user_metadata"""
+    # For test fixtures, we still use sign_up directly since we need a clean user
+    # without invitation flow complexity
+    response = await sign_up("public", "my@email.com", "currentPassword123")
+    user_id = response.user.id
+    org_id = uuid4()
+
+    # Set metadata directly via update_user_metadata (like users fixture)
+    await update_user_metadata(
+        user_id,
+        {
+            "first_name": "Test",
+            "last_name": "User",
+            "organization_id": str(org_id),
+            "invited": False,
+            "invite_status": InviteStatus.ACCEPTED.value,
+        },
+    )
+
+    # Reload cache
+    user_cache = get_user_cache()
+    await user_cache.reload_user(UUID(user_id))
+    final_user = await user_cache.get_user(UUID(user_id))
+
+    yield SuperTokensUser(id=final_user.id, organization_id=final_user.organization_id)
+
+    await delete_user(str(user_id))
+    await get_user_cache().remove_user(UUID(user_id))
+
 
 @pytest.fixture
-async def create_admin_user(app) -> SuperTokensUser:
+async def create_admin_user_old(app) -> SuperTokensUser:
     response = await sign_up("public", "admin@email.com", "currentPassword123")
     _user = SuperTokensUser(id=UUID(response.user.id), organization_id=uuid4())
     await assign_role(_user.id, Role.ADMIN)
@@ -210,8 +252,43 @@ async def create_admin_user(app) -> SuperTokensUser:
     await get_user_cache().remove_user(_user.id)
 
 
+@pytest.fixture
+async def create_admin_user(app) -> SuperTokensUser:
+    """Create an admin user using sign_up and update_user_metadata"""
+
+    # Create user via sign_up
+    response = await sign_up("public", "admin@email.com", "adminPassword123")
+    user_id = UUID(response.user.id)
+    org_id = uuid4()
+
+    # Set metadata directly via update_user_metadata (like users fixture)
+    await update_user_metadata(
+        str(user_id),
+        {
+            "first_name": "Admin",
+            "last_name": "User",
+            "organization_id": str(org_id),
+            "invited": False,
+            "invite_status": InviteStatus.ACCEPTED.value,
+        },
+    )
+
+    # Assign admin role
+    await assign_role(user_id, Role.ADMIN)
+
+    # Reload cache
+    user_cache = get_user_cache()
+    await user_cache.reload_user(user_id)
+    final_user = await user_cache.get_user(user_id)
+
+    yield SuperTokensUser(id=final_user.id, organization_id=final_user.organization_id)
+
+    await delete_user(str(user_id))
+    await get_user_cache().remove_user(user_id)
+
+
 @pytest.fixture()
-async def client_admin(app: FastAPI, client_unauthenticated, create_admin_user) -> Iterator[AsyncClient]:
+async def client_admin(app: FastAPI, client_unauthenticated, create_admin_user) -> AsyncGenerator[AsyncClient, None]:
     """Async server client that handles lifespan and teardown"""
 
     response = await client_unauthenticated.get(f"/login/{create_admin_user.id}")
@@ -222,7 +299,7 @@ async def client_admin(app: FastAPI, client_unauthenticated, create_admin_user) 
 
 
 @pytest.fixture()
-async def client(app: FastAPI, client_unauthenticated, create_user) -> Iterator[AsyncClient]:
+async def client(app: FastAPI, client_unauthenticated, create_user) -> AsyncGenerator[AsyncClient, None]:
     """Async server client that handles lifespan and teardown"""
 
     response = await client_unauthenticated.get(f"/login/{create_user.id}")
@@ -233,7 +310,7 @@ async def client(app: FastAPI, client_unauthenticated, create_user) -> Iterator[
 
 
 @pytest.fixture()
-async def client_user(app: FastAPI, client_unauthenticated, users) -> Iterator[AsyncClient]:
+async def client_user(app: FastAPI, client_unauthenticated, users) -> AsyncGenerator[AsyncClient, None]:
     """Async server client that authenticates as the first user from the users fixture"""
 
     user_id = users[0]["id"]
@@ -268,7 +345,7 @@ async def users(app):
         created_users.append(user_id)
     user_cache = get_user_cache()
     await user_cache.load_all()
-    _temp_users = user_cache.get_all_users()
+    _temp_users = await user_cache.get_all_users()
     yield users
 
     # Clean up created users
@@ -281,8 +358,10 @@ async def users(app):
 
 
 @pytest.fixture()
-async def client_unauthenticated(app: FastAPI) -> Iterator[AsyncClient]:
+async def client_unauthenticated(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     """Async server client that handles lifespan and teardown"""
+
+    from core.config import settings
 
     async with AsyncClient(
         transport=httpx.ASGITransport(app=app),
