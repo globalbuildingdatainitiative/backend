@@ -2,9 +2,12 @@ import pytest
 
 from models import DBOrganization, CountryCodes, OrganizationMetaDataModel, StakeholderEnum
 
+from typing import AsyncIterator
+from core.cache import get_organization_cache
+
 
 @pytest.fixture()
-async def organizations(client, mongo) -> list[DBOrganization]:
+async def organizations(client, mongo) -> AsyncIterator[list[DBOrganization]]:
     """Creates sample organizations before each test"""
     organizations = []
 
@@ -20,5 +23,9 @@ async def organizations(client, mongo) -> list[DBOrganization]:
         )
         await organization.insert()
         organizations.append(organization)
+
+    cache = get_organization_cache()
+    await cache.load_all()
+    await cache.get_all_organizations()
 
     yield organizations

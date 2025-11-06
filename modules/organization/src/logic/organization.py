@@ -2,7 +2,7 @@ import logging
 from uuid import UUID
 
 from core.exceptions import EntityNotFound
-from core.cache import organization_cache
+from core.cache import get_organization_cache
 from logic.roles import assign_role, Role
 from models import (
     DBOrganization,
@@ -12,6 +12,7 @@ from models import (
 )
 from models.sort_filter import FilterBy, SortBy
 from strawberry import UNSET
+
 
 logger = logging.getLogger("main")
 
@@ -43,6 +44,7 @@ async def get_organizations(
     if filter_by and filter_by.equal and filter_by.equal.get("id"):
         return await _apply_id_filter_cached(filter_by)
 
+    organization_cache = get_organization_cache()
     # Else fetch all organizations from cache and apply filters/sorting/pagination
     organizations = await organization_cache.get_all_organizations()
 
@@ -137,6 +139,7 @@ async def _apply_id_filter_cached(filter_by: FilterBy) -> tuple[list[DBOrganizat
     org_id = filter_by.equal.get("id")
     try:
         org_uuid = UUID(org_id) if isinstance(org_id, str) else org_id
+        organization_cache = get_organization_cache()
         if org := await organization_cache.get_organization(org_uuid):
             return [org], 1
         else:
@@ -168,6 +171,7 @@ async def create_organizations_mutation(
         new_organizations.append(new_organization)
 
         # Add to cache immediately
+        organization_cache = get_organization_cache()
         await organization_cache.add_organization(new_organization)
 
         # Verify the organization was inserted and is queryable
@@ -210,6 +214,7 @@ async def update_organizations_mutation(organizations: list[InputOrganization]) 
             updated_organizations.append(organization)
 
             # Reload in cache
+            organization_cache = get_organization_cache()
             await organization_cache.reload_organization(organization_id)
         else:
             raise EntityNotFound("Organization Not Found", organization_data.name)
@@ -228,6 +233,7 @@ async def delete_organizations_mutation(ids: list[UUID]) -> list[UUID]:
             deleted_ids.append(organization_id)
 
             # Remove from cache
+            organization_cache = get_organization_cache()
             await organization_cache.remove_organization(organization_id)
         else:
             raise EntityNotFound("Organization Not Found", str(organization_id))

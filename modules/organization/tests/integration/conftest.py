@@ -1,8 +1,9 @@
-from typing import Any
+from typing import Any, AsyncIterator
 
 import pytest
 from models import DBOrganization, CountryCodes, StakeholderEnum, OrganizationMetaDataModel
 import supertokens_python.recipe.usermetadata.asyncio
+from core.cache import get_organization_cache
 
 
 @pytest.fixture(scope="session")
@@ -20,7 +21,7 @@ def mock_update_user_metadata(session_mocker):
 
 
 @pytest.fixture()
-async def organizations(mongo) -> list[DBOrganization]:
+async def organizations(mongo) -> AsyncIterator[list[DBOrganization]]:
     """Creates sample organizations before each test"""
     organizations = []
 
@@ -36,5 +37,8 @@ async def organizations(mongo) -> list[DBOrganization]:
         )
         await organization.insert()
         organizations.append(organization)
+    cache = get_organization_cache()
+    await cache.load_all()
+    await cache.get_all_organizations()
 
     yield organizations

@@ -94,5 +94,19 @@ class OrganizationCache:
             logger.debug(f"Added organization {org.id} to cache")
 
 
-# Singleton instance
-organization_cache = OrganizationCache(cache_size=5000)
+# Global cache instance - will be initialized in lifespan
+_organization_cache: Optional[OrganizationCache] = None
+
+
+def get_organization_cache() -> OrganizationCache:
+    """Get the organization cache instance"""
+    if _organization_cache is None:
+        raise RuntimeError("OrganizationCache not initialized. Call init_organization_cache() first.")
+    return _organization_cache
+
+
+def init_organization_cache(cache_size: int = 15000) -> OrganizationCache:
+    """Initialize the organization cache with the given database URL"""
+    global _organization_cache
+    _organization_cache = OrganizationCache(cache_size=cache_size)
+    return _organization_cache

@@ -5,7 +5,7 @@ from uuid import UUID
 import strawberry
 
 from models import GraphQLOrganization
-from core.cache import organization_cache
+from core.cache import get_organization_cache
 
 logger = logging.getLogger("main")
 
@@ -23,6 +23,7 @@ async def get_user_organization(root: "GraphQLUser") -> GraphQLOrganization | No
 
         org_id = root.organizationId if isinstance(root.organizationId, UUID) else UUID(root.organizationId)
         # Use organization cache - NO MongoDB queries
+        organization_cache = get_organization_cache()
         organization = await organization_cache.get_organization(org_id)
 
         if not organization:
