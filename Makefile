@@ -138,6 +138,14 @@ format: ## Format code for all modules
 	@cd modules/projects && $(MAKE) format
 	@echo "✓ All code formatted"
 
+.PHONY: type-check
+type-check: ## Run type checking with mypy
+	@echo "Running type checking for all modules..."
+	@cd modules/auth && $(MAKE) type-check
+	@cd modules/organization && $(MAKE) type-check
+	@cd modules/projects && $(MAKE) type-check
+	@echo "✓ All type checking completed"
+
 .PHONY: clean
 clean: ## Clean up generated files in all modules
 	@echo "Cleaning up generated files..."

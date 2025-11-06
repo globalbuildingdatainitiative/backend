@@ -35,6 +35,10 @@ format: ## Format code with Ruff
 .PHONY: check
 check: lint ## Run all checks (linting, etc.)
 
+.PHONY: type-check
+type-check: ## Run type checking with mypy
+	$(UV) run mypy src/
+
 .PHONY: test
 test: ## Run tests
 	$(UV) run $(PYTEST) tests/
