@@ -1,5 +1,5 @@
 from time import sleep
-from typing import Iterator, AsyncGenerator
+from typing import AsyncGenerator
 from uuid import uuid4, UUID
 
 import docker

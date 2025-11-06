@@ -5,6 +5,10 @@ from mongomock_motor import AsyncMongoMockClient
 from core.config import settings
 from models import DBOrganization, CountryCodes, StakeholderEnum, OrganizationMetaDataModel
 
+from typing import AsyncIterator
+
+from core.cache import get_organization_cache
+
 
 @pytest.fixture
 async def mock_db():
@@ -20,7 +24,7 @@ async def mock_db():
 
 
 @pytest.fixture
-async def organizations(mock_db) -> list[DBOrganization]:
+async def organizations(mock_db) -> AsyncIterator[list[DBOrganization]]:
     """Creates sample organizations for unit tests"""
     organizations = []
 
@@ -36,5 +40,9 @@ async def organizations(mock_db) -> list[DBOrganization]:
         )
         await organization.insert()
         organizations.append(organization)
+
+    cache = get_organization_cache()
+    await cache.load_all()
+    await cache.get_all_organizations()
 
     yield organizations
