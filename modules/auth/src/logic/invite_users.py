@@ -15,7 +15,7 @@ from supertokens_python.types import AccountInfo
 from core.auth import FAKE_PASSWORD
 from core.exceptions import UserHasNoOrganization, InvitationFailed
 from models import InviteStatus, InviteResult
-
+from core.cache import get_user_cache
 
 logger = logging.getLogger("main")
 
@@ -56,9 +56,13 @@ async def invite_users(emails: List[str], inviter_id: UUID, request: Request) ->
                     "pending_org_id": str(inviter_org_id),
                 },
             )
+            user_cache = get_user_cache()
+            await user_cache.reload_user(user_id)
             await send_reset_password_email(
                 "public", user_id, email, user_context={"user_id": user_id, "request": request}
             )
+            await user_cache.reload_user(user_id)
+
             results.append(InviteResult(email=email, status="invited", message=""))
 
         except Exception as e:
@@ -67,11 +71,17 @@ async def invite_users(emails: List[str], inviter_id: UUID, request: Request) ->
 
 
 async def resend_invitation(user_id: str, request: Request) -> InviteResult:
-    user = await get_user(user_id)
+    cache = get_user_cache()
+    user = await cache.get_user(user_id)
+    if user:
+        user_email = user.email
+    if not user:
+        # // Fallback to fetching user directly if not in cache
+        user = await get_user(user_id)
+        user_email = user.emails[0] if user and user.emails else None
+
     if not user:
         raise InvitationFailed("User not found", "Auth")
-
-    user_email = user.emails[0]
 
     if not user_email:
         raise InvitationFailed("User not found or has no email", "Auth")

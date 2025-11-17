@@ -55,7 +55,6 @@ async def invite_users_mutation(info: Info, input: InviteUsersInput) -> list[Inv
 
 async def accept_invitation_mutation(user: AcceptInvitationInput) -> bool:
     """Accept an invitation"""
-
     result = await accept_invitation(user)
     logger.info(f"Invitation accepted by {user.id}")
 

@@ -1,10 +1,12 @@
 import pytest
 
+from typing import AsyncIterator
+from core.cache import get_organization_cache
 from models import DBOrganization, CountryCodes, StakeholderEnum, OrganizationMetaDataModel
 
 
 @pytest.fixture()
-async def organizations(client) -> list[DBOrganization]:
+async def organizations(client) -> AsyncIterator[list[DBOrganization]]:
     organizations = []
 
     for i in range(3):
@@ -19,5 +21,9 @@ async def organizations(client) -> list[DBOrganization]:
         )
         await organization.insert()
         organizations.append(organization)
+
+    cache = get_organization_cache()
+    await cache.load_all()
+    await cache.get_all_organizations()
 
     yield organizations

@@ -50,7 +50,7 @@ class GraphQLOrganization:
         from core.exceptions import EntityNotFound
 
         logger.debug(f"Resolving organization reference: {id}")
-        organizations = await get_organizations(filter_by=FilterBy(equal={"id": id}))
+        organizations, _ = await get_organizations(filter_by=FilterBy(equal={"id": id}))
 
         # Handle case where organization is not found to prevent "list index out of range" error
         if not organizations:

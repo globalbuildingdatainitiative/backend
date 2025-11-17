@@ -2,7 +2,9 @@
   {
     "email": "christian@epfl.ch",
     "id": "5c650110-2224-4bc7-8cd9-45617e97e712",
-    "tenantIds": ["public"],
+    "tenantIds": [
+      "public"
+    ],
     "timeJoined": 1715606572589,
     "firstName": "Christian",
     "lastName": "Kongsgaard",
@@ -11,12 +13,16 @@
     "password": "currentPassword123",
     "invite_status": "pending",
     "inviter_name": "John Doe",
-    "roles": ["owner"]
+    "roles": [
+      "owner"
+    ]
   },
   {
     "email": "hassan@epfl.ch",
     "id": "b57fc236-ebfc-4db2-8491-1c7136e5acc2",
-    "tenantIds": ["public"],
+    "tenantIds": [
+      "public"
+    ],
     "timeJoined": 1715606573589,
     "firstName": "Hassan",
     "lastName": "Shahzad",
@@ -24,12 +30,16 @@
     "invited": false,
     "invite_status": "none",
     "inviter_name": "",
-    "roles": ["member"]
+    "roles": [
+      "member"
+    ]
   },
   {
     "email": "john@company.com",
     "id": "11111111-1111-1111-1111-111111111111",
-    "tenantIds": ["public"],
+    "tenantIds": [
+      "public"
+    ],
     "timeJoined": 1715606574589,
     "firstName": "John",
     "lastName": "Doe",
@@ -37,12 +47,16 @@
     "invited": false,
     "invite_status": "none",
     "inviter_name": "",
-    "roles": ["member"]
+    "roles": [
+      "member"
+    ]
   },
   {
     "email": "jane@company.com",
     "id": "33333333-3333-3333-3333-333333333333",
-    "tenantIds": ["public"],
+    "tenantIds": [
+      "public"
+    ],
     "timeJoined": 1715606575589,
     "firstName": "Jane",
     "lastName": "Smith",
@@ -50,6 +64,8 @@
     "invited": false,
     "invite_status": "none",
     "inviter_name": "",
-    "roles": ["member"]
+    "roles": [
+      "member"
+    ]
   }
 ]

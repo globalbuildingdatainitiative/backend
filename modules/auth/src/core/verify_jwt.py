@@ -2,11 +2,15 @@ import threading
 from typing import List, Optional, Dict, Any
 
 import requests
-from jwt import PyJWK, PyJWKSet, decode
+from jwt import PyJWK, PyJWKSet, decode, get_unverified_header
 from jwt.exceptions import DecodeError
 from time import time
 
 from core.config import settings
+
+import logging
+
+logger = logging.getLogger("main")
 
 
 class RWMutex:
@@ -118,15 +122,43 @@ def get_latest_keys(jwks_uri: str) -> List[PyJWK]:
 
 
 async def verify_jwt(jwt_str: str, jwks_uri: str = JWKS_URI) -> Dict[str, Any] | None:
-    matching_keys = get_latest_keys(jwks_uri)
-    payload = decode(
-        jwt_str,
-        matching_keys[1].key,
-        algorithms=["RS256"],
-        options={"verify_signature": True, "verify_exp": True},
-    )
+    try:
+        matching_keys = get_latest_keys(jwks_uri)
+    except Exception as exc:
+        logger.error(f"Failed to refresh JWKS from {jwks_uri}: {exc}")
+        raise DecodeError("Could not fetch signing keys") from exc
 
-    if payload is None:
-        raise DecodeError("Could not decode the token")
+    if not matching_keys:
+        logger.error("JWKS did not return any keys")
+        raise DecodeError("No signing keys available")
 
-    return payload
+    try:
+        header = get_unverified_header(jwt_str)
+    except Exception as exc:
+        logger.error(f"Failed to decode JWT header: {exc}")
+        raise DecodeError("Invalid token header") from exc
+
+    kid = header.get("kid")
+    signing_key = None
+
+    if kid is not None:
+        for jwk in matching_keys:
+            if jwk.key_id == kid:
+                signing_key = jwk.key
+                break
+        if signing_key is None:
+            logger.error(f"No matching JWKS found for kid {kid}")
+            raise DecodeError("Signing key not found")
+    else:
+        signing_key = matching_keys[0].key
+
+    try:
+        return decode(
+            jwt_str,
+            signing_key,
+            algorithms=["RS256"],
+            options={"verify_signature": True, "verify_exp": True},
+        )
+    except Exception as exc:
+        logger.error(f"JWT verification failed: {exc}")
+        raise DecodeError("Could not decode the token") from exc

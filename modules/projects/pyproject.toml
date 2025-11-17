@@ -13,7 +13,7 @@ dependencies = [
     "lcax==2.6.0",
     "iso3166",
     "uvicorn[standard]",
-    "strawberry-graphql[fastapi,cli]>=0.134.0",
+    "strawberry-graphql[fastapi,cli]>=0.283.0",
     "supertokens-python==0.27.0",
     "pyyaml",
     "aiocache",

@@ -2,6 +2,7 @@ import logging
 from uuid import UUID
 
 from core.exceptions import EntityNotFound
+from core.cache import get_organization_cache
 from logic.roles import assign_role, Role
 from models import (
     DBOrganization,
@@ -9,9 +10,21 @@ from models import (
     SuperTokensUser,
     OrganizationMetaDataModel,
 )
-from models.sort_filter import filter_model_query, FilterBy, SortBy, sort_model_query
+from models.sort_filter import FilterBy, SortBy
+from strawberry import UNSET
+
 
 logger = logging.getLogger("main")
+
+
+# Map frontend field names to model attributes
+field_mapping = {
+    "id": "id",
+    "name": "name",
+    "address": "address",
+    "city": "city",
+    "country": "country",
+}
 
 
 async def get_organizations(
@@ -19,24 +32,121 @@ async def get_organizations(
     sort_by: SortBy | None = None,
     limit: int | None = None,
     offset: int = 0,
-) -> list[DBOrganization]:
-    query = DBOrganization.find()
+) -> tuple[list[DBOrganization], int]:
+    """Returns all Organizations with total count
+    filter
+    sort
+    offset
+    limit
+    """
+    # Handle special case: ID filter with direct lookup
+    # This optimizes performance for ID-based queries
+    if filter_by and filter_by.equal and filter_by.equal.get("id"):
+        return await _apply_id_filter_cached(filter_by)
+
+    organization_cache = get_organization_cache()
+    # Else fetch all organizations from cache and apply filters/sorting/pagination
+    organizations = await organization_cache.get_all_organizations()
+
     if filter_by:
-        query = filter_model_query(DBOrganization, filter_by, query)
-
+        organizations = filter_organizations(organizations, filter_by)
     if sort_by:
-        query = sort_model_query(DBOrganization, sort_by, query)
+        organizations = sort_organizations(organizations, sort_by)
 
+    # Store total count before pagination
+    total_count = len(organizations)
+
+    # Apply pagination
     if limit is not None:
-        query = query.limit(limit)
+        organizations = organizations[offset : offset + limit]
+    else:
+        organizations = organizations[offset:]
 
-    if offset:
-        query = query.skip(offset)
+    logger.debug(f"Found {len(organizations)} organizations (total: {total_count})")
+    return organizations, total_count
 
-    organizations = await query.to_list()
-    logger.debug(f"Found {len(organizations)} organizations")
 
-    return organizations
+def filter_organizations(organizations: list[DBOrganization], filters: FilterBy) -> list[DBOrganization]:
+    filtered_organizations = organizations
+
+    SUPPORTED_FILTERS = {"equal", "contains", "is_true"}
+
+    for _filter, fields in filters.items():
+        if not fields:
+            continue
+
+        # Raise error for unsupported filter types
+        if _filter not in SUPPORTED_FILTERS:
+            raise ValueError(
+                f"Filter type '{_filter}' is not supported for in-memory organization filtering. "
+                f"Supported filters: {', '.join(SUPPORTED_FILTERS)}"
+            )
+
+        for _field, value in fields.items():
+            if not _field or value is UNSET:
+                continue
+
+            model_field = field_mapping.get(_field, _field)
+            filtered_organizations = [
+                org
+                for org in filtered_organizations
+                if _matches_filter(getattr(org, model_field, None), value, _filter)
+            ]
+
+    return filtered_organizations
+
+
+def _matches_filter(field_value, filter_value, filter_type: str) -> bool:
+    """
+    Check if field value matches the filter.
+    Supports 'equal', 'contains', and 'is_true' filter types.
+    Handles UUIDs and basic string comparisons.
+    """
+    if field_value is None:
+        return False
+
+    # Handle is_true for boolean fields
+    if filter_type == "is_true":
+        return bool(field_value) == filter_value
+
+    # Handle UUID - exact match
+    if isinstance(field_value, UUID):
+        return str(field_value) == str(filter_value)
+
+    # Default: case-insensitive string comparison
+    field_str = str(field_value).lower()
+    filter_str = str(filter_value).lower()
+    return filter_str in field_str if filter_type == "contains" else field_str == filter_str
+
+
+def sort_organizations(organizations: list[DBOrganization], sort_by: SortBy | None = None) -> list[DBOrganization]:
+    if not sort_by:
+        return organizations
+
+    field = sort_by.asc if sort_by.asc is not UNSET else sort_by.dsc
+    reverse = sort_by.dsc is not UNSET
+    sort_field = field_mapping.get(field, field)
+
+    return sorted(
+        organizations,
+        key=lambda o: (getattr(o, sort_field, None) is None, str(getattr(o, sort_field, "") or "")),
+        reverse=reverse,
+    )
+
+
+async def _apply_id_filter_cached(filter_by: FilterBy) -> tuple[list[DBOrganization], int]:
+    """Optimized organization retrieval when filtering by ID using cache"""
+    org_id = filter_by.equal.get("id")
+    try:
+        org_uuid = UUID(org_id) if isinstance(org_id, str) else org_id
+        organization_cache = get_organization_cache()
+        if org := await organization_cache.get_organization(org_uuid):
+            return [org], 1
+        else:
+            return [], 0
+    except EntityNotFound as e:
+        logger.warning(f"Organization not found in cache: {e}")
+        raise e
 
 
 async def create_organizations_mutation(
@@ -60,8 +170,11 @@ async def create_organizations_mutation(
         await new_organization.insert()
         new_organizations.append(new_organization)
 
+        # Add to cache immediately
+        organization_cache = get_organization_cache()
+        await organization_cache.add_organization(new_organization)
+
         # Verify the organization was inserted and is queryable
-        # This helps prevent timing issues where the organization isn't immediately available
         try:
             verification = await DBOrganization.get(new_organization.id)
             if verification is None:
@@ -99,6 +212,10 @@ async def update_organizations_mutation(organizations: list[InputOrganization]) 
             }
             await organization.update(update_doc)
             updated_organizations.append(organization)
+
+            # Reload in cache
+            organization_cache = get_organization_cache()
+            await organization_cache.reload_organization(organization_id)
         else:
             raise EntityNotFound("Organization Not Found", organization_data.name)
 
@@ -114,6 +231,10 @@ async def delete_organizations_mutation(ids: list[UUID]) -> list[UUID]:
         if organization:
             await organization.delete()
             deleted_ids.append(organization_id)
+
+            # Remove from cache
+            organization_cache = get_organization_cache()
+            await organization_cache.remove_organization(organization_id)
         else:
             raise EntityNotFound("Organization Not Found", str(organization_id))
 

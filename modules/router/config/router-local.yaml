@@ -7,9 +7,10 @@ sandbox:
 health_check:
   listen: 0.0.0.0:8088
 cors:
-  origins:
-    - ${env.CLIENT_ORIGIN:-http://localhost:8000}
-  allow_credentials: true
+  policies:
+    - origins:
+        - ${env.CLIENT_ORIGIN:-http://localhost:8000}
+      allow_credentials: true
 headers:
   all:
     request:

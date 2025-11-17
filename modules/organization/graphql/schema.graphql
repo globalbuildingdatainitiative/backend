@@ -1,6 +1,6 @@
 directive @oneOf on INPUT_OBJECT
 
-schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key", "@shareable"]) {
+schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@external", "@key", "@requires"]) {
   query: Query
   mutation: Mutation
 }
@@ -364,10 +364,10 @@ enum StakeholderEnum {
 
 scalar UUID
 
-type User @key(fields: "id") {
-  id: UUID!
-  organizationId: UUID @shareable
-  organization: Organization
+extend type User @key(fields: "id") {
+  id: UUID! @external
+  organizationId: UUID @external
+  organization: Organization @requires(fields: "organizationId")
 }
 
 scalar _Any

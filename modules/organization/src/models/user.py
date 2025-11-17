@@ -3,55 +3,55 @@ from typing import Self
 from uuid import UUID
 
 import strawberry
-from strawberry.federation.schema_directives import Shareable
 
 from models import GraphQLOrganization
+from core.cache import get_organization_cache
 
 logger = logging.getLogger("main")
 
 
 async def get_user_organization(root: "GraphQLUser") -> GraphQLOrganization | None:
-    from logic import get_organizations
-    from models import FilterBy
+    """Resolve the organization for a user. Returns None if not found or on error."""
+    try:
+        logger.debug(f"get_user_organization called for user {root.id}, organizationId={root.organizationId}")
 
-    if root.organizationId is None:
+        if root.organizationId is None:
+            logger.warning(f"User {root.id} has no organizationId, returning None")
+            return None
+
+        logger.debug(f"Resolving user organization reference: {root.organizationId}")
+
+        org_id = root.organizationId if isinstance(root.organizationId, UUID) else UUID(root.organizationId)
+        # Use organization cache - NO MongoDB queries
+        organization_cache = get_organization_cache()
+        organization = await organization_cache.get_organization(org_id)
+
+        if not organization:
+            logger.warning(f"No organization found for user {root.id} with organizationId {org_id}")
+            return None
+
+        logger.debug(f"Found organization {organization.id} for user {root.id}")
+        return organization
+    except Exception as e:
+        # Catch any exception to prevent the entire User object from becoming null
+        logger.error(f"Error resolving organization for user {root.id}: {e}", exc_info=True)
         return None
 
-    logger.debug(f"Resolving user organization reference: {root.organizationId}")
 
-    org_id = root.organizationId if isinstance(root.organizationId, UUID) else UUID(root.organizationId)
-    organizations = await get_organizations(filter_by=FilterBy(equal={"id": org_id}))
-
-    logger.debug(f"Found {len(organizations)} organizations for user {root.id}")
-
-    # Handle case where organization is not found to prevent "list index out of range" error
-    if not organizations:
-        logger.warning(f"No organization found for user {root.id} with organizationId {org_id}")
-        return None
-
-    return organizations[0]
-
-
-@strawberry.federation.type(name="User", keys=["id"])
+@strawberry.federation.type(name="User", keys=["id"], extend=True)
 class GraphQLUser:
-    id: UUID
-    organizationId: UUID | None = strawberry.field(default=None, directives=[Shareable()])
-    organization: GraphQLOrganization | None = strawberry.field(resolver=get_user_organization)
+    id: UUID = strawberry.federation.field(external=True)
+    organizationId: UUID | None = strawberry.federation.field(external=True, default=None)
+    organization: GraphQLOrganization | None = strawberry.federation.field(
+        resolver=get_user_organization, requires=["organizationId"]
+    )
 
     @classmethod
-    async def resolve_reference(cls, id: UUID) -> Self:
-        from logic import get_auth_user
-        from core.exceptions import MicroServiceResponseError
+    async def resolve_reference(cls, id: UUID, organizationId: UUID | None = None, **kwargs) -> Self:
+        """
+        Resolve user reference in federation.
 
-        try:
-            user_data = await get_auth_user(id)
-            return cls(**user_data)
-        except MicroServiceResponseError as e:
-            # If user not found in auth service, create a minimal user object
-            # This can happen when the user ID is from a different context (e.g., JWT source)
-            logger.warning(f"User {id} not found in auth service, creating minimal user object: {e}")
-            return cls(id=id, organizationId=None)
-        except Exception as e:
-            # Log the error but still create a minimal user object to prevent complete failure
-            logger.error(f"Error resolving user reference for {id}: {e}")
-            return cls(id=id, organizationId=None)
+        The router should provide organizationId via @external and @requires directives.
+        """
+        logger.info(f"resolve_reference called: id={id}, organizationId={organizationId}, kwargs={kwargs}")
+        return cls(id=id, organizationId=organizationId)

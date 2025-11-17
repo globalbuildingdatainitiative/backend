@@ -6,11 +6,11 @@ services:
     env_file:
       - ./modules/auth/.env
     ports:
-      - "5434:5432"
+      - "5432:5432"
     volumes:
       - postgres-auth-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgresuser"]
+      test: ["CMD-SHELL", "pg_isready -U postgresuser -d auth -h localhost -p 5432"]
       interval: 10s
       timeout: 5s
       retries: 5

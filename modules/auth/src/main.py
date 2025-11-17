@@ -14,7 +14,8 @@ from core.auth import supertokens_init
 from core.config import settings
 from logic.roles import create_roles
 from routes import graphql_app
-from routes.heatlth import health_router
+from routes.health import health_router
+from core.cache import init_user_cache
 
 log_config = yaml.safe_load((Path(__file__).parent / "logging.yaml").read_text())
 log_config["loggers"]["main"]["level"] = settings.LOG_LEVEL
@@ -30,7 +31,24 @@ async def lifespan(app: FastAPI):
     try:
         await create_roles()
     except Exception as e:
-        logger.error(e)
+        logger.exception(e)
+
+    # Initialize user cache with the correct database URL
+    logger.info(f"Initializing user cache with database URL: {settings.database_url}")
+    user_cache = init_user_cache(settings.database_url, cache_size=15000)
+    logger.info("User cache initialized")
+
+    # Load user cache on startup
+    logger.info("Loading user cache...")
+    try:
+        await user_cache.load_all()
+        logger.info("User cache loaded successfully")
+        # Start periodic reload task (every 12 hours)
+        user_cache.start_periodic_reload()
+        logger.info("Auth service ready")
+    except Exception as e:
+        logger.exception(f"Failed to load user cache: {e}")
+
     yield
 
 
@@ -57,7 +75,7 @@ app.include_router(health_router, prefix=settings.API_STR)
 
 @app.exception_handler(Exception)
 async def exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unknown Error {type(exc)} - {exc}")
+    logger.exception(f"Unknown Error {type(exc)} - {exc}")
 
     return JSONResponse(
         status_code=500,
@@ -67,7 +85,7 @@ async def exception_handler(request: Request, exc: Exception):
 
 @app.exception_handler(TryRefreshTokenError)
 async def refresh_exception_handler(request: Request, exc: TryRefreshTokenError):
-    logger.error(exc)
+    logger.exception(exc)
 
     return JSONResponse(
         status_code=401,
@@ -77,7 +95,7 @@ async def refresh_exception_handler(request: Request, exc: TryRefreshTokenError)
 
 @app.exception_handler(UnauthorisedError)
 async def unauthorised_exception_handler(request: Request, exc: UnauthorisedError):
-    logger.error(exc)
+    logger.exception(exc)
 
     return JSONResponse(
         status_code=401,
@@ -87,7 +105,7 @@ async def unauthorised_exception_handler(request: Request, exc: UnauthorisedErro
 
 @app.exception_handler(ValidationError)
 async def validation_exception_handler(request: Request, exc: ValidationError):
-    logger.error(exc)
+    logger.exception(exc)
 
     return JSONResponse(
         status_code=400,

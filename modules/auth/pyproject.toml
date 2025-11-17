@@ -6,11 +6,16 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "fastapi[all]",
     "uvicorn[standard]",
-    "strawberry-graphql[fastapi,cli]>=0.134.0",
+    "strawberry-graphql[fastapi,cli]>=0.283.0",
     "supertokens-python==0.27.0",
     "pyyaml",
     "aiocache",
     "tenacity",
+    "cachetools>=6.2.1",
+    "sqlalchemy>=2.0.0",
+    "psycopg2-binary>=2.9.0",
+    "alembic>=1.13.0",
+    "asyncpg>=0.30.0",
 ]
 
 [tool.pytest.ini_options]
@@ -24,6 +29,12 @@ env = [
     "ROUTER_URL=http://localhost:7000",
     "CONNECTION_URI=http://localhost:3568",
     "BACKEND_CORS_ORIGINS=http://localhost:9000",
+    "POSTGRES_USER=testuser",
+    "POSTGRES_PASSWORD=testpass",
+    "POSTGRES_DB=auth_test",
+    "POSTGRES_HOST=localhost",
+    "POSTGRES_PORT=5433",
+	"DATABASE_URL=postgresql://testuser:testpass@localhost:5433/auth_test",
     "API_KEY=",
     "SMTP_HOST=epfl.ch",
     "SMTP_PORT=3131",

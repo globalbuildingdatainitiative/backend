@@ -1,5 +1,6 @@
 import pytest
 
+from core.cache import get_organization_cache
 from logic import (
     get_organizations,
     create_organizations_mutation,
@@ -20,7 +21,9 @@ from models import (
 async def test_get_organizations(organizations):
     """Tests retrieving all organizations"""
 
-    fetched_organizations = await get_organizations()
+    cache = get_organization_cache()
+    cache.load_all()
+    fetched_organizations, count = await get_organizations()
 
     assert len(fetched_organizations) == len(organizations)
     for i, organization in enumerate(fetched_organizations):
@@ -35,7 +38,7 @@ async def test_get_organizations_with_filters(organizations):
 
     organization = organizations[0]
     filter_by = FilterBy(equal={"name": organization.name})
-    _organizations = await get_organizations(filter_by=filter_by)
+    _organizations, _count = await get_organizations(filter_by=filter_by)
 
     assert len(_organizations) == 1
     assert _organizations[0].id == organization.id
@@ -46,7 +49,7 @@ async def test_get_organizations_with_sorting(organizations):
     """Test get_organizations with sorting applied."""
 
     sort_by = SortBy(dsc="city")
-    _organizations = await get_organizations(sort_by=sort_by)
+    _organizations, _count = await get_organizations(sort_by=sort_by)
 
     assert _organizations[0].city == organizations[2].city
 
@@ -57,7 +60,7 @@ async def test_get_organizations_with_limit_and_offset(organizations):
     Test get_organizations with limit and offset applied.
     """
 
-    organizations = await get_organizations(limit=5, offset=2)
+    organizations, _count = await get_organizations(limit=5, offset=2)
 
     assert len(organizations) == 1
 

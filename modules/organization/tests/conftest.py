@@ -1,5 +1,5 @@
 from time import sleep
-from typing import Iterator
+from typing import AsyncGenerator
 from uuid import uuid4, UUID
 
 import docker
@@ -20,11 +20,17 @@ from tenacity import stop_after_attempt, wait_fixed, retry, retry_if_exception
 from core.config import settings
 from core.connection import health_check_mongo, create_mongo_client
 from models import SuperTokensUser
+from core.cache import init_organization_cache
 
 
 @pytest.fixture(scope="session")
 def docker_client():
     yield docker.from_env()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _init_org_cache():
+    init_organization_cache()
 
 
 @pytest.fixture(scope="session")
@@ -131,7 +137,7 @@ async def create_user(app, create_owner) -> SuperTokensUser:
 
 
 @pytest.fixture()
-async def client(app: FastAPI, client_unauthenticated, create_user) -> Iterator[AsyncClient]:
+async def client(app: FastAPI, client_unauthenticated, create_user) -> AsyncGenerator[AsyncClient, None]:
     """Async server client that handles lifespan and teardown"""
 
     response = await client_unauthenticated.get(f"/login/{create_user.id}")
@@ -142,7 +148,7 @@ async def client(app: FastAPI, client_unauthenticated, create_user) -> Iterator[
 
 
 @pytest.fixture()
-async def client_unauthenticated(app: FastAPI, database) -> Iterator[AsyncClient]:
+async def client_unauthenticated(app: FastAPI, database) -> AsyncGenerator[AsyncClient, None]:
     """Async server client that handles lifespan and teardown"""
 
     async with AsyncClient(

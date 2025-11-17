@@ -45,12 +45,13 @@ async def get_auth_user(uid: UUID) -> dict[str, str]:
         headers={"authorization": f"Bearer {jwt_token}"},
     ) as client:
         try:
+            json = {
+                "query": query,
+                "variables": {"id": str(uid)},
+            }
             response = await client.post(
                 f"{settings.ROUTER_URL}graphql",
-                json={
-                    "query": query,
-                    "variables": {"id": str(uid)},
-                },
+                json=json,
             )
             logger.debug(f"Received response from auth service with status: {response.status_code}")
             logger.debug(f"Response content: {response.text}")

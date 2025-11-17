@@ -1,13 +1,15 @@
 from typing import Any, Type, Tuple
 import json
 
-from pydantic import AnyHttpUrl
+from pydantic import AnyHttpUrl, Field, computed_field
 from pydantic.fields import FieldInfo
 from pydantic_settings import (
     BaseSettings,
+    SettingsConfigDict,
     EnvSettingsSource,
     PydanticBaseSettingsSource,
 )
+from typing import Optional
 
 
 class ParsingValues(EnvSettingsSource):
@@ -39,6 +41,25 @@ class Settings(BaseSettings):
         "http://localhost:7000",
     ]
     LOG_LEVEL: str = "INFO"
+    SUPERTOKENS_TENANT_ID: str = "public"
+
+    # # Database Configuration
+    # Database Configuration
+    # Option 1: Provide full DATABASE_URL directly (takes precedence)
+    DATABASE_URL: Optional[str] = Field(
+        default=None,
+        description="""
+            Full database URL. If not set, defaults to SQLite
+            or constructed PostgreSQL URL based on other settings: DB_*
+            """,
+    )
+
+    @computed_field
+    def database_url(self) -> str:
+        """Get the database URL."""
+        if not self.DATABASE_URL:
+            raise ValueError("DATABASE_URL must be set")
+        return self.DATABASE_URL
 
     SMTP_HOST: str
     SMTP_PORT: int
@@ -58,8 +79,19 @@ class Settings(BaseSettings):
     ) -> Tuple[PydanticBaseSettingsSource, ...]:
         return (dotenv_settings, ParsingValues(settings_cls))
 
-    class Config:
-        case_sensitive = True
+    model_config = SettingsConfigDict(case_sensitive=True)
 
 
-settings = Settings()
+class _SettingsProxy:
+    """Proxy that delays Settings() until first access."""
+
+    _instance: Settings | None = None
+
+    def __getattr__(self, name: str):
+        if self._instance is None:
+            self._instance = Settings()
+        return getattr(self._instance, name)
+
+
+# Use everywhere instead of Settings()
+settings = _SettingsProxy()

@@ -3,7 +3,6 @@ from uuid import UUID
 
 # from aiocache import cached
 from supertokens_python.recipe.userroles.asyncio import (
-    get_roles_for_user,
     add_role_to_user,
     remove_user_role,
     get_all_roles,
@@ -104,17 +103,3 @@ async def remove_role(user_id: str | UUID, role: Role):
         logger.info(f"User: {user_id} did have role of {role.value}.")
     else:
         logger.info(f"Successfully removed role of {role.value} to user: {user_id}.")
-
-
-# @cached(ttl=60)
-async def check_is_admin(user_id: str | UUID) -> bool:
-    """Check if the user is an admin"""
-
-    if isinstance(user_id, UUID):
-        user_id = str(user_id)
-
-    _user = await get_roles_for_user("public", user_id)
-    if Role.ADMIN.value in _user.roles:
-        return True
-
-    return False

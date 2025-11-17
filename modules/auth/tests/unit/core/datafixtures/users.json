@@ -2,7 +2,9 @@
   {
     "email": "christian@kongsgaard.eu",
     "id": "5c650110-2224-4bc7-8cd9-45617e97e712",
-    "tenantIds": ["public"],
+    "tenantIds": [
+      "public"
+    ],
     "timeJoined": 1715606572589,
     "firstName": "Christian",
     "lastName": "Kongsgaard",
@@ -15,7 +17,9 @@
   {
     "email": "hassan.shahzad@epfl.ch",
     "id": "b57fc236-ebfc-4db2-8491-1c7136e5acc2",
-    "tenantIds": ["public"],
+    "tenantIds": [
+      "public"
+    ],
     "timeJoined": 1715606573589,
     "firstName": "Hassan",
     "lastName": "Shahzad",

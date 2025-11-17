@@ -28,11 +28,14 @@ class GraphQLResponse[T]:
         )  # Set default limit to 50 if it's not provided or set to None
 
         if self._type == "Organization":
-            return await get_organizations(filter_by, sort_by, limit, offset)
+            organizations, _ = await get_organizations(filter_by, sort_by, limit, offset)
+            return organizations
 
         return None
 
     @strawberry.field(description="Total number of items in the filtered dataset.")
     async def count(self, filter_by: FilterBy | None = None) -> int:
-        items = await self.items(filter_by=filter_by, limit=None)
-        return len(items)
+        if self._type == "Organization":
+            _, total_count = await get_organizations(filter_by=filter_by, limit=None)
+            return total_count
+        return 0

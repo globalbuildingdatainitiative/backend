@@ -142,8 +142,6 @@ dmypy.json
 cython_debug/
 
 # IDEs
-.vs
-.vscode
 **/.idea
 .idea
 .fleet
