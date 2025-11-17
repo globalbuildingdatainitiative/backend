@@ -1,5 +1,6 @@
 import os
 from logging.config import fileConfig
+from core.config import settings
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -14,7 +15,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Get database URL from environment
-database_url = os.getenv("POSTGRESQL_CONNECTION_URI", "postgresql://postgresuser:password@localhost:5432/auth")
+database_url = settings.database_url
 config.set_main_option("sqlalchemy.url", database_url)
 
 target_metadata = None

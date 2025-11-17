@@ -43,16 +43,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     SUPERTOKENS_TENANT_ID: str = "public"
 
-    # # Database configuration necessary for tests only
-    # TEST_DB_USER: str = "test_user"
-    # TEST_DB_PASSWORD: str = "test_password"
-    # TEST_DB_NAME: str = "test_db"
-    # TEST_DB_PORT: int = 5432
-
     # # Database Configuration
-    # POSTGRESQL_CONNECTION_URI: str | None = None
-    # POSTGRESQL_CONNECTION_URI_LOCAL: str | None = None
-
     # Database Configuration
     # Option 1: Provide full DATABASE_URL directly (takes precedence)
     DATABASE_URL: Optional[str] = Field(
@@ -63,35 +54,12 @@ class Settings(BaseSettings):
             """,
     )
 
-    # Option 2: Provide PostgreSQL connection details (optional, for PostgreSQL)
-    DB_USER: Optional[str] = Field(default=None, description="Database user (optional, for PostgreSQL)")
-    DB_PASSWORD: Optional[str] = Field(default=None, description="Database password (optional, for PostgreSQL)")
-    DB_NAME: Optional[str] = Field(default=None, description="Database name (optional, for PostgreSQL)")
-
-    # necessary to build the DB URL if DATABASE_URL is not provided
-    DB_HOST: Optional[str] = Field(default=None, description="Database host (optional, for PostgreSQL)")
-    DB_HOST_PORT: int = Field(default=5432, description="Database port (optional, for PostgreSQL)")
-
     @computed_field
     def database_url(self) -> str:
-        """
-        Get the database URL.
-
-        Priority:
-        1. If DATABASE_URL is explicitly set, use it
-        2. If DB_USER, DB_PASSWORD, DB_HOST, DB_NAME are all set, build PostgreSQL URL
-        3. Otherwise, default to SQLite
-        """
-        # If DATABASE_URL is explicitly provided, use it
-        if self.DATABASE_URL:
-            return self.DATABASE_URL
-
-        # If PostgreSQL credentials are provided, build the URL
-        if all([self.DB_USER, self.DB_PASSWORD, self.DB_HOST, self.DB_NAME]):
-            return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_HOST_PORT}/{self.DB_NAME}"
-
-        # Default to SQLite for local development
-        return "sqlite+aiosqlite:///./co2_calculator.db"
+        """Get the database URL."""
+        if not self.DATABASE_URL:
+            raise ValueError("DATABASE_URL must be set")
+        return self.DATABASE_URL
 
     SMTP_HOST: str
     SMTP_PORT: int
@@ -110,11 +78,6 @@ class Settings(BaseSettings):
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> Tuple[PydanticBaseSettingsSource, ...]:
         return (dotenv_settings, ParsingValues(settings_cls))
-
-    # @property
-    # def database_url(self) -> str | None:
-    #     """Get the appropriate database URL, preferring LOCAL for development"""
-    #     return self.POSTGRESQL_CONNECTION_URI_LOCAL or self.POSTGRESQL_CONNECTION_URI
 
     model_config = SettingsConfigDict(case_sensitive=True)
 

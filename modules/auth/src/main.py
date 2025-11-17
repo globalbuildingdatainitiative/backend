@@ -34,8 +34,9 @@ async def lifespan(app: FastAPI):
         logger.exception(e)
 
     # Initialize user cache with the correct database URL
+    logger.info(f"Initializing user cache with database URL: {settings.database_url}")
     user_cache = init_user_cache(settings.database_url, cache_size=15000)
-    logger.info(f"User cache initialized with database URL: {settings.database_url}")
+    logger.info("User cache initialized")
 
     # Load user cache on startup
     logger.info("Loading user cache...")

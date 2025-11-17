@@ -46,15 +46,13 @@ def postgres_db(docker_client):
     except NotFound:
         pass
 
-    from core.config import settings
-
-    db_user = settings.DB_USER
-    db_password = settings.DB_PASSWORD
-    db_name = settings.DB_NAME
+    db_user = os.getenv("POSTGRES_USER")
+    db_password = os.getenv("POSTGRES_PASSWORD")
+    db_name = os.getenv("POSTGRES_DB")
 
     container_port = 5432  # Default PostgreSQL port
-    host_port = settings.DB_HOST_PORT
-    db_hostname = settings.DB_HOST
+    host_port = os.getenv("POSTGRES_PORT")
+    db_hostname = os.getenv("POSTGRES_HOST")
 
     container = docker_client.containers.run(
         image="postgres:15",
@@ -115,8 +113,9 @@ async def supertokens(docker_client, postgres_db):
     postgres_url = f"postgresql://{postgres_db['user']}:{postgres_db['password']}@host.docker.internal:{postgres_db['host_port']}/{postgres_db['database']}"
 
     container = docker_client.containers.run(
-        image="registry.supertokens.io/supertokens/supertokens-postgresql",
+        image="registry.supertokens.io/supertokens/supertokens-postgresql:10.1",
         ports={"3567": "3568"},
+        extra_hosts={"host.docker.internal": "host-gateway"},
         environment={
             "POSTGRESQL_CONNECTION_URI": postgres_url,
         },
@@ -173,14 +172,12 @@ def run_migrations(supertokens, postgres_db):
 def set_test_environment(postgres_db):
     """Set environment variables BEFORE any application code is imported"""
     # Override BOTH database URLs for tests
-    os.environ["POSTGRESQL_CONNECTION_URI"] = postgres_db["url"]
-    os.environ["POSTGRESQL_CONNECTION_URI_LOCAL"] = postgres_db["url"]
+    os.environ["DATABASE_URL"] = postgres_db["url"]
 
     yield
 
     # Cleanup (optional)
-    # del os.environ["POSTGRESQL_CONNECTION_URI"]
-    # del os.environ["POSTGRESQL_CONNECTION_URI_LOCAL"]
+    del os.environ["DATABASE_URL"]
 
 
 @pytest.fixture(scope="session")
