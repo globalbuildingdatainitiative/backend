@@ -38,8 +38,7 @@ COPY --chown=fastapi:fastapi ./entrypoint.sh /app/
 COPY --chown=fastapi:fastapi ./src /app/src/
 COPY --chown=fastapi:fastapi ./graphql /app/graphql/
 COPY --chown=fastapi:fastapi ./export_schema.sh /app/
-COPY --chown=fastapi:fastapi ./alembic/versions /app/alembic/versions
+COPY --chown=fastapi:fastapi ./alembic.ini /app/alembic.ini
+COPY --chown=fastapi:fastapi ./alembic /app/alembic
 
 ENTRYPOINT ["bash", "/app/entrypoint.sh"]
-
-
