@@ -78,6 +78,9 @@ type Mutation {
 
   """Remove admin role from a user"""
   unmakeAdmin(userId: String!): Boolean!
+
+  """Refresh user cache after external metadata updates"""
+  refreshUserCache(userId: String!): Boolean!
 }
 
 enum Permission {

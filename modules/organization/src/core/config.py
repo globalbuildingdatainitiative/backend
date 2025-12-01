@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     SERVER_NAME: str
     SERVER_HOST: AnyHttpUrl
     ROUTER_URL: AnyHttpUrl
+    AUTH_SERVICE_URL: AnyHttpUrl | None = None
     BACKEND_CORS_ORIGINS: list[str] = [
         "http://localhost:8000",
     ]

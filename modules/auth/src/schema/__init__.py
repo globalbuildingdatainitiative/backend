@@ -13,6 +13,7 @@ from schema.user import (
     reject_invitation_mutation,
     resend_invitation_mutation,
     impersonate_mutation,
+    refresh_user_cache_mutation,
 )
 
 
@@ -55,6 +56,11 @@ class Mutation:
     # unmake admin mutation can be added here similarly
     unmake_admin: bool = strawberry.field(
         resolver=unmake_admin_mutation, description=getdoc(unmake_admin_mutation), permission_classes=[IsAdmin]
+    )
+    refresh_user_cache: bool = strawberry.field(
+        resolver=refresh_user_cache_mutation,
+        description=getdoc(refresh_user_cache_mutation),
+        permission_classes=[IsAuthenticated],
     )
 
 

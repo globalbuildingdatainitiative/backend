@@ -85,3 +85,18 @@ async def impersonate_mutation(info: Info, user_id: str) -> bool:
     logger.info(f"User {user_id} impersonated by {get_user(info).id}")
 
     return True if session else False
+
+
+async def refresh_user_cache_mutation(user_id: str) -> bool:
+    """Refresh user cache after external metadata updates"""
+    from core.cache import get_user_cache
+    from uuid import UUID
+
+    try:
+        user_cache = get_user_cache()
+        await user_cache.reload_user(UUID(user_id))
+        logger.info(f"User cache refreshed for user {user_id}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to refresh user cache for user {user_id}: {e}")
+        return False

@@ -1,5 +1,6 @@
 import logging
 from uuid import UUID
+import httpx
 
 from core.exceptions import EntityNotFound
 from core.cache import get_organization_cache
@@ -149,6 +150,57 @@ async def _apply_id_filter_cached(filter_by: FilterBy) -> tuple[list[DBOrganizat
         raise e
 
 
+async def _refresh_user_cache_in_auth_service(user_id: UUID):
+    """Call auth service directly to refresh user cache after metadata updates"""
+    from core.config import settings
+    from supertokens_python.recipe.jwt import asyncio as jwt_asyncio
+    from supertokens_python.recipe.jwt.interfaces import CreateJwtOkResult
+
+    mutation = """
+    mutation RefreshUserCache($userId: String!) {
+        refreshUserCache(userId: $userId)
+    }
+    """
+
+    try:
+        # Create JWT token for inter-service authentication
+        logger.debug(f"Creating JWT for inter-service communication to refresh cache for user {user_id}")
+        jwt_response = await jwt_asyncio.create_jwt({"source": "microservice"})
+
+        if not isinstance(jwt_response, CreateJwtOkResult):
+            logger.error("Failed to create JWT for inter-service communication")
+            return
+
+        jwt_token = jwt_response.jwt
+
+        # Use configured auth service URL, fall back to router if not set
+        auth_url = (
+            f"{str(settings.AUTH_SERVICE_URL).rstrip('/')}/api/graphql"
+            if settings.AUTH_SERVICE_URL
+            else f"{settings.ROUTER_URL}/graphql"
+        )
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                auth_url,
+                json={"query": mutation, "variables": {"userId": str(user_id)}},
+                headers={"Authorization": f"Bearer {jwt_token}", "Content-Type": "application/json"},
+            )
+
+            if response.is_error:
+                logger.warning(
+                    f"Failed to refresh user cache in auth service at {auth_url}: "
+                    f"Status {response.status_code} - {response.text}"
+                )
+            else:
+                result = response.json()
+                if "errors" in result:
+                    logger.warning(f"GraphQL errors refreshing user cache: {result['errors']}")
+                else:
+                    logger.info(f"Successfully refreshed user cache for user {user_id}")
+    except Exception as e:
+        logger.error(f"Error calling auth service to refresh user cache: {e}", exc_info=True)
+
+
 async def create_organizations_mutation(
     organizations: list[InputOrganization], current_user: SuperTokensUser
 ) -> list[DBOrganization]:
@@ -187,6 +239,9 @@ async def create_organizations_mutation(
         logger.info(f"Updating user metadata for user {current_user.id} with organization ID {new_organizations[0].id}")
         await update_user_metadata(str(current_user.id), {"organization_id": str(new_organizations[0].id)})
         await assign_role(current_user.id, Role.OWNER)
+
+        # Refresh the user cache in auth service
+        await _refresh_user_cache_in_auth_service(current_user.id)
 
     return new_organizations
 

@@ -73,17 +73,16 @@ db-revision: ## Create a new database migration
 
 .PHONY: upgrade
 db-upgrade: ## Run database migrations (upgrade to head)
-	$(UV) run --env-file=.env alembic upgrade head
+	PYTHONPATH=src $(UV) run --env-file=.env alembic upgrade head
 
 .PHONY: downgrade
 db-downgrade: ## Downgrade database migration by one step
-	$(UV) run --env-file=.env alembic downgrade -1
-
+	PYTHONPATH=src $(UV) run --env-file=.env alembic downgrade -1
 .PHONY: db-reset
 db-reset: ## Reset database (drop + migrate + seed)
 	@echo "Resetting database..."
-	$(UV) run --env-file=.env alembic downgrade base
-	$(UV) run --env-file=.env alembic upgrade head
+	PYTHONPATH=src $(UV) run --env-file=.env alembic downgrade base
+	PYTHONPATH=src $(UV) run --env-file=.env alembic upgrade head
 	@echo "Database reset complete!"
 
 
