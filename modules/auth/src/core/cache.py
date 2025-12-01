@@ -26,7 +26,6 @@ class UserCache:
                 result = conn.execute(text("SELECT * FROM user_full_view"))
                 rows = result.all()
                 print(f"Loading {len(rows)} users into cache")
-                print(rows)
                 for row in rows:
                     try:
                         # todo: should we have generic from metadata?
