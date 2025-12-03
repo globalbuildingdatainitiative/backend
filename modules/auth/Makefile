@@ -15,6 +15,7 @@ help: ## Show this help message
 .PHONY: install
 install: ## Install dependencies
 	$(UV) sync --dev
+	$(UV) pip install -e .
 
 .PHONY: install-prod
 install-prod: ## Install production dependencies only
