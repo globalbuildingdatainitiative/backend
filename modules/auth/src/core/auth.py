@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 from typing import List, Dict, Any, Union
 from uuid import UUID
@@ -365,9 +366,19 @@ def functions_override(original_impl: RecipeInterface):
     ) -> Union[SignInOkResult, WrongCredentialsError]:
         if password == FAKE_PASSWORD:
             return WrongCredentialsError()
-        return await og_emailpassword_sign_in(
+        result = await og_emailpassword_sign_in(
             email, password, tenant_id, session, should_try_linking_with_session_user, user_context
         )
+
+        if isinstance(result, SignInOkResult):
+            from core.cache import get_user_cache
+
+            user_id = result.user.id
+            await update_user_metadata(user_id, {"last_login": datetime.utcnow().isoformat()})
+            user_cache = get_user_cache()
+            await user_cache.reload_user(user_id)
+
+        return result
 
     original_impl.update_email_or_password = update_email_or_password
     # original_impl.reset_password_using_token = reset_password_using_token
