@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 from typing import List, Dict, Any, Union
 from uuid import UUID
@@ -374,7 +374,7 @@ def functions_override(original_impl: RecipeInterface):
             from core.cache import get_user_cache
 
             user_id = result.user.id
-            await update_user_metadata(user_id, {"last_login": datetime.utcnow().isoformat()})
+            await update_user_metadata(user_id, {"last_login": datetime.now(timezone.utc).isoformat()})
             user_cache = get_user_cache()
             await user_cache.reload_user(user_id)
 
