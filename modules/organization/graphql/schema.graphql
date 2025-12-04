@@ -318,6 +318,9 @@ type OrganizationGraphQLResponse {
 
   """Total number of items in the filtered dataset."""
   count(filterBy: FilterBy = null): Int!
+
+  """Total number of unique items in the filtered dataset."""
+  uniqueCount(filterBy: FilterBy = null): Int!
 }
 
 type OrganizationMetaData {

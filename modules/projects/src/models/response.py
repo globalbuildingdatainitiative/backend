@@ -97,6 +97,16 @@ class GraphQLResponse[T]:
         items = await self.items(info, filter_by=filter_by, limit=None)
         return len(items)
 
+    @strawberry.field(description="Total number of public contributions in the filtered dataset.")
+    async def public_count(self, info: Info, filter_by: FilterBy | None = None) -> int:
+        items = await self.items(info, filter_by=filter_by, limit=None)
+        return len(list(filter(lambda item: item.public, items)))
+
+    @strawberry.field(description="Total number of private contributions in the filtered dataset.")
+    async def private_count(self, info: Info, filter_by: FilterBy | None = None) -> int:
+        items = await self.items(info, filter_by=filter_by, limit=None)
+        return len(list(filter(lambda item: not item.public, items)))
+
     @strawberry.field()
     async def groups(self, info: Info, group_by: str, limit: int = 50) -> list[GraphQLGroupResponse[T]]:
         user = get_user(info)

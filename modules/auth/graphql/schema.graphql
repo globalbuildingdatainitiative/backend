@@ -149,6 +149,7 @@ type User @key(fields: "id") {
   timeJoined: DateTime!
   organizationId: UUID
   roles: [Role!]
+  lastLogin: DateTime
   invited: Boolean!
   inviteStatus: InviteStatus!
   inviterName: String

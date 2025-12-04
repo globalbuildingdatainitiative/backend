@@ -42,6 +42,9 @@ class UserCache:
                             if row.metadata.get("invite_status")
                             else InviteStatus.NONE,
                             inviter_name=row.metadata.get("inviter_name"),
+                            last_login=datetime.fromisoformat(row.metadata.get("last_login"))
+                            if row.metadata.get("last_login")
+                            else None,
                             roles=[Role(role) for role in (row.roles or [])],
                         )
                         self.cache[self._safe_uuid(row.user_id)] = user
@@ -110,6 +113,9 @@ class UserCache:
                         else InviteStatus.NONE,
                         inviter_name=row.metadata.get("inviter_name"),
                         roles=[Role(role) for role in (row.roles or [])],
+                        last_login=datetime.fromisoformat(row.metadata.get("last_login"))
+                        if row.metadata.get("last_login")
+                        else None,
                     )
                     self.cache[UUID(row.user_id)] = user
                     return user

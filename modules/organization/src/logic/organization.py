@@ -33,8 +33,8 @@ async def get_organizations(
     sort_by: SortBy | None = None,
     limit: int | None = None,
     offset: int = 0,
-) -> tuple[list[DBOrganization], int]:
-    """Returns all Organizations with total count
+) -> tuple[list[DBOrganization], int, int]:
+    """Returns all Organizations with total count and unique count
     filter
     sort
     offset
@@ -56,6 +56,7 @@ async def get_organizations(
 
     # Store total count before pagination
     total_count = len(organizations)
+    unique_count = len(set(f"{org.name.lower()};{org.country}" for org in organizations))
 
     # Apply pagination
     if limit is not None:
@@ -64,7 +65,7 @@ async def get_organizations(
         organizations = organizations[offset:]
 
     logger.debug(f"Found {len(organizations)} organizations (total: {total_count})")
-    return organizations, total_count
+    return organizations, total_count, unique_count
 
 
 def filter_organizations(organizations: list[DBOrganization], filters: FilterBy) -> list[DBOrganization]:

@@ -172,6 +172,13 @@ type ContributionGraphQLResponse {
 
   """Total number of items in the filtered dataset."""
   count(filterBy: FilterBy = null): Int!
+
+  """Total number of public contributions in the filtered dataset."""
+  publicCount(filterBy: FilterBy = null): Int!
+
+  """Total number of private contributions in the filtered dataset."""
+  privateCount(filterBy: FilterBy = null): Int!
+
   groups(groupBy: String!, limit: Int! = 50): [ContributionGraphQLGroupResponse!]!
 
   """

@@ -38,6 +38,7 @@ class GraphQLUser:
     time_joined: datetime
     organization_id: UUID | None = strawberry.field(name="organizationId")
     roles: list[Role] | None
+    last_login: datetime | None = strawberry.field(name="lastLogin")
     # optional fields for invited users
     invited: bool = False
     invite_status: InviteStatus = InviteStatus.NONE
