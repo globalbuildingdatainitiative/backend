@@ -1,5 +1,4 @@
 from enum import Enum
-import logging
 
 import strawberry
 from strawberry import Info
@@ -7,8 +6,6 @@ from strawberry.scalars import JSON
 
 from core.context import get_user
 from models.sort_filter import FilterBy, SortBy
-
-logger = logging.getLogger("main")
 
 
 @strawberry.enum
