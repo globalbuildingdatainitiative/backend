@@ -35,7 +35,10 @@ async def get_contributions(
     if fetch_links:
         query = query.find({}, fetch_links=True)
     contributions = await query.to_list()
-    logger.debug(f"Found {len(contributions)} projects for organization {organization_id}")
+
+    logger.debug(
+        f"Found {len(contributions)} projects for organization {organization_id} with filter \n{filter_by} and :\n sort {sort_by} ; limit {limit} ; offset {offset} ; fetch_links {fetch_links} \n\n"
+    )
     return contributions
 
 
@@ -89,7 +92,14 @@ async def update_contributions(contributions: list[UpdateContribution], user: Su
 
 
 def check_fetch_projects(info: Info) -> bool:
-    if contribution_field := [field for field in info.selected_fields if field.name == "items"]:
+    if [
+        field
+        for field in info.selected_fields
+        if (field.name == "count" or field.name == "publicCount" or field.name == "privateCount")
+    ]:
+        return True
+
+    if contribution_field := [field for field in info.selected_fields if (field.name in "items")]:
         if [_field for _field in contribution_field[0].selections if _field.name == "project"]:
             return True
 
