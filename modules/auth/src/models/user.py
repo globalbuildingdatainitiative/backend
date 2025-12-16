@@ -75,6 +75,13 @@ class UpdateUserInput:
     organization_id: UUID | None = UNSET
 
 
+@strawberry.type
+class UserStatistics:
+    active_last_30_days: int = strawberry.field(name="activeLast30Days")
+    active_last_60_days: int = strawberry.field(name="activeLast60Days")
+    active_last_90_days: int = strawberry.field(name="activeLast90Days")
+
+
 @strawberry.input
 class InviteUsersInput:
     emails: List[str]

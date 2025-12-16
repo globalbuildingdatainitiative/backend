@@ -9,6 +9,7 @@ from .user import (
     InviteUsersInput,
     InviteResult,
     InviteStatus,
+    UserStatistics,
 )
 
 __all__ = [
@@ -25,4 +26,5 @@ __all__ = [
     Permission,
     RolePermission,
     EmailAddress,
+    UserStatistics,
 ]

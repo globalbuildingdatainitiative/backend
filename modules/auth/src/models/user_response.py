@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import logging
 
 import strawberry
@@ -7,7 +8,7 @@ from core.cache import get_user_cache
 from core.context import MICROSERVICE_USER_ID
 
 from logic import get_users
-from models import GraphQLUser, FilterBy, SortBy, Role
+from models import GraphQLUser, FilterBy, SortBy, Role, UserStatistics
 
 logger = logging.getLogger("main")
 
@@ -118,3 +119,29 @@ class UserResponse:
             info, filter_by=effective_filter_by, sort_by=effective_sort_by, limit=None, offset=0
         )
         return total_count
+
+    @strawberry.field(
+        description="Get statistics on user utilization, with number of connected users in the last 30, 60, and 90 days."
+    )
+    async def statistics(self, info: Info) -> UserStatistics:
+        stats = UserStatistics(active_last_30_days=0, active_last_60_days=0, active_last_90_days=0)
+        users = await self.items(info, limit=None, offset=0)
+        now = datetime.now(timezone.utc)
+
+        for user in users:
+            if user.last_login is None:
+                continue
+
+            last_login = user.last_login
+            if last_login.tzinfo is None:
+                last_login = last_login.replace(tzinfo=timezone.utc)
+
+            days_since_login = (now - last_login).days
+            if days_since_login <= 30:
+                stats.active_last_30_days += 1
+            if days_since_login <= 60:
+                stats.active_last_60_days += 1
+            if days_since_login <= 90:
+                stats.active_last_90_days += 1
+
+        return stats
