@@ -156,12 +156,21 @@ type User @key(fields: "id") {
   pendingOrgId: UUID
 }
 
+type UserStatistics {
+  activeLast30Days: Int!
+  activeLast60Days: Int!
+  activeLast90Days: Int!
+}
+
 type UserGraphQLResponse {
   """The list of users in this pagination window."""
   items(filterBy: FilterBy = null, sortBy: SortBy = null, offset: Int! = 0, limit: Int! = 50): [User!]!
 
   """Total number of users in the filtered dataset."""
   count(filterBy: FilterBy = null, sortBy: SortBy = null): Int!
+
+  """Get statistics on user utilization, with number of connected users in the last 30, 60, and 90 days."""
+  statistics: UserStatistics!
 }
 
 scalar _Any

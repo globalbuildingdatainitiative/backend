@@ -1,4 +1,3 @@
-import os
 from logging.config import fileConfig
 from core.config import settings
 
