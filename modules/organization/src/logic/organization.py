@@ -1,3 +1,4 @@
+from functools import reduce
 import logging
 from uuid import UUID
 import httpx
@@ -25,6 +26,7 @@ field_mapping = {
     "address": "address",
     "city": "city",
     "country": "country",
+    "stakeholders": "meta_data.stakeholders",
 }
 
 
@@ -56,7 +58,7 @@ async def get_organizations(
 
     # Store total count before pagination
     total_count = len(organizations)
-    unique_count = len(set(f"{org.name.lower()};{org.country}" for org in organizations))
+    unique_count = len(set(f"{org.name.lower()}" for org in organizations))
 
     # Apply pagination
     if limit is not None:
@@ -90,20 +92,27 @@ def filter_organizations(organizations: list[DBOrganization], filters: FilterBy)
 
             model_field = field_mapping.get(_field, _field)
             filtered_organizations = [
-                org
-                for org in filtered_organizations
-                if _matches_filter(getattr(org, model_field, None), value, _filter)
+                org for org in filtered_organizations if _matches_filter(org, model_field, value, _filter)
             ]
 
     return filtered_organizations
 
 
-def _matches_filter(field_value, filter_value, filter_type: str) -> bool:
+def _get_nested_attr(obj, attr_path):
+    """Helper to retrieve nested attributes (e.g., 'meta_data.stakeholders')"""
+    try:
+        return reduce(getattr, attr_path.split("."), obj)
+    except AttributeError:
+        return None
+
+
+def _matches_filter(org_obj, field_path: str, filter_value, filter_type: str) -> bool:
     """
     Check if field value matches the filter.
-    Supports 'equal', 'contains', and 'is_true' filter types.
-    Handles UUIDs and basic string comparisons.
     """
+    # specific logic for nested retrieval
+    field_value = _get_nested_attr(org_obj, field_path)
+
     if field_value is None:
         return False
 
@@ -115,9 +124,23 @@ def _matches_filter(field_value, filter_value, filter_type: str) -> bool:
     if isinstance(field_value, UUID):
         return str(field_value) == str(filter_value)
 
-    # Default: case-insensitive string comparison
-    field_str = str(field_value).lower()
     filter_str = str(filter_value).lower()
+
+    # SPECIAL HANDLING FOR LISTS (e.g., stakeholders)
+    if isinstance(field_value, list):
+        # We check if ANY element in the list matches the 'contains' or 'equal' logic
+        for item in field_value:
+            item_str = str(item).lower()
+            if filter_type == "contains":
+                if filter_str in item_str:
+                    return True
+            else:  # "equal"
+                if filter_str == item_str:
+                    return True
+        return False
+
+    # Default: case-insensitive string comparison for scalar values
+    field_str = str(field_value).lower()
     return filter_str in field_str if filter_type == "contains" else field_str == filter_str
 
 
