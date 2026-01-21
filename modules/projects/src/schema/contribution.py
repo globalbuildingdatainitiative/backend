@@ -11,6 +11,7 @@ async def add_contributions_mutation(info: Info, contributions: list[InputContri
     """Creates new Contributions"""
 
     user = get_user(info)
+
     _contributions = await create_contributions(contributions, user)
 
     return _contributions
